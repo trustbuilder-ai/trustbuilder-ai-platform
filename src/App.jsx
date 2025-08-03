@@ -10,7 +10,7 @@ import RedTeaming from "./pages/RedTeaming";
 import Dashboard from "./pages/Dashboard";
 import Tournaments from "./pages/Tournaments";
 import ChallengeDebug from "./pages/ChallengeDebug";
-//import WargamesChallenge from "./pages/wargames/WargamesChallenge";
+import WargamesChallenge from "./pages/wargames/WargamesChallenge";
 import Callback from "./pages/auth/Callback";
 import { setupApiClient } from "./lib/api-client";
 import "./App.css";
@@ -45,10 +45,10 @@ function App() {
         </Route>
         
         {/* Wargames routes without Header */}
-        { /* <Route path="/wargames" element={<WargamesLayout />}>
+        { <Route path="/wargames" element={<WargamesLayout />}>
           <Route path="challenge" element={<WargamesChallenge />} />
           <Route path="challenge/:challengeId" element={<WargamesChallenge />} />
-        </Route> */ }
+        </Route> }
       </Routes>
     </div>
   );

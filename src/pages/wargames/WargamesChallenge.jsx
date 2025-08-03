@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useApiData } from "../../hooks";
 import { auth } from "../../lib/supabase";
-import { getSampleMessagesSampleMessagesGet } from "../../backend_client/sdk.gen";
 import useWargamesScripts from "./hooks/useWargamesScripts";
 // import GameStatus from "./components/GameStatus";  // Intentionally not displayed
 import ModelOutput from "./components/ModelOutput";
@@ -25,11 +24,6 @@ const WargamesChallenge = () => {
     score: "0.00"
   });
   
-  // Fetch sample messages from API if authenticated
-  const sampleMessages = useApiData(getSampleMessagesSampleMessagesGet, {
-    requiresAuth: true,
-    enabled: !!session // Only fetch if user is authenticated
-  });
   
   // Determine messages based on authentication state
   const getDisplayMessages = () => {
@@ -37,14 +31,8 @@ const WargamesChallenge = () => {
       return [{ type: "system", text: "User not authenticated. Unable to proceed." }];
     }
     
-    if (sampleMessages.data) {
-      // Transform API messages to match ModelOutput expected format
-      return sampleMessages.data.map(msg => ({
-        type: msg.role,
-        text: msg.content
-      }));
-    }
-    
+    // Return empty array for authenticated users
+    // You can replace this with static demo messages if needed
     return [];
   };
   
@@ -201,8 +189,8 @@ const WargamesChallenge = () => {
           <div className="flex-1 flex flex-col gap-10">
             <ModelOutput 
               messages={getDisplayMessages()} 
-              loading={session && sampleMessages.loading}
-              error={session ? sampleMessages.error : null}
+              loading={false}
+              error={null}
             />
             
             {/* User Input */}
