@@ -1,15 +1,27 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useApiData } from "../../hooks";
 import { auth } from "../../lib/supabase";
 import useWargamesScripts from "./hooks/useWargamesScripts";
-// import GameStatus from "./components/GameStatus";  // Intentionally not displayed
+import useSlashCommands from "./hooks/useSlashCommands";
+import GameStatus from "./components/GameStatus";
 import ModelOutput from "./components/ModelOutput";
 import Options from "./components/options/Options";
+import SlashCommandAutocomplete from "./components/SlashCommandAutocomplete";
+import { parseCommand } from "./utils/commandDefinitions";
+import { WargamesProvider, useWargamesContext } from "./context/WargamesContext";
+import { 
+  addMessageToChallengeChallengesChallengeIdAddMessagePost,
+  getCurrentUserInfoUsersMeGet,
+  listTournamentsTournamentsGet,
+  listChallengesChallengesGet,
+  getChallengeContextChallengesChallengeIdContextGet,
+  evaluateChallengeContextChallengesChallengeIdEvaluateGet
+} from "../../backend_client/sdk.gen";
 import "./WargamesChallenge.css";
 
-const WargamesChallenge = () => {
+const WargamesChallengeContent = () => {
   const { session } = useAuth();
   useWargamesScripts(); // Load external dependencies
   
@@ -23,17 +35,88 @@ const WargamesChallenge = () => {
     round: "-",
     score: "0.00"
   });
+  const [messages, setMessages] = useState([]);
+  const [commandExecuting, setCommandExecuting] = useState(false);
   
   
+  // Get context
+  const wargamesContext = useWargamesContext();
+  
+  // Clear state on mount
+  useEffect(() => {
+    // Clear any existing context state on page load
+    wargamesContext.clearState();
+    // Also clear any existing messages
+    setMessages([]);
+  }, []); // Empty dependency array means this runs only once on mount
+  
+  // Check for active tournaments only (not challenges) on mount
+  useEffect(() => {
+    const checkActiveTournament = async () => {
+      if (!session) return;
+      
+      try {
+        // Get user info to check active tournaments
+        const userInfo = await getCurrentUserInfoUsersMeGet({
+          requiresAuth: true
+        });
+        
+        if (userInfo.data) {
+          // Check for active tournament only - don't auto-resume challenges
+          if (userInfo.data.active_tournaments && userInfo.data.active_tournaments.length > 0) {
+            const activeTournament = userInfo.data.active_tournaments[0];
+            console.log('Found active tournament:', activeTournament);
+            wargamesContext.joinTournament(activeTournament.id, activeTournament.name);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking active tournament:', error);
+      }
+    };
+    
+    checkActiveTournament();
+  }, [session]); // Only run when session changes
+  
+  // Callback to handle challenge messages
+  const handleChallengeMessages = useCallback((existingMessages) => {
+    setMessages(prev => [...prev, ...existingMessages]);
+  }, []);
+  
+  // Initialize slash commands hook with context
+  const {
+    suggestions,
+    selectedIndex,
+    showAutocomplete,
+    isExecuting,
+    handleInputChange,
+    handleKeyDown,
+    executeCommand,
+    resetAutocomplete
+  } = useSlashCommands(session, wargamesContext, handleChallengeMessages);
+
   // Determine messages based on authentication state
   const getDisplayMessages = () => {
-    if (!session) {
+    if (!session && messages.length === 0) {
       return [{ type: "system", text: "User not authenticated. Unable to proceed." }];
     }
-    
-    // Return empty array for authenticated users
-    // You can replace this with static demo messages if needed
-    return [];
+    return messages;
+  };
+  
+  // Get dynamic placeholder text
+  const getPlaceholderText = () => {
+    if (!session) {
+      return "Please log in to continue...";
+    }
+    if (!wargamesContext.hasTournament) {
+      return "Type /help to get started or /list-tournaments to see available tournaments";
+    }
+    if (!wargamesContext.hasActiveChallenge) {
+      return "Type /list-challenges to see available challenges";
+    }
+    if (!wargamesContext.canContribute) {
+      return "This challenge is complete. Type / for commands";
+    }
+    return "Send a message to the challenge agent... (Type / for commands)";
   };
   
   // State for JOIN GAME authentication
@@ -72,22 +155,221 @@ const WargamesChallenge = () => {
   }, [theme]);
 
 
-  const handleSendMessage = () => {
-    if (userInput.trim() && session) {
-      // For now, just clear the input since we're using read-only API messages
-      // In a real implementation, this would send to a different endpoint
+  const handleSendMessage = async () => {
+    const trimmedInput = userInput.trim();
+    if (!trimmedInput) return;
+
+    // Check if it's a command
+    if (trimmedInput.startsWith('/')) {
+      const { isValid } = parseCommand(trimmedInput);
+      
+      if (!isValid && !showAutocomplete) {
+        setMessages(prev => [...prev, {
+          type: 'error',
+          text: `Invalid command: ${trimmedInput}. Type /help for available commands.`
+        }]);
+        setUserInput("");
+        return;
+      }
+      
+      // Execute the command
+      setCommandExecuting(true);
       setUserInput("");
       
-      // Could trigger a refresh of messages here if needed
-      // sampleMessages.refetch();
+      // Add user's command to messages
+      setMessages(prev => [...prev, {
+        type: 'user',
+        text: trimmedInput
+      }]);
+      
+      await executeCommand(trimmedInput, (results) => {
+        setMessages(prev => [...prev, ...results]);
+      });
+      
+      setCommandExecuting(false);
+    } else {
+      // Regular message - send to active challenge
+      if (!session) {
+        setMessages(prev => [...prev, {
+          type: 'error',
+          text: 'You must be logged in to send messages.'
+        }]);
+        return;
+      }
+      
+      if (!wargamesContext.hasActiveChallenge) {
+        console.log('Context state:', {
+          hasActiveChallenge: wargamesContext.hasActiveChallenge,
+          activeChallengeId: wargamesContext.activeChallengeId,
+          challengeName: wargamesContext.challengeName
+        });
+        // Show user's message first, then the error
+        setMessages(prev => [...prev, 
+          {
+            type: 'user',
+            text: trimmedInput
+          },
+          {
+            type: 'error',
+            text: 'No active challenge. Use /start-challenge <id> to begin a challenge.'
+          }
+        ]);
+        setUserInput("");
+        return;
+      }
+      
+      // Check if challenge can accept messages
+      if (!wargamesContext.canContribute) {
+        // Show user's message first, then the error
+        setMessages(prev => [...prev, 
+          {
+            type: 'user',
+            text: trimmedInput
+          },
+          {
+            type: 'error',
+            text: 'This challenge has been completed and cannot accept new messages.'
+          }
+        ]);
+        setUserInput("");
+        return;
+      }
+      
+      // Add user message with optimistic update
+      setMessages(prev => [...prev, {
+        type: 'user',
+        text: trimmedInput
+      }]);
+      
+      // Add loading indicator
+      setMessages(prev => [...prev, {
+        type: 'system',
+        text: '⏳ Processing...',
+        isLoading: true
+      }]);
+      
+      setUserInput("");
+      setCommandExecuting(true);
+      
+      try {
+        // Send message to the active challenge
+        const response = await addMessageToChallengeChallengesChallengeIdAddMessagePost({
+          path: {
+            challenge_id: wargamesContext.activeChallengeId
+          },
+          query: {
+            message: trimmedInput,
+            role: 'user',
+            solicit_llm_response: true
+          },
+          requiresAuth: true
+        });
+        
+        if (response.data) {
+          // Check if challenge is now complete
+          const canContribute = response.data.user_challenge_context?.can_contribute ?? true;
+          if (canContribute !== wargamesContext.canContribute) {
+            wargamesContext.startChallenge(
+              wargamesContext.activeChallengeId,
+              wargamesContext.challengeName,
+              canContribute
+            );
+          }
+          
+          // Get scroll position before updating
+          const scrollContainer = document.querySelector('.bg-black\\/50.overflow-y-auto');
+          const scrollPosition = scrollContainer?.scrollTop;
+          const wasAtBottom = scrollContainer 
+            ? scrollContainer.scrollHeight - scrollContainer.scrollTop <= scrollContainer.clientHeight + 100
+            : true;
+          
+          // Handle the full challenge context response
+          const messages = [];
+          if (response.data.messages && response.data.messages.length > 0) {
+            // Clear existing messages and show all messages from the response
+            const allMessages = response.data.messages.map(msg => ({
+              type: msg.role,
+              text: msg.content
+            }));
+            messages.push(...allMessages);
+          } else if (response.data.user_challenge_context?.messages) {
+            // Fallback to user_challenge_context if messages not at top level
+            const contextMessages = response.data.user_challenge_context.messages;
+            const allMessages = contextMessages.map(msg => ({
+              type: msg.role,
+              text: msg.content
+            }));
+            messages.push(...allMessages);
+          }
+          
+          // Add completion message if challenge just completed
+          if (!canContribute && wargamesContext.canContribute) {
+            messages.push({
+              type: 'system',
+              text: 'Challenge completed! This challenge cannot accept any more messages.'
+            });
+          }
+          
+          setMessages(messages);
+          
+          // Restore scroll position after React re-renders
+          setTimeout(() => {
+            if (wasAtBottom && scrollContainer) {
+              // If user was at bottom, scroll to new bottom
+              scrollContainer.scrollTop = scrollContainer.scrollHeight;
+            } else if (scrollPosition && scrollContainer) {
+              // Otherwise preserve their position
+              scrollContainer.scrollTop = scrollPosition;
+            }
+          }, 50);
+        }
+      } catch (error) {
+        console.error('Failed to send message:', error);
+        setMessages(prev => [...prev, {
+          type: 'error',
+          text: `Failed to send message: ${error.message || 'Unknown error'}`
+        }]);
+      } finally {
+        setCommandExecuting(false);
+      }
     }
   };
 
   const handleKeyPress = (e) => {
+    // Handle slash command autocomplete navigation
+    const commandResult = handleKeyDown(e);
+    
+    if (commandResult === true) {
+      // Event was handled by autocomplete
+      return;
+    } else if (commandResult && typeof commandResult === 'object') {
+      // A command was selected
+      e.preventDefault();
+      setUserInput(commandResult.name + ' ');
+      resetAutocomplete();
+      return;
+    }
+    
+    // Handle regular enter key
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
+  };
+  
+  // Handle input changes
+  const handleInputChangeWithCommands = (e) => {
+    const value = e.target.value;
+    setUserInput(value);
+    handleInputChange(value);
+  };
+  
+  // Handle autocomplete selection
+  const handleAutocompleteSelect = (command) => {
+    setUserInput(command.name + ' ');
+    resetAutocomplete();
+    // Focus back on the textarea
+    document.querySelector('.cyber-input')?.focus();
   };
   
   // Email validation regex
@@ -158,6 +440,141 @@ const WargamesChallenge = () => {
       setJoinGameLoading(false);
     }
   };
+  
+  // Handle evaluation
+  const handleEvaluate = async () => {
+    if (!session) {
+      setMessages(prev => [...prev, {
+        type: 'error',
+        text: 'You must be logged in to run evaluations.'
+      }]);
+      return;
+    }
+    
+    if (!wargamesContext.hasActiveChallenge) {
+      setMessages(prev => [...prev, {
+        type: 'error',
+        text: 'No active challenge. Start a challenge first to run evaluation.'
+      }]);
+      return;
+    }
+    
+    setMessages(prev => [...prev, {
+      type: 'system',
+      text: 'Running evaluation...'
+    }]);
+    
+    try {
+      const response = await evaluateChallengeContextChallengesChallengeIdEvaluateGet({
+        path: {
+          challenge_id: wargamesContext.activeChallengeId
+        },
+        requiresAuth: true
+      });
+      
+      if (response.data) {
+        console.log('Evaluation response:', response.data);
+        
+        // Display evaluation results based on EvalResult type
+        const messages = [];
+        
+        messages.push({
+          type: 'system',
+          text: '=== EVALUATION RESULTS ==='
+        });
+        
+        // Handle the EvalResult response
+        const evalResult = response.data;
+        
+        // Display status
+        switch (evalResult.status) {
+          case 'SUCCEEDED':
+            messages.push({
+              type: 'success',
+              text: '✓ Challenge Evaluation: SUCCEEDED'
+            });
+            break;
+          case 'FAILED':
+            messages.push({
+              type: 'error',
+              text: '✗ Challenge Evaluation: FAILED'
+            });
+            break;
+          case 'ERRORED':
+            messages.push({
+              type: 'error',
+              text: '⚠️ Challenge Evaluation: ERRORED'
+            });
+            break;
+          case 'NOT_EVALUATED':
+            messages.push({
+              type: 'system',
+              text: 'Challenge has not been evaluated yet.'
+            });
+            break;
+          default:
+            messages.push({
+              type: 'system',
+              text: `Evaluation Status: ${evalResult.status}`
+            });
+        }
+        
+        // Display reason if provided
+        if (evalResult.reason) {
+          messages.push({
+            type: 'system',
+            text: `Reason: ${evalResult.reason}`
+          });
+        }
+        
+        // Check if challenge is complete after evaluation (if status is SUCCEEDED)
+        if (evalResult.status === 'SUCCEEDED' && wargamesContext.canContribute) {
+          // Challenge might be completed now, update the context
+          messages.push({
+            type: 'system',
+            text: 'Challenge completed successfully! 🎉'
+          });
+          
+          // We should fetch the updated context to confirm the challenge state
+          try {
+            const contextResponse = await getChallengeContextChallengesChallengeIdContextGet({
+              path: {
+                challenge_id: wargamesContext.activeChallengeId
+              },
+              requiresAuth: true
+            });
+            
+            if (contextResponse.data?.user_challenge_context) {
+              const canContribute = contextResponse.data.user_challenge_context.can_contribute;
+              if (canContribute !== wargamesContext.canContribute) {
+                wargamesContext.startChallenge(
+                  wargamesContext.activeChallengeId,
+                  wargamesContext.challengeName,
+                  canContribute
+                );
+              }
+            }
+          } catch (err) {
+            console.error('Error fetching updated context:', err);
+          }
+        }
+        
+        setMessages(prev => [...prev, ...messages]);
+      } else {
+        console.log('No response data from evaluation');
+        setMessages(prev => [...prev, {
+          type: 'error',
+          text: 'No response from evaluation endpoint.'
+        }]);
+      }
+    } catch (error) {
+      console.error('Evaluation error:', error);
+      setMessages(prev => [...prev, {
+        type: 'error',
+        text: `Failed to run evaluation: ${error.message || 'Unknown error'}`
+      }]);
+    }
+  };
 
   return (
     <div className="wargames-challenge-container cyber-grid">
@@ -189,7 +606,7 @@ const WargamesChallenge = () => {
           <div className="flex-1 flex flex-col gap-10">
             <ModelOutput 
               messages={getDisplayMessages()} 
-              loading={false}
+              loading={commandExecuting}
               error={null}
             />
             
@@ -201,13 +618,20 @@ const WargamesChallenge = () => {
                   <span className="text-xs text-gray-500">Tokens: {userInput.length}/4096</span>
                 </div>
               </div>
-              <div className="space-y-4">
+              <div className="space-y-4 relative">
+                <SlashCommandAutocomplete
+                  suggestions={suggestions}
+                  selectedIndex={selectedIndex}
+                  onSelect={handleAutocompleteSelect}
+                  visible={showAutocomplete}
+                />
                 <textarea
                   className="cyber-input w-full h-36 resize-none"
-                  placeholder="Enter your prompt here..."
+                  placeholder={getPlaceholderText()}
                   value={userInput}
-                  onChange={(e) => setUserInput(e.target.value)}
-                  onKeyPress={handleKeyPress}
+                  onChange={handleInputChangeWithCommands}
+                  onKeyDown={handleKeyPress}
+                  disabled={commandExecuting}
                 />
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
@@ -221,9 +645,10 @@ const WargamesChallenge = () => {
                   <button 
                     className="cyber-button flex items-center space-x-2"
                     onClick={handleSendMessage}
+                    disabled={commandExecuting || !userInput.trim()}
                   >
                     <i data-lucide="send" className="w-4 h-4"></i>
-                    <span>EXECUTE</span>
+                    <span>{commandExecuting ? 'EXECUTING...' : 'EXECUTE'}</span>
                   </button>
                 </div>
               </div>
@@ -249,11 +674,16 @@ const WargamesChallenge = () => {
               handleOtpVerification={handleOtpVerification}
               setShowOtpInput={setShowOtpInput}
               setOtpMessage={setOtpMessage}
+              onHistoryClick={() => console.log('History clicked')}
+              onExportClick={() => console.log('Export clicked')}
+              onSettingsClick={() => console.log('Settings clicked')}
+              onHelpClick={() => console.log('Help clicked')}
+              onModeChange={(mode) => console.log('Mode changed to:', mode)}
+              onRunEval={handleEvaluate}
+              onViewResults={handleEvaluate}
             />
 
-            {/* Game Status - Intentionally not displayed
             <GameStatus status={gameStatus} />
-            */}
           </div>
         </div>
       </main>
@@ -264,6 +694,18 @@ const WargamesChallenge = () => {
           <div className="flex items-center justify-between h-12 text-xs">
             <div className="flex items-center space-x-4">
               <span className="text-gray-400">Model: GPT-4</span>
+              {wargamesContext.hasTournament && (
+                <>
+                  <span className="text-gray-400">|</span>
+                  <span className="text-cyan-400">Tournament: {wargamesContext.tournamentName}</span>
+                </>
+              )}
+              {wargamesContext.hasActiveChallenge && (
+                <>
+                  <span className="text-gray-400">|</span>
+                  <span className="text-green-400">Challenge: {wargamesContext.challengeName}</span>
+                </>
+              )}
               <span className="text-gray-400">|</span>
               <span className="text-gray-400">Latency: 42ms</span>
               <span className="text-gray-400">|</span>
@@ -277,6 +719,15 @@ const WargamesChallenge = () => {
       </footer>
 
     </div>
+  );
+};
+
+// Main component with context provider
+const WargamesChallenge = () => {
+  return (
+    <WargamesProvider>
+      <WargamesChallengeContent />
+    </WargamesProvider>
   );
 };
 

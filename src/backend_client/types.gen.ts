@@ -204,78 +204,16 @@ export type ChatUsage = {
  */
 export type EvalResult = {
     /**
-     * Task Type
+     * Reason
      */
-    task_type: string;
-    /**
-     * Dataset Type
-     */
-    dataset_type: string;
-    /**
-     * Dataset Name
-     */
-    dataset_name: string;
-    /**
-     * Metric Type
-     */
-    metric_type: string;
-    /**
-     * Metric Value
-     */
-    metric_value: unknown;
-    /**
-     * Task Name
-     */
-    task_name?: string | null;
-    /**
-     * Dataset Config
-     */
-    dataset_config?: string | null;
-    /**
-     * Dataset Split
-     */
-    dataset_split?: string | null;
-    /**
-     * Dataset Revision
-     */
-    dataset_revision?: string | null;
-    /**
-     * Dataset Args
-     */
-    dataset_args?: {
-        [key: string]: unknown;
-    } | null;
-    /**
-     * Metric Name
-     */
-    metric_name?: string | null;
-    /**
-     * Metric Config
-     */
-    metric_config?: string | null;
-    /**
-     * Metric Args
-     */
-    metric_args?: {
-        [key: string]: unknown;
-    } | null;
-    /**
-     * Verified
-     */
-    verified?: boolean | null;
-    /**
-     * Verify Token
-     */
-    verify_token?: string | null;
-    /**
-     * Source Name
-     */
-    source_name?: string | null;
-    /**
-     * Source Url
-     */
-    source_url?: string | null;
+    reason?: string | null;
+    status: EvalStatus;
 };
+
+/**
+ * EvalStatus
+ */
+export type EvalStatus = 'NOT_EVALUATED' | 'SUCCEEDED' | 'FAILED' | 'ERRORED';
 
 /**
  * FunctionCall

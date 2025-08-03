@@ -2,9 +2,9 @@ import React from "react";
 import AuthStatus from "./AuthStatus";
 import ThemeSelector from "./ThemeSelector";
 import JoinGame from "./JoinGame";
-// import ToolsPanel from "./ToolsPanel";  // Intentionally not displayed
-// import ModeSelector from "./ModeSelector";  // Intentionally not displayed
-// import EvalPanel from "./EvalPanel";  // Intentionally not displayed
+import ToolsPanel from "./ToolsPanel";
+import ModeSelector from "./ModeSelector";
+import EvalPanel from "./EvalPanel";
 
 const Options = ({ 
   session,
@@ -59,28 +59,22 @@ const Options = ({
         />
       )}
       
-      {/* Tools Panel - Intentionally not displayed 
       <ToolsPanel 
         onHistoryClick={onHistoryClick}
         onExportClick={onExportClick}
         onSettingsClick={onSettingsClick}
         onHelpClick={onHelpClick}
       />
-      */}
       
-      {/* Mode Selector - Intentionally not displayed
       <ModeSelector 
         initialMode="single"
         onModeChange={onModeChange}
       />
-      */}
       
-      {/* Eval Panel - Intentionally not displayed
       <EvalPanel 
         onRunEval={onRunEval}
         onViewResults={onViewResults}
       />
-      */}
     </div>
   );
 };

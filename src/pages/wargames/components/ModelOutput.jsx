@@ -1,15 +1,36 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 
 const ModelOutput = ({ messages, loading, error }) => {
   const messagesEndRef = useRef(null);
+  const containerRef = useRef(null);
+  const [userHasScrolled, setUserHasScrolled] = useState(false);
+  const prevMessageCount = useRef(messages.length);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // Detect if user has manually scrolled
+  const handleScroll = useCallback(() => {
+    const container = containerRef.current;
+    if (container) {
+      const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
+      setUserHasScrolled(!isAtBottom);
+    }
+  }, []);
+
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    // Only auto-scroll if:
+    // 1. User hasn't scrolled up manually
+    // 2. New messages were added (not a full replacement)
+    const messageCountIncreased = messages.length > prevMessageCount.current;
+    
+    if (!userHasScrolled || messageCountIncreased) {
+      scrollToBottom();
+    }
+    
+    prevMessageCount.current = messages.length;
+  }, [messages, userHasScrolled]);
 
   const getMessageTypeStyle = (type) => {
     switch (type) {
@@ -26,6 +47,8 @@ const ModelOutput = ({ messages, loading, error }) => {
         return 'text-purple-400';
       case 'error':
         return 'text-red-400';
+      case 'success':
+        return 'text-green-400';
       case 'unknown role':
       default:
         return 'text-gray-400';
@@ -49,6 +72,8 @@ const ModelOutput = ({ messages, loading, error }) => {
         return '[TOOL_RESULT]';
       case 'error':
         return '[ERROR]';
+      case 'success':
+        return '[SUCCESS]';
       case 'unknown role':
         return '[UNKNOWN]';
       default:
@@ -64,7 +89,11 @@ const ModelOutput = ({ messages, loading, error }) => {
           <i data-lucide="maximize-2" className="w-5 h-5"></i>
         </button>
       </div>
-      <div className="bg-black/50 rounded p-6 min-h-[450px] max-h-[550px] overflow-y-auto font-mono text-sm">
+      <div 
+        ref={containerRef}
+        onScroll={handleScroll}
+        className="bg-black/50 rounded p-6 min-h-[450px] max-h-[550px] overflow-y-auto font-mono text-sm"
+      >
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-green-400">Loading messages...</div>
@@ -84,7 +113,20 @@ const ModelOutput = ({ messages, loading, error }) => {
                 <span className={getMessageTypeStyle(message.type)}>
                   {getMessageLabel(message.type)}
                 </span>
-                <p className="text-gray-300">{message.text}</p>
+                <p className="text-gray-300">
+                  {message.isLoading ? (
+                    <span className="inline-flex items-center">
+                      {message.text}
+                      <span className="ml-2 inline-flex">
+                        <span className="animate-pulse">.</span>
+                        <span className="animate-pulse animation-delay-200">.</span>
+                        <span className="animate-pulse animation-delay-400">.</span>
+                      </span>
+                    </span>
+                  ) : (
+                    message.text
+                  )}
+                </p>
               </div>
             ))}
             <div className="typing-cursor" ref={messagesEndRef}></div>
