@@ -27,7 +27,7 @@ function App() {
         {/* Routes with Header */}
         <Route element={<RootLayout />}>
           {/* Redirect from root to dashboard */}
-          <Route path="/" element={<Navigate to="/console" replace />} />
+          <Route path="/" element={<Navigate to="/wargames/challenge" replace />} />
           
           {/* Console routes with sidebar */}
           <Route path="/console" element={<ConsoleLayout />}>

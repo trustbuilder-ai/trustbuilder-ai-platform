@@ -589,8 +589,8 @@ const WargamesChallengeContent = () => {
               <span className="text-xs text-gray-500 uppercase">TrustBuilder</span>
             </div>
             <div className="flex items-center space-x-4">
-              <Link to="/dashboard/wargames" className="text-sm text-gray-400 hover:text-green-400 transition-colors">
-                ← Back to Dashboard
+              <Link to="https://trb.ai.localhost" className="text-sm text-gray-400 hover:text-green-400 transition-colors">
+                ← Back to Landing
               </Link>
               <span className="text-sm text-gray-400">Connected to: wargames-ai.trb.ai</span>
               <div className="w-2 h-2 bg-green-400 rounded-full pulse-glow"></div>
