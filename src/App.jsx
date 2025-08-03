@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import RootLayout from "./layouts/RootLayout";
-import DashboardLayout from "./layouts/DashboardLayout";
+import ConsoleLayout from "./layouts/ConsoleLayout";
 import WargamesLayout from "./layouts/WargamesLayout";
 import Home from "./pages/Home";
 import Wargames from "./pages/Wargames";
@@ -10,7 +10,7 @@ import RedTeaming from "./pages/RedTeaming";
 import Dashboard from "./pages/Dashboard";
 import Tournaments from "./pages/Tournaments";
 import ChallengeDebug from "./pages/ChallengeDebug";
-// import WargamesChallenge from "./pages/wargames/WargamesChallenge";
+//import WargamesChallenge from "./pages/wargames/WargamesChallenge";
 import Callback from "./pages/auth/Callback";
 import { setupApiClient } from "./lib/api-client";
 import "./App.css";
@@ -27,10 +27,10 @@ function App() {
         {/* Routes with Header */}
         <Route element={<RootLayout />}>
           {/* Redirect from root to dashboard */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/" element={<Navigate to="/console" replace />} />
           
-          {/* Dashboard routes with sidebar */}
-          <Route path="/dashboard" element={<DashboardLayout />}>
+          {/* Console routes with sidebar */}
+          <Route path="/console" element={<ConsoleLayout />}>
             <Route index element={<Home />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="wargames" element={<Wargames />} />
@@ -45,10 +45,10 @@ function App() {
         </Route>
         
         {/* Wargames routes without Header */}
-        {/* <Route path="/wargames" element={<WargamesLayout />}>
+        { /* <Route path="/wargames" element={<WargamesLayout />}>
           <Route path="challenge" element={<WargamesChallenge />} />
           <Route path="challenge/:challengeId" element={<WargamesChallenge />} />
-        </Route> */}
+        </Route> */ }
       </Routes>
     </div>
   );

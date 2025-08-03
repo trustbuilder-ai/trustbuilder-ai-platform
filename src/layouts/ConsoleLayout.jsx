@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import Breadcrumbs from "../components/Breadcrumbs";
-import "./DashboardLayout.css";
+import "./ConsoleLayout.css";
 
-const DashboardLayout = () => {
+const ConsoleLayout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
@@ -50,4 +50,4 @@ const DashboardLayout = () => {
   );
 };
 
-export default DashboardLayout;
+export default ConsoleLayout;

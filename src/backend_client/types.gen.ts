@@ -200,6 +200,103 @@ export type ChatUsage = {
 };
 
 /**
+ * EvalResult
+ */
+export type EvalResult = {
+    /**
+     * Task Type
+     */
+    task_type: string;
+    /**
+     * Dataset Type
+     */
+    dataset_type: string;
+    /**
+     * Dataset Name
+     */
+    dataset_name: string;
+    /**
+     * Metric Type
+     */
+    metric_type: string;
+    /**
+     * Metric Value
+     */
+    metric_value: unknown;
+    /**
+     * Task Name
+     */
+    task_name?: string | null;
+    /**
+     * Dataset Config
+     */
+    dataset_config?: string | null;
+    /**
+     * Dataset Split
+     */
+    dataset_split?: string | null;
+    /**
+     * Dataset Revision
+     */
+    dataset_revision?: string | null;
+    /**
+     * Dataset Args
+     */
+    dataset_args?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Metric Name
+     */
+    metric_name?: string | null;
+    /**
+     * Metric Config
+     */
+    metric_config?: string | null;
+    /**
+     * Metric Args
+     */
+    metric_args?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Verified
+     */
+    verified?: boolean | null;
+    /**
+     * Verify Token
+     */
+    verify_token?: string | null;
+    /**
+     * Source Name
+     */
+    source_name?: string | null;
+    /**
+     * Source Url
+     */
+    source_url?: string | null;
+};
+
+/**
+ * FunctionCall
+ * Function call details within a tool call.
+ *
+ * Attributes:
+ * name: The name of the function to call.
+ * arguments: The arguments to call the function with (as JSON string).
+ */
+export type FunctionCall = {
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Arguments
+     */
+    arguments: string;
+};
+
+/**
  * HTTPValidationError
  */
 export type HttpValidationError = {
@@ -265,6 +362,14 @@ export type Message = {
      * Tool Name
      */
     tool_name?: string | null;
+    /**
+     * Tool Calls
+     */
+    tool_calls?: Array<ToolCall> | null;
+    /**
+     * Tool Call Id
+     */
+    tool_call_id?: string | null;
 };
 
 /**
@@ -334,6 +439,27 @@ export type ModelsResponse = {
  * SelectionFilter
  */
 export type SelectionFilter = 'PAST' | 'ACTIVE' | 'FUTURE' | 'PAST_AND_ACTIVE' | 'ACTIVE_AND_FUTURE';
+
+/**
+ * ToolCall
+ * A tool call request from the model.
+ *
+ * Attributes:
+ * id: Unique identifier for this tool call.
+ * type: The type of tool call (currently only 'function').
+ * function: The function call details.
+ */
+export type ToolCall = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Type
+     */
+    type?: 'function';
+    function: FunctionCall;
+};
 
 /**
  * Tournaments
@@ -679,6 +805,36 @@ export type AddMessageToChallengeChallengesChallengeIdAddMessagePostResponses = 
 };
 
 export type AddMessageToChallengeChallengesChallengeIdAddMessagePostResponse = AddMessageToChallengeChallengesChallengeIdAddMessagePostResponses[keyof AddMessageToChallengeChallengesChallengeIdAddMessagePostResponses];
+
+export type EvaluateChallengeContextChallengesChallengeIdEvaluateGetData = {
+    body?: never;
+    path: {
+        /**
+         * Challenge Id
+         */
+        challenge_id: number;
+    };
+    query?: never;
+    url: '/challenges/{challenge_id}/evaluate';
+};
+
+export type EvaluateChallengeContextChallengesChallengeIdEvaluateGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type EvaluateChallengeContextChallengesChallengeIdEvaluateGetError = EvaluateChallengeContextChallengesChallengeIdEvaluateGetErrors[keyof EvaluateChallengeContextChallengesChallengeIdEvaluateGetErrors];
+
+export type EvaluateChallengeContextChallengesChallengeIdEvaluateGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: EvalResult;
+};
+
+export type EvaluateChallengeContextChallengesChallengeIdEvaluateGetResponse = EvaluateChallengeContextChallengesChallengeIdEvaluateGetResponses[keyof EvaluateChallengeContextChallengesChallengeIdEvaluateGetResponses];
 
 export type JoinTournamentTournamentsTournamentIdJoinPostData = {
     body?: never;
