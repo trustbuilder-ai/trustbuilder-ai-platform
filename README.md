@@ -1,5 +1,7 @@
 # Backend client
 
+Trustbuilder AI: Turning Adversity into Assurance.
+
 WarGames-AI is a crowdsourced security platform that enables AI providers to validate the safety and robustness of their language models through competitive wargames and red-teaming exercises conducted by a global community of security researchers.
 
 ## Try Online
