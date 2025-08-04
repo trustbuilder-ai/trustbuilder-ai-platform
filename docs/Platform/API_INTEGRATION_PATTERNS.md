@@ -18,7 +18,7 @@ The project implements a type-safe, authentication-aware API integration pattern
 
 The `@hey-api/openapi-ts` tool generates a complete TypeScript client from the backend's OpenAPI specification:
 
-```
+```sh
 src/backend_client/
 ├── client.gen.ts      # Client configuration
 ├── sdk.gen.ts         # Type-safe SDK functions
