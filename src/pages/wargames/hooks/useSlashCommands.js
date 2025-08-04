@@ -316,11 +316,13 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
                   
                   if (contextResponse.data.messages && contextResponse.data.messages.length > 0) {
                     console.log('Found existing messages:', contextResponse.data.messages.length);
-                    // Convert messages to display format
-                    const existingMessages = contextResponse.data.messages.map(msg => ({
-                      type: msg.role,
-                      text: msg.content
-                    }));
+                    // Filter out system messages and convert to display format
+                    const existingMessages = contextResponse.data.messages
+                      .filter(msg => msg.role !== 'system')
+                      .map(msg => ({
+                        type: msg.role,
+                        text: msg.content
+                      }));
                     onChallengeMessages(existingMessages);
                   }
                   
@@ -341,12 +343,11 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
                 text: `Started challenge: ${challengeName}`
               }];
               
-              // Only show "send messages" prompt if NOT already evaluated with terminal status
-              const evalStatus = contextResponse.data?.eval_result?.status;
-              if (!evalStatus || !['SUCCEEDED', 'FAILED', 'ERRORED'].includes(evalStatus)) {
+              // Add challenge description if available
+              if (challenge?.description) {
                 results.push({
                   type: 'system',
-                  text: 'You can now send messages to interact with the challenge.'
+                  text: `[CHALLENGE]: ${challenge.description}`
                 });
               }
             } else {
@@ -437,11 +438,13 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
                           
                           if (contextResponse.data.messages && contextResponse.data.messages.length > 0) {
                             console.log('Found existing messages:', contextResponse.data.messages.length);
-                            // Convert messages to display format
-                            const existingMessages = contextResponse.data.messages.map(msg => ({
-                              type: msg.role,
-                              text: msg.content
-                            }));
+                            // Filter out system messages and convert to display format
+                            const existingMessages = contextResponse.data.messages
+                              .filter(msg => msg.role !== 'system')
+                              .map(msg => ({
+                                type: msg.role,
+                                text: msg.content
+                              }));
                             onChallengeMessages(existingMessages);
                           }
                         }
@@ -457,14 +460,15 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
                         text: `Challenge already active: ${activeChallenge.name}`
                       }];
                       
-                      // Only show "send messages" prompt if NOT already evaluated with terminal status
-                      const evalStatus = contextResponse.data?.eval_result?.status;
-                      if (canContribute && (!evalStatus || !['SUCCEEDED', 'FAILED', 'ERRORED'].includes(evalStatus))) {
+                      // Add challenge description if available  
+                      if (activeChallenge.description) {
                         results.push({
                           type: 'system',
-                          text: 'You can now send messages to interact with the challenge.'
+                          text: `[CHALLENGE]: ${activeChallenge.description}`
                         });
-                      } else if (!canContribute) {
+                      }
+                      
+                      if (!canContribute) {
                         results.push({
                           type: 'system',
                           text: 'This challenge has been completed and cannot accept new messages.'

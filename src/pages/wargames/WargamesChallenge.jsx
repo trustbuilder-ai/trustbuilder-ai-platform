@@ -10,6 +10,7 @@ import ModelOutput from "./components/ModelOutput";
 import Options from "./components/options/Options";
 import SlashCommandAutocomplete from "./components/SlashCommandAutocomplete";
 import EvaluationConfirmModal from "./components/EvaluationConfirmModal";
+import ChallengesOverlay from "./components/ChallengesOverlay";
 import { parseCommand } from "./utils/commandDefinitions";
 import { WargamesProvider, useWargamesContext } from "./context/WargamesContext";
 import { 
@@ -39,6 +40,7 @@ const WargamesChallengeContent = () => {
   const [messages, setMessages] = useState([]);
   const [commandExecuting, setCommandExecuting] = useState(false);
   const [showEvalConfirmModal, setShowEvalConfirmModal] = useState(false);
+  const [showChallengesOverlay, setShowChallengesOverlay] = useState(false);
   
   
   // Get context
@@ -468,6 +470,101 @@ const WargamesChallengeContent = () => {
     setShowEvalConfirmModal(true);
   };
   
+  // Handle challenge selection from overlay
+  const handleChallengeSelect = useCallback(async (challengeId, challengeName, challengeDescription) => {
+    console.log('Challenge selected from overlay:', challengeId, challengeName);
+    
+    // Initialize messages array to control order
+    const messagesToDisplay = [];
+    
+    // Add SUCCESS message first
+    messagesToDisplay.push({
+      type: 'success',
+      text: `Started challenge: ${challengeName}`
+    });
+    
+    // Add CHALLENGE description if available
+    if (challengeDescription) {
+      messagesToDisplay.push({
+        type: 'system',
+        text: `[CHALLENGE]: ${challengeDescription}`
+      });
+    }
+    
+    // Fetch existing challenge messages
+    try {
+      const contextResponse = await getChallengeContextChallengesChallengeIdContextGet({
+        path: {
+          challenge_id: challengeId
+        },
+        requiresAuth: true
+      });
+      
+      if (contextResponse.data) {
+        // Update canContribute status
+        const canContribute = contextResponse.data.user_challenge_context?.can_contribute ?? true;
+        
+        // Update remaining message count
+        if (contextResponse.data.remaining_message_count !== undefined) {
+          wargamesContext.setRemainingMessageCount(contextResponse.data.remaining_message_count);
+        }
+        
+        // Process eval_result
+        if (contextResponse.data.eval_result) {
+          const evalResult = contextResponse.data.eval_result;
+          wargamesContext.setEvaluationStatus(evalResult.status);
+          
+          // Add evaluation messages for non-terminal states
+          if (evalResult.status === 'NOT_EVALUATED') {
+            messagesToDisplay.push({
+              type: 'system',
+              text: 'Challenge has not been evaluated yet.'
+            });
+          } else if (!['SUCCEEDED', 'FAILED', 'ERRORED'].includes(evalResult.status)) {
+            messagesToDisplay.push({
+              type: 'system',
+              text: `Evaluation Status: ${evalResult.status}`
+            });
+          }
+          
+          // Add reason if provided
+          if (evalResult.reason) {
+            messagesToDisplay.push({
+              type: 'system',
+              text: `Reason: ${evalResult.reason}`
+            });
+          }
+        }
+        
+        if (contextResponse.data.messages && contextResponse.data.messages.length > 0) {
+          console.log('Found existing messages:', contextResponse.data.messages.length);
+          // Filter out system messages from the context endpoint
+          // Only include user and assistant messages
+          const existingMessages = contextResponse.data.messages
+            .filter(msg => msg.role !== 'system')
+            .map(msg => ({
+              type: msg.role,
+              text: msg.content
+            }));
+          messagesToDisplay.push(...existingMessages);
+        }
+        
+        // Add completion message if challenge is complete
+        if (!canContribute) {
+          messagesToDisplay.push({
+            type: 'system',
+            text: 'This challenge has been completed and cannot accept new messages.'
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching challenge context:', err);
+    }
+    
+    // Set all messages at once in the correct order
+    setMessages(messagesToDisplay);
+  }, [wargamesContext]);
+  
   // Confirm evaluation and actually run it
   const confirmEvaluation = async () => {
     setShowEvalConfirmModal(false);
@@ -690,10 +787,7 @@ const WargamesChallengeContent = () => {
               handleOtpVerification={handleOtpVerification}
               setShowOtpInput={setShowOtpInput}
               setOtpMessage={setOtpMessage}
-              onHistoryClick={() => console.log('History clicked')}
-              onExportClick={() => console.log('Export clicked')}
-              onSettingsClick={() => console.log('Settings clicked')}
-              onHelpClick={() => console.log('Help clicked')}
+              onChallengesClick={() => setShowChallengesOverlay(true)}
               onModeChange={(mode) => console.log('Mode changed to:', mode)}
               onRunEval={handleEvaluate}
               onViewResults={handleEvaluate}
@@ -740,6 +834,15 @@ const WargamesChallengeContent = () => {
         onConfirm={confirmEvaluation}
         onCancel={() => setShowEvalConfirmModal(false)}
         theme={theme}
+      />
+      
+      {/* Challenges Overlay */}
+      <ChallengesOverlay
+        isOpen={showChallengesOverlay}
+        onClose={() => setShowChallengesOverlay(false)}
+        theme={theme}
+        wargamesContext={wargamesContext}
+        onSelectChallenge={handleChallengeSelect}
       />
 
     </div>

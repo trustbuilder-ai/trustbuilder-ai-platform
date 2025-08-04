@@ -23,10 +23,7 @@ const Options = ({
   handleOtpVerification,
   setShowOtpInput,
   setOtpMessage,
-  onHistoryClick,
-  onExportClick,
-  onSettingsClick,
-  onHelpClick,
+  onChallengesClick,
   onModeChange,
   onRunEval,
   onViewResults
@@ -60,10 +57,7 @@ const Options = ({
       )}
       
       <ToolsPanel 
-        onHistoryClick={onHistoryClick}
-        onExportClick={onExportClick}
-        onSettingsClick={onSettingsClick}
-        onHelpClick={onHelpClick}
+        onChallengesClick={onChallengesClick}
       />
       
       <ModeSelector 
