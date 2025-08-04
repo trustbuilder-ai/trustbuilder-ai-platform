@@ -14,6 +14,8 @@ export const WargamesProvider = ({ children }) => {
   const [activeChallengeId, setActiveChallengeId] = useState(null);
   const [challengeName, setChallengeName] = useState('');
   const [canContribute, setCanContribute] = useState(true);
+  const [remainingMessageCount, setRemainingMessageCount] = useState(null);
+  const [evaluationStatus, setEvaluationStatus] = useState(null);
   
   // Helper functions
   const joinTournament = (tournamentId, name) => {
@@ -24,10 +26,11 @@ export const WargamesProvider = ({ children }) => {
     setChallengeName('');
   };
   
-  const startChallenge = (challengeId, name, canContributeFlag = true) => {
+  const startChallenge = (challengeId, name, canContributeFlag = true, messageCount = null) => {
     setActiveChallengeId(challengeId);
     setChallengeName(name);
     setCanContribute(canContributeFlag);
+    setRemainingMessageCount(messageCount);
   };
   
   const clearState = () => {
@@ -36,6 +39,8 @@ export const WargamesProvider = ({ children }) => {
     setActiveChallengeId(null);
     setChallengeName('');
     setCanContribute(true);
+    setRemainingMessageCount(null);
+    setEvaluationStatus(null);
   };
   
   const value = {
@@ -47,11 +52,15 @@ export const WargamesProvider = ({ children }) => {
     activeChallengeId,
     challengeName,
     canContribute,
+    remainingMessageCount,
+    evaluationStatus,
     
     // Actions
     joinTournament,
     startChallenge,
     clearState,
+    setRemainingMessageCount,
+    setEvaluationStatus,
     
     // Computed values
     hasTournament: !!currentTournamentId,

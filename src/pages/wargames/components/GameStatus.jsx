@@ -1,6 +1,6 @@
 import React from "react";
 
-const GameStatus = ({ status }) => {
+const GameStatus = ({ status, remainingMessageCount }) => {
   return (
     <div className="cyber-card">
       <h2 className="text-xl font-semibold text-cyan-400 mb-6">
@@ -16,12 +16,14 @@ const GameStatus = ({ status }) => {
           <span>{status.players}/4</span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-gray-400">Round:</span>
-          <span>{status.round}</span>
-        </div>
-        <div className="flex justify-between items-center">
           <span className="text-gray-400">Score:</span>
           <span>{status.score}</span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-gray-400">Messages Remaining:</span>
+          <span className={remainingMessageCount !== null && remainingMessageCount <= 5 ? "text-yellow-400" : ""}>
+            {remainingMessageCount !== null ? remainingMessageCount : "-"}
+          </span>
         </div>
       </div>
     </div>

@@ -86,12 +86,6 @@ export const getBadgeBadgesBadgeIdGet = <ThrowOnError extends boolean = false>(o
  */
 export const listChallengesChallengesGet = <ThrowOnError extends boolean = false>(options?: Options<ListChallengesChallengesGetData, ThrowOnError>) => {
     return (options?.client ?? _heyApiClient).get<ListChallengesChallengesGetResponses, ListChallengesChallengesGetErrors, ThrowOnError>({
-        security: [
-            {
-                scheme: 'bearer',
-                type: 'http'
-            }
-        ],
         url: '/challenges',
         ...options
     });

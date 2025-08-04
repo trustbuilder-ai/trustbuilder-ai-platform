@@ -9,6 +9,7 @@ import GameStatus from "./components/GameStatus";
 import ModelOutput from "./components/ModelOutput";
 import Options from "./components/options/Options";
 import SlashCommandAutocomplete from "./components/SlashCommandAutocomplete";
+import EvaluationConfirmModal from "./components/EvaluationConfirmModal";
 import { parseCommand } from "./utils/commandDefinitions";
 import { WargamesProvider, useWargamesContext } from "./context/WargamesContext";
 import { 
@@ -31,12 +32,13 @@ const WargamesChallengeContent = () => {
   const [userInput, setUserInput] = useState("");
   const [gameStatus, setGameStatus] = useState({
     state: "READY",
-    players: 0,
+    players: 1,
     round: "-",
     score: "0.00"
   });
   const [messages, setMessages] = useState([]);
   const [commandExecuting, setCommandExecuting] = useState(false);
+  const [showEvalConfirmModal, setShowEvalConfirmModal] = useState(false);
   
   
   // Get context
@@ -76,6 +78,27 @@ const WargamesChallengeContent = () => {
     
     checkActiveTournament();
   }, [session]); // Only run when session changes
+  
+  // Sync evaluation status to game status
+  useEffect(() => {
+    if (wargamesContext.evaluationStatus) {
+      setGameStatus(prev => ({
+        ...prev,
+        state: wargamesContext.evaluationStatus,
+        score: wargamesContext.evaluationStatus === "SUCCEEDED" ? "100.00" : prev.score
+      }));
+    } else if (wargamesContext.hasActiveChallenge) {
+      setGameStatus(prev => ({
+        ...prev,
+        state: "ACTIVE"
+      }));
+    } else {
+      setGameStatus(prev => ({
+        ...prev,
+        state: "READY"
+      }));
+    }
+  }, [wargamesContext.evaluationStatus, wargamesContext.hasActiveChallenge]);
   
   // Callback to handle challenge messages
   const handleChallengeMessages = useCallback((existingMessages) => {
@@ -266,15 +289,8 @@ const WargamesChallengeContent = () => {
         });
         
         if (response.data) {
-          // Check if challenge is now complete
-          const canContribute = response.data.user_challenge_context?.can_contribute ?? true;
-          if (canContribute !== wargamesContext.canContribute) {
-            wargamesContext.startChallenge(
-              wargamesContext.activeChallengeId,
-              wargamesContext.challengeName,
-              canContribute
-            );
-          }
+          // Remove loading indicator
+          setMessages(prev => prev.filter(msg => !msg.isLoading));
           
           // Get scroll position before updating
           const scrollContainer = document.querySelector('.bg-black\\/50.overflow-y-auto');
@@ -283,34 +299,19 @@ const WargamesChallengeContent = () => {
             ? scrollContainer.scrollHeight - scrollContainer.scrollTop <= scrollContainer.clientHeight + 100
             : true;
           
-          // Handle the full challenge context response
-          const messages = [];
+          // Append only new messages from the LLM response
           if (response.data.messages && response.data.messages.length > 0) {
-            // Clear existing messages and show all messages from the response
-            const allMessages = response.data.messages.map(msg => ({
+            const newMessages = response.data.messages.map(msg => ({
               type: msg.role,
               text: msg.content
             }));
-            messages.push(...allMessages);
-          } else if (response.data.user_challenge_context?.messages) {
-            // Fallback to user_challenge_context if messages not at top level
-            const contextMessages = response.data.user_challenge_context.messages;
-            const allMessages = contextMessages.map(msg => ({
-              type: msg.role,
-              text: msg.content
-            }));
-            messages.push(...allMessages);
+            setMessages(prev => [...prev, ...newMessages]);
           }
           
-          // Add completion message if challenge just completed
-          if (!canContribute && wargamesContext.canContribute) {
-            messages.push({
-              type: 'system',
-              text: 'Challenge completed! This challenge cannot accept any more messages.'
-            });
+          // Update remaining message count in context
+          if (response.data.remaining_message_count !== undefined) {
+            wargamesContext.setRemainingMessageCount(response.data.remaining_message_count);
           }
-          
-          setMessages(messages);
           
           // Restore scroll position after React re-renders
           setTimeout(() => {
@@ -325,10 +326,14 @@ const WargamesChallengeContent = () => {
         }
       } catch (error) {
         console.error('Failed to send message:', error);
-        setMessages(prev => [...prev, {
-          type: 'error',
-          text: `Failed to send message: ${error.message || 'Unknown error'}`
-        }]);
+        // Remove loading indicator and add error message
+        setMessages(prev => [
+          ...prev.filter(msg => !msg.isLoading),
+          {
+            type: 'error',
+            text: `Failed to send message: ${error.message || 'Unknown error'}`
+          }
+        ]);
       } finally {
         setCommandExecuting(false);
       }
@@ -441,8 +446,8 @@ const WargamesChallengeContent = () => {
     }
   };
   
-  // Handle evaluation
-  const handleEvaluate = async () => {
+  // Handle evaluation - show confirmation modal
+  const handleEvaluate = () => {
     if (!session) {
       setMessages(prev => [...prev, {
         type: 'error',
@@ -458,6 +463,14 @@ const WargamesChallengeContent = () => {
       }]);
       return;
     }
+    
+    // Show confirmation modal
+    setShowEvalConfirmModal(true);
+  };
+  
+  // Confirm evaluation and actually run it
+  const confirmEvaluation = async () => {
+    setShowEvalConfirmModal(false);
     
     setMessages(prev => [...prev, {
       type: 'system',
@@ -485,6 +498,9 @@ const WargamesChallengeContent = () => {
         
         // Handle the EvalResult response
         const evalResult = response.data;
+        
+        // Update evaluation status in context
+        wargamesContext.setEvaluationStatus(evalResult.status);
         
         // Display status
         switch (evalResult.status) {
@@ -683,7 +699,7 @@ const WargamesChallengeContent = () => {
               onViewResults={handleEvaluate}
             />
 
-            <GameStatus status={gameStatus} />
+            <GameStatus status={gameStatus} remainingMessageCount={wargamesContext.remainingMessageCount} />
           </div>
         </div>
       </main>
@@ -717,6 +733,14 @@ const WargamesChallengeContent = () => {
           </div>
         </div>
       </footer>
+
+      {/* Evaluation Confirmation Modal */}
+      <EvaluationConfirmModal
+        isOpen={showEvalConfirmModal}
+        onConfirm={confirmEvaluation}
+        onCancel={() => setShowEvalConfirmModal(false)}
+        theme={theme}
+      />
 
     </div>
   );

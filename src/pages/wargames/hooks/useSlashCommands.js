@@ -266,8 +266,9 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
               wargamesContext.startChallenge(challengeId, challengeName, true);
               
               // Fetch existing challenge messages
+              let contextResponse;
               try {
-                const contextResponse = await getChallengeContextChallengesChallengeIdContextGet({
+                contextResponse = await getChallengeContextChallengesChallengeIdContextGet({
                   path: {
                     challenge_id: challengeId
                   },
@@ -278,6 +279,40 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
                   // Update canContribute status
                   const canContribute = contextResponse.data.user_challenge_context?.can_contribute ?? true;
                   wargamesContext.startChallenge(challengeId, challengeName, canContribute);
+                  
+                  // Update remaining message count
+                  if (contextResponse.data.remaining_message_count !== undefined) {
+                    wargamesContext.setRemainingMessageCount(contextResponse.data.remaining_message_count);
+                  }
+                  
+                  // Process eval_result
+                  if (contextResponse.data.eval_result) {
+                    const evalResult = contextResponse.data.eval_result;
+                    
+                    // Update evaluation status in context
+                    wargamesContext.setEvaluationStatus(evalResult.status);
+                    
+                    // Add evaluation messages for non-terminal states
+                    if (evalResult.status === 'NOT_EVALUATED') {
+                      onChallengeMessages([{
+                        type: 'system',
+                        text: 'Challenge has not been evaluated yet.'
+                      }]);
+                    } else if (!['SUCCEEDED', 'FAILED', 'ERRORED'].includes(evalResult.status)) {
+                      onChallengeMessages([{
+                        type: 'system',
+                        text: `Evaluation Status: ${evalResult.status}`
+                      }]);
+                    }
+                    
+                    // Add reason if provided
+                    if (evalResult.reason) {
+                      onChallengeMessages([{
+                        type: 'system',
+                        text: `Reason: ${evalResult.reason}`
+                      }]);
+                    }
+                  }
                   
                   if (contextResponse.data.messages && contextResponse.data.messages.length > 0) {
                     console.log('Found existing messages:', contextResponse.data.messages.length);
@@ -304,10 +339,16 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
               results = [{
                 type: 'success',
                 text: `Started challenge: ${challengeName}`
-              }, {
-                type: 'system',
-                text: 'You can now send messages to interact with the challenge.'
               }];
+              
+              // Only show "send messages" prompt if NOT already evaluated with terminal status
+              const evalStatus = contextResponse.data?.eval_result?.status;
+              if (!evalStatus || !['SUCCEEDED', 'FAILED', 'ERRORED'].includes(evalStatus)) {
+                results.push({
+                  type: 'system',
+                  text: 'You can now send messages to interact with the challenge.'
+                });
+              }
             } else {
               // Handle case where response doesn't have data
               console.error('Start challenge response missing data:', startResponse);
@@ -345,10 +386,11 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
                       console.log('Challenge already active, updating context');
                       // Need to get canContribute status
                       let canContribute = true;
+                      let contextResponse;
                       
                       // Fetch existing challenge messages
                       try {
-                        const contextResponse = await getChallengeContextChallengesChallengeIdContextGet({
+                        contextResponse = await getChallengeContextChallengesChallengeIdContextGet({
                           path: {
                             challenge_id: challengeId
                           },
@@ -358,6 +400,40 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
                         if (contextResponse.data) {
                           // Get canContribute status
                           canContribute = contextResponse.data.user_challenge_context?.can_contribute ?? true;
+                          
+                          // Update remaining message count
+                          if (contextResponse.data.remaining_message_count !== undefined) {
+                            wargamesContext.setRemainingMessageCount(contextResponse.data.remaining_message_count);
+                          }
+                          
+                          // Process eval_result
+                          if (contextResponse.data.eval_result) {
+                            const evalResult = contextResponse.data.eval_result;
+                            
+                            // Update evaluation status in context
+                            wargamesContext.setEvaluationStatus(evalResult.status);
+                            
+                            // Add evaluation messages for non-terminal states
+                            if (evalResult.status === 'NOT_EVALUATED') {
+                              onChallengeMessages([{
+                                type: 'system',
+                                text: 'Challenge has not been evaluated yet.'
+                              }]);
+                            } else if (!['SUCCEEDED', 'FAILED', 'ERRORED'].includes(evalResult.status)) {
+                              onChallengeMessages([{
+                                type: 'system',
+                                text: `Evaluation Status: ${evalResult.status}`
+                              }]);
+                            }
+                            
+                            // Add reason if provided
+                            if (evalResult.reason) {
+                              onChallengeMessages([{
+                                type: 'system',
+                                text: `Reason: ${evalResult.reason}`
+                              }]);
+                            }
+                          }
                           
                           if (contextResponse.data.messages && contextResponse.data.messages.length > 0) {
                             console.log('Found existing messages:', contextResponse.data.messages.length);
@@ -381,12 +457,14 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
                         text: `Challenge already active: ${activeChallenge.name}`
                       }];
                       
-                      if (canContribute) {
+                      // Only show "send messages" prompt if NOT already evaluated with terminal status
+                      const evalStatus = contextResponse.data?.eval_result?.status;
+                      if (canContribute && (!evalStatus || !['SUCCEEDED', 'FAILED', 'ERRORED'].includes(evalStatus))) {
                         results.push({
                           type: 'system',
                           text: 'You can now send messages to interact with the challenge.'
                         });
-                      } else {
+                      } else if (!canContribute) {
                         results.push({
                           type: 'system',
                           text: 'This challenge has been completed and cannot accept new messages.'

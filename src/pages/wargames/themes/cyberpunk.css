@@ -191,3 +191,82 @@
   color: var(--wg-primary);
   text-shadow: 0 0 5px var(--wg-primary);
 }
+
+/* Slash Command Autocomplete - Cyberpunk styling */
+.wargames-challenge-container .slash-command-autocomplete {
+  box-shadow: 
+    0 -4px 20px rgba(0, 255, 255, 0.2),
+    inset 0 0 20px rgba(0, 255, 255, 0.05);
+}
+
+.wargames-challenge-container .autocomplete-header {
+  background: rgba(0, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+}
+
+.wargames-challenge-container .autocomplete-item:hover {
+  background: rgba(0, 255, 255, 0.05);
+  border-left-color: rgba(0, 255, 255, 0.3);
+}
+
+.wargames-challenge-container .autocomplete-item.selected {
+  background: rgba(0, 255, 255, 0.15);
+  border-left-color: var(--wg-accent);
+  box-shadow: inset 0 0 20px rgba(0, 255, 255, 0.1);
+}
+
+.wargames-challenge-container .autocomplete-list::-webkit-scrollbar-track {
+  background: rgba(0, 255, 255, 0.1);
+}
+
+.wargames-challenge-container .autocomplete-list::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 255, 0.3);
+}
+
+.wargames-challenge-container .autocomplete-footer {
+  background: rgba(0, 0, 0, 0.5);
+  border-top: 1px solid rgba(0, 255, 255, 0.2);
+}
+
+.wargames-challenge-container .footer-hint kbd {
+  background: rgba(0, 255, 255, 0.1);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  color: var(--wg-accent);
+}
+
+/* Evaluation Confirmation Modal - Cyberpunk styling */
+.theme-cyberpunk .eval-modal-content {
+  box-shadow: 
+    0 0 40px rgba(0, 255, 255, 0.3),
+    inset 0 0 20px rgba(0, 255, 255, 0.05);
+}
+
+.theme-cyberpunk .eval-modal-header {
+  background: rgba(0, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+}
+
+.theme-cyberpunk .eval-modal-warning {
+  background: rgba(255, 0, 85, 0.1);
+  border: 1px solid rgba(255, 0, 85, 0.3);
+}
+
+.theme-cyberpunk .warning-icon {
+  color: var(--wg-destructive);
+  text-shadow: 0 0 10px rgba(255, 0, 85, 0.5);
+}
+
+.theme-cyberpunk .eval-modal-footer {
+  background: rgba(0, 0, 0, 0.5);
+  border-top: 1px solid rgba(0, 255, 255, 0.2);
+}
+
+.theme-cyberpunk .eval-modal-confirm {
+  background: var(--wg-accent);
+  color: var(--wg-background);
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+}
+
+.theme-cyberpunk .eval-modal-confirm:hover {
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+}

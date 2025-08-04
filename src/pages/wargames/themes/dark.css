@@ -163,3 +163,49 @@
 .wargames-challenge-container .border-gray-700 {
   border-color: var(--wg-border) !important;
 }
+
+/* Slash Command Autocomplete - Dark theme styling */
+.wargames-challenge-container .slash-command-autocomplete {
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.wargames-challenge-container .autocomplete-header {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.wargames-challenge-container .autocomplete-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.wargames-challenge-container .autocomplete-item.selected {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.wargames-challenge-container .footer-hint kbd {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Evaluation Confirmation Modal - Dark theme styling */
+.theme-dark .eval-modal-content {
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.theme-dark .eval-modal-warning {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.theme-dark .warning-icon {
+  color: #f59e0b;
+}
+
+.theme-dark .eval-modal-confirm {
+  background: var(--wg-primary);
+  color: var(--wg-primary-foreground);
+}
+
+.theme-dark .eval-modal-confirm:hover {
+  background: var(--wg-foreground);
+  color: var(--wg-background);
+}

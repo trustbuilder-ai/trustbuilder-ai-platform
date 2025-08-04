@@ -41,14 +41,25 @@
   backdrop-filter: blur(10px);
 }
 
-/* Text colors */
-.wargames-challenge-container .text-green-400,
+/* Text colors - High contrast for light theme */
+.wargames-challenge-container .text-green-400 {
+  color: #16a34a !important;
+}
+
 .wargames-challenge-container .text-cyan-400 {
-  color: var(--wg-primary) !important;
+  color: #0891b2 !important;
 }
 
 .wargames-challenge-container .text-yellow-400 {
   color: #ca8a04 !important;
+}
+
+.wargames-challenge-container .text-red-400 {
+  color: #dc2626 !important;
+}
+
+.wargames-challenge-container .text-purple-400 {
+  color: #9333ea !important;
 }
 
 .wargames-challenge-container .text-gray-400,
@@ -155,4 +166,100 @@
 .wargames-challenge-container .typing-cursor::after {
   color: var(--wg-primary);
   text-shadow: none;
+}
+
+/* Slash Command Autocomplete - Light theme styling */
+.wargames-challenge-container .slash-command-autocomplete {
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.98);
+}
+
+.wargames-challenge-container .autocomplete-header {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.wargames-challenge-container .autocomplete-item:hover {
+  background: rgba(0, 0, 0, 0.03);
+  border-left-color: var(--wg-muted-foreground);
+}
+
+.wargames-challenge-container .autocomplete-item.selected {
+  background: rgba(0, 0, 0, 0.05);
+  border-left-color: var(--wg-primary);
+}
+
+.wargames-challenge-container .autocomplete-footer {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.wargames-challenge-container .footer-hint kbd {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: var(--wg-muted-foreground);
+}
+
+/* Model Output - High contrast for light theme */
+.wargames-challenge-container .bg-black\/50 {
+  background: rgba(0, 0, 0, 0.02) !important;
+  border: 1px solid var(--wg-border);
+}
+
+/* Auth Status - High contrast for light theme */
+.wargames-challenge-container .bg-gray-900 {
+  background-color: var(--wg-muted) !important;
+  border-color: var(--wg-border) !important;
+}
+
+.wargames-challenge-container .text-gray-500 {
+  color: var(--wg-muted-foreground) !important;
+}
+
+.wargames-challenge-container .text-gray-400 {
+  color: var(--wg-foreground) !important;
+  opacity: 0.7;
+}
+
+
+/* Status indicators with better contrast */
+.wargames-challenge-container .bg-gray-900 .text-green-400 {
+  color: #16a34a !important;
+  font-weight: 500;
+}
+
+.wargames-challenge-container .bg-gray-900 .text-red-400 {
+  color: #dc2626 !important;
+  font-weight: 500;
+}
+
+/* Evaluation Confirmation Modal - Light theme styling */
+.theme-light .eval-modal-content {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.theme-light .eval-modal-header {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.theme-light .eval-modal-warning {
+  background: rgba(220, 38, 38, 0.05);
+  border-color: rgba(220, 38, 38, 0.2);
+}
+
+.theme-light .warning-icon {
+  color: #dc2626;
+}
+
+.theme-light .eval-modal-footer {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.theme-light .eval-modal-confirm {
+  background: var(--wg-primary);
+  color: var(--wg-primary-foreground);
+}
+
+.theme-light .eval-modal-confirm:hover {
+  background: var(--wg-accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }

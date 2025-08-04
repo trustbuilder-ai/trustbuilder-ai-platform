@@ -14,12 +14,12 @@ const EvalPanel = ({ onRunEval, onViewResults }) => {
         >
           Run Evaluation
         </button>
-        <button 
+        {/* <button 
           className="option-button w-full text-left"
           onClick={onViewResults}
         >
           View Results
-        </button>
+        </button> */}
       </div>
     </div>
   );
