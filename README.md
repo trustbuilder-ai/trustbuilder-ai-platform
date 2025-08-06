@@ -33,3 +33,12 @@ Set `SUPABASE_PUBLIC_ANON_KEY` to supabase anonymous key or add to .env.
 The backend host (repo: wargames-ai-backend) is running here (as of JULY/27/2025):
 
 `https://wargames-ai-backend-357559285333.us-west1.run.app`
+
+## Deployment steps
+
+This is the current deployment pattern for GH. This is to be updated with custom actions/workflows.
+
+```
+make build
+npx gh-pages -d dist
+```
