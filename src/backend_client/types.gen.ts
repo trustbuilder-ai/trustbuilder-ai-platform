@@ -86,6 +86,17 @@ export type Challenges = {
 };
 
 /**
+ * ChallengesPublic
+ */
+export type ChallengesPublic = {
+    challenge: Challenges;
+    /**
+     * Tournament Name
+     */
+    tournament_name: string;
+};
+
+/**
  * ChatChoice
  * A single choice in the chat completion response.
  *
@@ -238,6 +249,10 @@ export type EvalResult = {
      */
     reason?: string | null;
     status: EvalStatus;
+    /**
+     * Challenge Id
+     */
+    challenge_id?: number | null;
 };
 
 /**
@@ -500,13 +515,17 @@ export type UserInfo = {
      */
     active_tournaments: Array<Tournaments>;
     /**
-     * Active Challenges
+     * Active Challenge Contexts
      */
-    active_challenges: Array<Challenges>;
+    active_challenge_contexts: Array<UserChallengeContexts>;
     /**
      * Badges
      */
     badges: Array<Badges>;
+    /**
+     * Eval Results
+     */
+    eval_results?: Array<EvalResult>;
 };
 
 /**
@@ -696,7 +715,7 @@ export type ListChallengesChallengesGetResponses = {
      * Response List Challenges Challenges Get
      * Successful Response
      */
-    200: Array<Challenges>;
+    200: Array<ChallengesPublic>;
 };
 
 export type ListChallengesChallengesGetResponse = ListChallengesChallengesGetResponses[keyof ListChallengesChallengesGetResponses];

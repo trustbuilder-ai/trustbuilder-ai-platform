@@ -7,12 +7,12 @@ import {
 } from '../utils/commandDefinitions';
 import {
   listTournamentsTournamentsGet,
-  joinTournamentTournamentsTournamentIdJoinPost,
   startChallengeChallengesChallengeIdStartPost,
   listChallengesChallengesGet,
   getCurrentUserInfoUsersMeGet,
   getChallengeContextChallengesChallengeIdContextGet
 } from '../../../backend_client/sdk.gen';
+import { WARGAMES_CONSTANTS } from '../../../constants/wargames';
 
 /**
  * Custom hook for managing slash commands in the Wargames interface
@@ -134,50 +134,6 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
           }
           break;
           
-        case COMMAND_TYPES.JOIN_TOURNAMENT:
-          if (!session) {
-            results = [{
-              type: 'error',
-              text: 'You must be logged in to join tournaments'
-            }];
-            break;
-          }
-          
-          const tournamentId = parseInt(args[0]);
-          if (isNaN(tournamentId)) {
-            results = [{
-              type: 'error',
-              text: 'Invalid tournament ID. Please provide a number.'
-            }];
-            break;
-          }
-          
-          const joinResponse = await joinTournamentTournamentsTournamentIdJoinPost({
-            path: {
-              tournament_id: tournamentId
-            },
-            requiresAuth: true
-          });
-          
-          if (joinResponse.data) {
-            // Get tournament details to store the name
-            const tournamentsResponse = await listTournamentsTournamentsGet({
-              requiresAuth: true
-            });
-            
-            const tournament = tournamentsResponse.data?.find(t => t.id === tournamentId);
-            const tournamentName = tournament?.name || `Tournament ${tournamentId}`;
-            
-            // Update context
-            wargamesContext.joinTournament(tournamentId, tournamentName);
-            
-            results = [{
-              type: 'success',
-              text: `Successfully joined tournament: ${tournamentName}`
-            }];
-          }
-          break;
-          
         case COMMAND_TYPES.LIST_CHALLENGES:
           if (!session) {
             results = [{
@@ -187,39 +143,56 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
             break;
           }
           
-          if (!wargamesContext.hasTournament) {
-            results = [{
-              type: 'error',
-              text: 'You must join a tournament first. Use /join-tournament <id>'
-            }];
-            break;
-          }
-          
           const challengesResponse = await listChallengesChallengesGet({
             query: {
-              tournament_id: wargamesContext.currentTournamentId
+              count: WARGAMES_CONSTANTS.CHALLENGES_PAGE_SIZE
             },
             requiresAuth: true
           });
           
-          if (challengesResponse.data) {
-            results = [
-              {
-                type: 'system',
-                text: `=== CHALLENGES IN ${wargamesContext.tournamentName.toUpperCase()} ===`
-              },
-              ...challengesResponse.data.map(challenge => ({
-                type: 'system',
-                text: `[${challenge.id}] ${challenge.name} - ${challenge.description || 'No description'}`
-              }))
-            ];
+          if (challengesResponse.data && challengesResponse.data.length > 0) {
+            // Group challenges by tournament_name
+            const challengesByTournament = {};
+            challengesResponse.data.forEach(item => {
+              const tournamentName = item.tournament_name;
+              if (!challengesByTournament[tournamentName]) {
+                challengesByTournament[tournamentName] = [];
+              }
+              challengesByTournament[tournamentName].push(item.challenge);
+            });
             
-            if (challengesResponse.data.length === 0) {
+            results = [{
+              type: 'system',
+              text: '=== ALL AVAILABLE CHALLENGES ==='
+            }];
+            
+            // Format output by tournament
+            Object.entries(challengesByTournament).forEach(([tournamentName, challenges]) => {
               results.push({
                 type: 'system',
-                text: 'No challenges available in this tournament.'
+                text: ''  // Empty line before tournament
               });
-            }
+              results.push({
+                type: 'system',
+                text: tournamentName.toUpperCase()
+              });
+              results.push({
+                type: 'system',
+                text: ''  // Empty line after tournament name
+              });
+              
+              challenges.forEach(challenge => {
+                results.push({
+                  type: 'system',
+                  text: `[${challenge.id}] ${challenge.name}`
+                });
+              });
+            });
+          } else {
+            results = [{
+              type: 'system',
+              text: 'No challenges available.'
+            }];
           }
           break;
           
@@ -255,10 +228,13 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
             if (startResponse.data || (startResponse.response && startResponse.response.ok)) {
               // Get challenge details
               const challengesResponse = await listChallengesChallengesGet({
+                query: {
+                  count: WARGAMES_CONSTANTS.CHALLENGES_PAGE_SIZE
+                },
                 requiresAuth: true
               });
               
-              const challenge = challengesResponse.data?.find(c => c.id === challengeId);
+              const challenge = challengesResponse.data?.find(item => item.challenge.id === challengeId)?.challenge;
               const challengeName = challenge?.name || `Challenge ${challengeId}`;
               
               // Update context (assume can contribute for new challenge)

@@ -4,11 +4,9 @@ import ChallengeCard from './ChallengeCard';
 const TournamentSection = ({
   tournament,
   challenges,
-  challengeContexts,
+  userInfo,
+  getChallengeContextFromUserInfo,
   onChallengeAction,
-  onLoadMore,
-  hasMore,
-  loadingMore,
   session,
   startingChallenge
 }) => {
@@ -23,42 +21,12 @@ const TournamentSection = ({
               <ChallengeCard
                 key={challenge.id}
                 challenge={challenge}
-                context={challengeContexts[challenge.id]}
+                context={getChallengeContextFromUserInfo(challenge.id, userInfo)}
                 onAction={onChallengeAction}
                 session={session}
                 isStarting={startingChallenge}
               />
             ))}
-            
-            {hasMore && (
-              <div className="load-more-card">
-                <button 
-                  className="load-more-button"
-                  onClick={onLoadMore}
-                  disabled={loadingMore}
-                >
-                  {loadingMore ? (
-                    <>
-                      <div className="loading-spinner small"></div>
-                      <span>Loading...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Load More</span>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path
-                          d="M9 18l6-6-6-6"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </>
-                  )}
-                </button>
-              </div>
-            )}
           </>
         ) : (
           <div className="no-challenges">

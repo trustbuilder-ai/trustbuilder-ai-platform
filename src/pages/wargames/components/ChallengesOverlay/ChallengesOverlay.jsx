@@ -1,186 +1,135 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import { useAuth } from '../../../../hooks/useAuth';
-import { useApiData } from '../../../../hooks/useApiData';
-import { usePaginatedData } from '../../../../hooks/usePaginatedData';
 import TournamentSection from './TournamentSection';
 import {
-  listTournamentsTournamentsGet,
   listChallengesChallengesGet,
-  joinTournamentTournamentsTournamentIdJoinPost,
   startChallengeChallengesChallengeIdStartPost,
-  getChallengeContextChallengesChallengeIdContextGet
+  getCurrentUserInfoUsersMeGet
 } from '../../../../backend_client/sdk.gen';
+import { WARGAMES_CONSTANTS } from '../../../../constants/wargames';
 import './ChallengesOverlay.css';
+
+// Helper function to derive challenge context from UserInfo data
+const getChallengeContextFromUserInfo = (challengeId, userInfo) => {
+  if (!userInfo) return null;
+  
+  // Find the challenge context in active_challenge_contexts
+  const activeContext = userInfo.active_challenge_contexts?.find(
+    ctx => ctx.challenge_id === challengeId
+  );
+  
+  // Find the evaluation result in eval_results
+  const evalResult = userInfo.eval_results?.find(
+    result => result.challenge_id === challengeId
+  );
+  
+  // If no active context, challenge hasn't been started
+  if (!activeContext) return null;
+  
+  // Build a context object that matches the expected structure
+  return {
+    user_challenge_context: activeContext,
+    eval_result: evalResult || null
+  };
+};
 
 const ChallengesOverlay = ({ isOpen, onClose, theme, wargamesContext, onSelectChallenge }) => {
   const { session } = useAuth();
   const [pendingChallengeId, setPendingChallengeId] = useState(null);
-  const [challengeContexts, setChallengeContexts] = useState({});
-  const [loadingContexts, setLoadingContexts] = useState({});
   const [startingChallenge, setStartingChallenge] = useState(false);
-  const [tournamentChallenges, setTournamentChallenges] = useState({});
-  const [tournamentPages, setTournamentPages] = useState({});
-  const [loadingMore, setLoadingMore] = useState({});
-  const [contextLoadAttempted, setContextLoadAttempted] = useState({});
+  
+  // Simplified state
+  const [allChallengesData, setAllChallengesData] = useState([]); // Store full ChallengesPublic objects
+  const [groupedChallenges, setGroupedChallenges] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [userInfo, setUserInfo] = useState(null); // Store user info from single API call
+  const [loadingUserInfo, setLoadingUserInfo] = useState(false);
 
-  // Load all tournaments
-  const { data: tournaments, loading: tournamentsLoading } = useApiData(
-    listTournamentsTournamentsGet,
-    { requiresAuth: false, enabled: isOpen }
-  );
-
-  // Load initial challenges for each tournament
+  // Load all challenges with single API call
   useEffect(() => {
-    const loadInitialChallenges = async () => {
-      if (!tournaments || tournaments.length === 0) return;
-
-      // Clear previous data when reopening
-      setTournamentChallenges({});
-      setTournamentPages({});
-      setChallengeContexts({});
-      setLoadingContexts({});
-      setContextLoadAttempted({});
-
-      for (const tournament of tournaments) {
-        try {
-          const response = await listChallengesChallengesGet({
-            query: {
-              tournament_id: tournament.id,
-              page_index: 0,
-              count: 10
-            }
-          });
-
-          if (response.data) {
-            setTournamentChallenges(prev => ({
-              ...prev,
-              [tournament.id]: response.data
-            }));
-            setTournamentPages(prev => ({
-              ...prev,
-              [tournament.id]: 0
-            }));
-          }
-        } catch (error) {
-          console.error(`Error loading challenges for tournament ${tournament.id}:`, error);
-        }
-      }
-    };
-
-    if (isOpen && tournaments) {
-      loadInitialChallenges();
-    }
-  }, [tournaments, isOpen]);
-
-  // Load challenge contexts for authenticated users
-  useEffect(() => {
-    const loadChallengeContexts = async () => {
-      if (!session || !tournamentChallenges || !isOpen) return;
-
-      const allChallenges = Object.values(tournamentChallenges).flat();
+    const loadChallenges = async () => {
+      if (!isOpen) return;
       
-      for (const challenge of allChallenges) {
-        // Only try to load context once per challenge
-        if (!contextLoadAttempted[challenge.id]) {
-          setContextLoadAttempted(prev => ({ ...prev, [challenge.id]: true }));
-          setLoadingContexts(prev => ({ ...prev, [challenge.id]: true }));
+      setIsLoading(true);
+      try {
+        const response = await listChallengesChallengesGet({
+          query: {
+            count: WARGAMES_CONSTANTS.CHALLENGES_PAGE_SIZE,
+            page_index: 0
+          },
+          requiresAuth: false
+        });
+        
+        if (response.data) {
+          // Store the full data for later use
+          setAllChallengesData(response.data);
           
-          try {
-            const response = await getChallengeContextChallengesChallengeIdContextGet({
-              path: { challenge_id: challenge.id },
-              requiresAuth: true
-            });
-
-            if (response.data) {
-              setChallengeContexts(prev => ({
-                ...prev,
-                [challenge.id]: response.data
-              }));
+          // Group by tournament_name
+          const grouped = response.data.reduce((acc, item) => {
+            const tournamentName = item.tournament_name;
+            if (!acc[tournamentName]) {
+              acc[tournamentName] = [];
             }
-          } catch (error) {
-            // Challenge may not be started yet, mark as null
-            setChallengeContexts(prev => ({
-              ...prev,
-              [challenge.id]: null
-            }));
-          } finally {
-            setLoadingContexts(prev => ({ ...prev, [challenge.id]: false }));
-          }
+            acc[tournamentName].push(item.challenge);
+            return acc;
+          }, {});
+          
+          setGroupedChallenges(grouped);
         }
+      } catch (error) {
+        console.error('Error loading challenges:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    loadChallengeContexts();
-  }, [session, tournamentChallenges, contextLoadAttempted, isOpen]);
+    loadChallenges();
+  }, [isOpen]);
 
-  const loadMoreChallenges = useCallback(async (tournamentId) => {
-    setLoadingMore(prev => ({ ...prev, [tournamentId]: true }));
-    
-    try {
-      const currentPage = (tournamentPages[tournamentId] || 0) + 1;
-      const response = await listChallengesChallengesGet({
-        query: {
-          tournament_id: tournamentId,
-          page_index: currentPage,
-          count: 10
+  // Load user info for authenticated users
+  useEffect(() => {
+    const loadUserInfo = async () => {
+      if (!session || !isOpen) return;
+
+      setLoadingUserInfo(true);
+      try {
+        const response = await getCurrentUserInfoUsersMeGet({
+          requiresAuth: true
+        });
+
+        if (response.data) {
+          setUserInfo(response.data);
         }
-      });
-
-      if (response.data && response.data.length > 0) {
-        setTournamentChallenges(prev => ({
-          ...prev,
-          [tournamentId]: [...(prev[tournamentId] || []), ...response.data]
-        }));
-        setTournamentPages(prev => ({
-          ...prev,
-          [tournamentId]: currentPage
-        }));
+      } catch (error) {
+        console.error('Error loading user info:', error);
+        setUserInfo(null);
+      } finally {
+        setLoadingUserInfo(false);
       }
-    } catch (error) {
-      console.error(`Error loading more challenges for tournament ${tournamentId}:`, error);
-    } finally {
-      setLoadingMore(prev => ({ ...prev, [tournamentId]: false }));
-    }
-  }, [tournamentPages]);
+    };
+
+    loadUserInfo();
+  }, [session, isOpen]);
 
   const handleStartChallenge = useCallback(async (challengeId) => {
     setStartingChallenge(true);
     
     try {
-      // Find the challenge and its tournament
-      let targetChallenge = null;
-      let tournamentId = null;
+      // Find the challenge data from our stored data
+      const challengeData = allChallengesData.find(item => item.challenge.id === challengeId);
       
-      for (const [tId, challenges] of Object.entries(tournamentChallenges)) {
-        const challenge = challenges.find(c => c.id === challengeId);
-        if (challenge) {
-          targetChallenge = challenge;
-          tournamentId = parseInt(tId);
-          break;
-        }
-      }
-
-      if (!targetChallenge || !tournamentId) {
+      if (!challengeData) {
         throw new Error('Challenge not found');
       }
-
-      // Join tournament first (required)
-      console.log('Joining tournament:', tournamentId);
-      const joinResponse = await joinTournamentTournamentsTournamentIdJoinPost({
-        path: { tournament_id: tournamentId },
-        requiresAuth: true
-      });
-
-      if (joinResponse.error) {
-        // Tournament might already be joined, continue anyway
-        console.log('Tournament join response:', joinResponse.error);
-      }
-
-      // Update context with tournament info
-      const tournament = tournaments.find(t => t.id === tournamentId);
-      if (tournament) {
-        wargamesContext.joinTournament(tournamentId, tournament.name);
+      
+      const targetChallenge = challengeData.challenge;
+      const tournamentName = challengeData.tournament_name;
+      
+      // Update context with tournament info (backend auto-joins tournament when challenge starts)
+      const tournamentId = targetChallenge.tournament_id;
+      if (tournamentId) {
+        wargamesContext.joinTournament(tournamentId, tournamentName);
       }
 
       // Start the challenge
@@ -216,7 +165,7 @@ const ChallengesOverlay = ({ isOpen, onClose, theme, wargamesContext, onSelectCh
     } finally {
       setStartingChallenge(false);
     }
-  }, [tournamentChallenges, tournaments, wargamesContext, onSelectChallenge, onClose]);
+  }, [allChallengesData, wargamesContext, onSelectChallenge, onClose]);
 
   const handleChallengeAction = useCallback((challengeId) => {
     if (!session) {
@@ -276,30 +225,27 @@ const ChallengesOverlay = ({ isOpen, onClose, theme, wargamesContext, onSelectCh
         </div>
 
         <div className="challenges-overlay-body">
-          {tournamentsLoading ? (
+          {isLoading || (session && loadingUserInfo) ? (
             <div className="challenges-loading">
               <div className="loading-spinner"></div>
-              <p>Loading tournaments...</p>
+              <p>{isLoading ? 'Loading challenges...' : 'Loading user data...'}</p>
             </div>
-          ) : tournaments && tournaments.length > 0 ? (
-            tournaments.map(tournament => (
+          ) : Object.keys(groupedChallenges).length > 0 ? (
+            Object.entries(groupedChallenges).map(([tournamentName, challenges]) => (
               <TournamentSection
-                key={tournament.id}
-                tournament={tournament}
-                challenges={tournamentChallenges[tournament.id] || []}
-                challengeContexts={challengeContexts}
+                key={tournamentName}
+                tournament={{ name: tournamentName }}
+                challenges={challenges}
+                userInfo={userInfo}
+                getChallengeContextFromUserInfo={getChallengeContextFromUserInfo}
                 onChallengeAction={handleChallengeAction}
-                onLoadMore={() => loadMoreChallenges(tournament.id)}
-                hasMore={(tournamentChallenges[tournament.id]?.length || 0) % 10 === 0 && 
-                        (tournamentChallenges[tournament.id]?.length || 0) > 0}
-                loadingMore={loadingMore[tournament.id]}
                 session={session}
                 startingChallenge={startingChallenge}
               />
             ))
           ) : (
             <div className="no-tournaments">
-              <p>No tournaments available</p>
+              <p>No challenges available</p>
             </div>
           )}
         </div>

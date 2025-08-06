@@ -470,6 +470,26 @@ const WargamesChallengeContent = () => {
     setShowEvalConfirmModal(true);
   };
   
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+      // The session state will automatically update via onAuthStateChange
+      // Clear any challenge-related state
+      wargamesContext.clearState();
+      setMessages([{
+        type: 'system',
+        text: 'Logged out successfully.'
+      }]);
+    } catch (error) {
+      console.error('Error logging out:', error);
+      setMessages(prev => [...prev, {
+        type: 'error',
+        text: 'Failed to log out. Please try again.'
+      }]);
+    }
+  };
+  
   // Handle challenge selection from overlay
   const handleChallengeSelect = useCallback(async (challengeId, challengeName, challengeDescription) => {
     console.log('Challenge selected from overlay:', challengeId, challengeName);
@@ -702,6 +722,18 @@ const WargamesChallengeContent = () => {
               <span className="text-xs text-gray-500 uppercase">TrustBuilder</span>
             </div>
             <div className="flex items-center space-x-4">
+              {session && (
+                <>
+                  <span className="text-sm text-gray-400">{session.user.email}</span>
+                  <button 
+                    onClick={handleLogout}
+                    className="text-sm text-gray-400 hover:text-red-400 transition-colors"
+                  >
+                    Logout
+                  </button>
+                  <span className="text-gray-400">|</span>
+                </>
+              )}
               <Link to="https://trb.ai.localhost" className="text-sm text-gray-400 hover:text-green-400 transition-colors">
                 ← Back to Landing
               </Link>
@@ -719,7 +751,6 @@ const WargamesChallengeContent = () => {
           <div className="flex-1 flex flex-col gap-10">
             <ModelOutput 
               messages={getDisplayMessages()} 
-              loading={commandExecuting}
               error={null}
             />
             

@@ -5,6 +5,7 @@ import JoinGame from "./JoinGame";
 import ToolsPanel from "./ToolsPanel";
 import ModeSelector from "./ModeSelector";
 import EvalPanel from "./EvalPanel";
+import FeedbackPanel from "./FeedbackPanel";
 
 const Options = ({ 
   session,
@@ -69,6 +70,8 @@ const Options = ({
         onRunEval={onRunEval}
         onViewResults={onViewResults}
       />
+      
+      <FeedbackPanel />
     </div>
   );
 };

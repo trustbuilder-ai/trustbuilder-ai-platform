@@ -5,7 +5,6 @@
 export const COMMAND_TYPES = {
   HELP: 'help',
   LIST_TOURNAMENTS: 'list-tournaments',
-  JOIN_TOURNAMENT: 'join-tournament',
   LIST_CHALLENGES: 'list-challenges',
   START_CHALLENGE: 'start-challenge'
 };
@@ -30,18 +29,9 @@ export const COMMANDS = [
     examples: ['/list-tournaments']
   },
   {
-    name: '/join-tournament',
-    type: COMMAND_TYPES.JOIN_TOURNAMENT,
-    description: 'Join a specific tournament',
-    usage: '/join-tournament <tournament_id>',
-    requiresArgument: true,
-    argumentHint: '<tournament_id>',
-    examples: ['/join-tournament 1', '/join-tournament 42']
-  },
-  {
     name: '/list-challenges',
     type: COMMAND_TYPES.LIST_CHALLENGES,
-    description: 'List challenges in the current tournament',
+    description: 'List all available challenges',
     usage: '/list-challenges',
     requiresArgument: false,
     argumentHint: null,
