@@ -21,7 +21,7 @@ const JoinGame = ({
     <div className="mb-8">
       <h3 className="text-sm font-semibold text-gray-400 mb-4 flex items-center">
         <i data-lucide="gamepad-2" className="w-4 h-4 mr-2"></i>
-        JOIN GAME
+        JOIN
       </h3>
       <div className="space-y-3">
         {session ? (
@@ -34,7 +34,7 @@ const JoinGame = ({
               readOnly
             />
             <button className="cyber-button w-full text-sm">
-              JOIN SESSION
+              SIGN IN
             </button>
           </>
         ) : showOtpInput ? (
@@ -77,7 +77,7 @@ const JoinGame = ({
               onClick={handleJoinSession}
               disabled={joinGameLoading}
             >
-              {joinGameLoading ? "Sending..." : "JOIN SESSION"}
+              {joinGameLoading ? "Sending..." : "SIGN IN"}
             </button>
           </>
         )}

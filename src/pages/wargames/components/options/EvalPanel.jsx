@@ -2,7 +2,7 @@ import React from "react";
 
 const EvalPanel = ({ onRunEval, onViewResults }) => {
   return (
-    <div>
+    <div className="mb-8">
       <h3 className="text-sm font-semibold text-gray-400 mb-4 flex items-center">
         <i data-lucide="bar-chart-3" className="w-4 h-4 mr-2"></i>
         EVAL
@@ -14,12 +14,12 @@ const EvalPanel = ({ onRunEval, onViewResults }) => {
         >
           Run Evaluation
         </button>
-        <button 
+        {/* <button 
           className="option-button w-full text-left"
           onClick={onViewResults}
         >
           View Results
-        </button>
+        </button> */}
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 
-const ModelOutput = ({ messages, loading, error }) => {
+const ModelOutput = ({ messages, error }) => {
   const messagesEndRef = useRef(null);
   const containerRef = useRef(null);
   const [userHasScrolled, setUserHasScrolled] = useState(false);
@@ -94,11 +94,7 @@ const ModelOutput = ({ messages, loading, error }) => {
         onScroll={handleScroll}
         className="bg-black/50 rounded p-6 min-h-[450px] max-h-[550px] overflow-y-auto font-mono text-sm"
       >
-        {loading ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-green-400">Loading messages...</div>
-          </div>
-        ) : error ? (
+        {error ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-red-400">Error loading messages: {error.message}</div>
           </div>

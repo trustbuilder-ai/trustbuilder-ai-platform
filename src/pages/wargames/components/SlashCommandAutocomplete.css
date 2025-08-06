@@ -4,14 +4,12 @@
   left: 0;
   right: 0;
   margin-bottom: 8px;
-  background: rgba(0, 0, 0, 0.95);
-  border: 1px solid rgba(0, 255, 255, 0.3);
+  background: var(--wg-popover);
+  border: 1px solid var(--wg-border);
   border-radius: 8px;
   overflow: hidden;
   backdrop-filter: blur(10px);
-  box-shadow: 
-    0 -4px 20px rgba(0, 255, 255, 0.2),
-    inset 0 0 20px rgba(0, 255, 255, 0.05);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
   animation: slideUp 0.2s ease-out;
   z-index: 1000;
 }
@@ -32,19 +30,19 @@
   align-items: center;
   gap: 8px;
   padding: 12px 16px;
-  background: rgba(0, 255, 255, 0.1);
-  border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+  background: var(--wg-muted);
+  border-bottom: 1px solid var(--wg-border);
 }
 
 .header-icon {
-  color: #00ffff;
+  color: var(--wg-accent);
   font-size: 16px;
 }
 
 .header-text {
   font-size: 12px;
   font-weight: 600;
-  color: #00ffff;
+  color: var(--wg-accent);
   letter-spacing: 2px;
 }
 
@@ -58,11 +56,11 @@
 }
 
 .autocomplete-list::-webkit-scrollbar-track {
-  background: rgba(0, 255, 255, 0.1);
+  background: var(--wg-muted);
 }
 
 .autocomplete-list::-webkit-scrollbar-thumb {
-  background: rgba(0, 255, 255, 0.3);
+  background: var(--wg-border);
   border-radius: 2px;
 }
 
@@ -77,13 +75,13 @@
 }
 
 .autocomplete-item:hover {
-  background: rgba(0, 255, 255, 0.05);
-  border-left-color: rgba(0, 255, 255, 0.3);
+  background: var(--wg-muted);
+  border-left-color: var(--wg-border);
 }
 
 .autocomplete-item.selected {
-  background: rgba(0, 255, 255, 0.15);
-  border-left-color: #00ffff;
+  background: var(--wg-secondary);
+  border-left-color: var(--wg-accent);
 }
 
 .command-info {
@@ -96,17 +94,17 @@
 .command-name {
   font-family: 'Courier New', monospace;
   font-size: 14px;
-  color: #00ff00;
+  color: var(--wg-primary);
   font-weight: 500;
 }
 
 .command-description {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--wg-muted-foreground);
 }
 
 .selection-indicator {
-  color: #00ffff;
+  color: var(--wg-accent);
   font-size: 12px;
   animation: pulse 1s ease-in-out infinite;
 }
@@ -122,13 +120,13 @@
 
 .autocomplete-footer {
   padding: 8px 16px;
-  background: rgba(0, 0, 0, 0.5);
-  border-top: 1px solid rgba(0, 255, 255, 0.2);
+  background: var(--wg-muted);
+  border-top: 1px solid var(--wg-border);
 }
 
 .footer-hint {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--wg-muted-foreground);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -139,8 +137,8 @@
   padding: 2px 6px;
   font-size: 10px;
   font-family: 'Courier New', monospace;
-  background: rgba(0, 255, 255, 0.1);
-  border: 1px solid rgba(0, 255, 255, 0.3);
+  background: var(--wg-secondary);
+  border: 1px solid var(--wg-border);
   border-radius: 3px;
-  color: #00ffff;
+  color: var(--wg-secondary-foreground);
 }

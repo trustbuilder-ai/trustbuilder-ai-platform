@@ -15,7 +15,24 @@ export type Badges = {
 };
 
 /**
+ * ChallengeContextLLMResponse
+ * Represents a response from the LLM call.
+ */
+export type ChallengeContextLlmResponse = {
+    /**
+     * Remaining Message Count
+     */
+    remaining_message_count: number;
+    /**
+     * Messages
+     */
+    messages: Array<Message>;
+};
+
+/**
  * ChallengeContextResponse
+ * Represents the full message context for a challenge, including user challenge context
+ * and messages.
  */
 export type ChallengeContextResponse = {
     user_challenge_context: UserChallengeContexts;
@@ -23,6 +40,11 @@ export type ChallengeContextResponse = {
      * Messages
      */
     messages?: Array<Message>;
+    eval_result?: EvalResult | null;
+    /**
+     * Remaining Message Count
+     */
+    remaining_message_count?: number;
 };
 
 /**
@@ -53,6 +75,25 @@ export type Challenges = {
      * Evaluation Prompt
      */
     evaluation_prompt?: string | null;
+    /**
+     * System Prompt
+     */
+    system_prompt?: string | null;
+    /**
+     * Initial Llm Prompt
+     */
+    initial_llm_prompt?: string | null;
+};
+
+/**
+ * ChallengesPublic
+ */
+export type ChallengesPublic = {
+    challenge: Challenges;
+    /**
+     * Tournament Name
+     */
+    tournament_name: string;
 };
 
 /**
@@ -208,6 +249,10 @@ export type EvalResult = {
      */
     reason?: string | null;
     status: EvalStatus;
+    /**
+     * Challenge Id
+     */
+    challenge_id?: number | null;
 };
 
 /**
@@ -470,13 +515,17 @@ export type UserInfo = {
      */
     active_tournaments: Array<Tournaments>;
     /**
-     * Active Challenges
+     * Active Challenge Contexts
      */
-    active_challenges: Array<Challenges>;
+    active_challenge_contexts: Array<UserChallengeContexts>;
     /**
      * Badges
      */
     badges: Array<Badges>;
+    /**
+     * Eval Results
+     */
+    eval_results?: Array<EvalResult>;
 };
 
 /**
@@ -666,7 +715,7 @@ export type ListChallengesChallengesGetResponses = {
      * Response List Challenges Challenges Get
      * Successful Response
      */
-    200: Array<Challenges>;
+    200: Array<ChallengesPublic>;
 };
 
 export type ListChallengesChallengesGetResponse = ListChallengesChallengesGetResponses[keyof ListChallengesChallengesGetResponses];
@@ -739,7 +788,7 @@ export type AddMessageToChallengeChallengesChallengeIdAddMessagePostResponses = 
     /**
      * Successful Response
      */
-    200: ChallengeContextResponse;
+    200: ChallengeContextLlmResponse;
 };
 
 export type AddMessageToChallengeChallengesChallengeIdAddMessagePostResponse = AddMessageToChallengeChallengesChallengeIdAddMessagePostResponses[keyof AddMessageToChallengeChallengesChallengeIdAddMessagePostResponses];

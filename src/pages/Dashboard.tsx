@@ -11,6 +11,7 @@ import {
 } from "../backend_client/sdk.gen";
 import type { SelectionFilter, UserInfo, Badges, Tournaments, Challenges } from "../backend_client/types.gen";
 import { BACKEND_URL } from "../config";
+import { WARGAMES_CONSTANTS } from "../constants/wargames";
 import "./Dashboard.css";
 
 export function Dashboard() {
@@ -41,7 +42,7 @@ export function Dashboard() {
       query: {
         tournament_id: 1,
         page_index: 0,
-        count: 20,
+        count: WARGAMES_CONSTANTS.CHALLENGES_PAGE_SIZE,
       },
     },
   });

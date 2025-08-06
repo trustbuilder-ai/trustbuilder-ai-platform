@@ -9,6 +9,8 @@ import GameStatus from "./components/GameStatus";
 import ModelOutput from "./components/ModelOutput";
 import Options from "./components/options/Options";
 import SlashCommandAutocomplete from "./components/SlashCommandAutocomplete";
+import EvaluationConfirmModal from "./components/EvaluationConfirmModal";
+import ChallengesOverlay from "./components/ChallengesOverlay";
 import { parseCommand } from "./utils/commandDefinitions";
 import { WargamesProvider, useWargamesContext } from "./context/WargamesContext";
 import { 
@@ -31,12 +33,14 @@ const WargamesChallengeContent = () => {
   const [userInput, setUserInput] = useState("");
   const [gameStatus, setGameStatus] = useState({
     state: "READY",
-    players: 0,
+    players: 1,
     round: "-",
     score: "0.00"
   });
   const [messages, setMessages] = useState([]);
   const [commandExecuting, setCommandExecuting] = useState(false);
+  const [showEvalConfirmModal, setShowEvalConfirmModal] = useState(false);
+  const [showChallengesOverlay, setShowChallengesOverlay] = useState(false);
   
   
   // Get context
@@ -76,6 +80,27 @@ const WargamesChallengeContent = () => {
     
     checkActiveTournament();
   }, [session]); // Only run when session changes
+  
+  // Sync evaluation status to game status
+  useEffect(() => {
+    if (wargamesContext.evaluationStatus) {
+      setGameStatus(prev => ({
+        ...prev,
+        state: wargamesContext.evaluationStatus,
+        score: wargamesContext.evaluationStatus === "SUCCEEDED" ? "100.00" : prev.score
+      }));
+    } else if (wargamesContext.hasActiveChallenge) {
+      setGameStatus(prev => ({
+        ...prev,
+        state: "ACTIVE"
+      }));
+    } else {
+      setGameStatus(prev => ({
+        ...prev,
+        state: "READY"
+      }));
+    }
+  }, [wargamesContext.evaluationStatus, wargamesContext.hasActiveChallenge]);
   
   // Callback to handle challenge messages
   const handleChallengeMessages = useCallback((existingMessages) => {
@@ -266,15 +291,8 @@ const WargamesChallengeContent = () => {
         });
         
         if (response.data) {
-          // Check if challenge is now complete
-          const canContribute = response.data.user_challenge_context?.can_contribute ?? true;
-          if (canContribute !== wargamesContext.canContribute) {
-            wargamesContext.startChallenge(
-              wargamesContext.activeChallengeId,
-              wargamesContext.challengeName,
-              canContribute
-            );
-          }
+          // Remove loading indicator
+          setMessages(prev => prev.filter(msg => !msg.isLoading));
           
           // Get scroll position before updating
           const scrollContainer = document.querySelector('.bg-black\\/50.overflow-y-auto');
@@ -283,34 +301,19 @@ const WargamesChallengeContent = () => {
             ? scrollContainer.scrollHeight - scrollContainer.scrollTop <= scrollContainer.clientHeight + 100
             : true;
           
-          // Handle the full challenge context response
-          const messages = [];
+          // Append only new messages from the LLM response
           if (response.data.messages && response.data.messages.length > 0) {
-            // Clear existing messages and show all messages from the response
-            const allMessages = response.data.messages.map(msg => ({
+            const newMessages = response.data.messages.map(msg => ({
               type: msg.role,
               text: msg.content
             }));
-            messages.push(...allMessages);
-          } else if (response.data.user_challenge_context?.messages) {
-            // Fallback to user_challenge_context if messages not at top level
-            const contextMessages = response.data.user_challenge_context.messages;
-            const allMessages = contextMessages.map(msg => ({
-              type: msg.role,
-              text: msg.content
-            }));
-            messages.push(...allMessages);
+            setMessages(prev => [...prev, ...newMessages]);
           }
           
-          // Add completion message if challenge just completed
-          if (!canContribute && wargamesContext.canContribute) {
-            messages.push({
-              type: 'system',
-              text: 'Challenge completed! This challenge cannot accept any more messages.'
-            });
+          // Update remaining message count in context
+          if (response.data.remaining_message_count !== undefined) {
+            wargamesContext.setRemainingMessageCount(response.data.remaining_message_count);
           }
-          
-          setMessages(messages);
           
           // Restore scroll position after React re-renders
           setTimeout(() => {
@@ -325,10 +328,14 @@ const WargamesChallengeContent = () => {
         }
       } catch (error) {
         console.error('Failed to send message:', error);
-        setMessages(prev => [...prev, {
-          type: 'error',
-          text: `Failed to send message: ${error.message || 'Unknown error'}`
-        }]);
+        // Remove loading indicator and add error message
+        setMessages(prev => [
+          ...prev.filter(msg => !msg.isLoading),
+          {
+            type: 'error',
+            text: `Failed to send message: ${error.message || 'Unknown error'}`
+          }
+        ]);
       } finally {
         setCommandExecuting(false);
       }
@@ -441,8 +448,8 @@ const WargamesChallengeContent = () => {
     }
   };
   
-  // Handle evaluation
-  const handleEvaluate = async () => {
+  // Handle evaluation - show confirmation modal
+  const handleEvaluate = () => {
     if (!session) {
       setMessages(prev => [...prev, {
         type: 'error',
@@ -458,6 +465,129 @@ const WargamesChallengeContent = () => {
       }]);
       return;
     }
+    
+    // Show confirmation modal
+    setShowEvalConfirmModal(true);
+  };
+  
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+      // The session state will automatically update via onAuthStateChange
+      // Clear any challenge-related state
+      wargamesContext.clearState();
+      setMessages([{
+        type: 'system',
+        text: 'Logged out successfully.'
+      }]);
+    } catch (error) {
+      console.error('Error logging out:', error);
+      setMessages(prev => [...prev, {
+        type: 'error',
+        text: 'Failed to log out. Please try again.'
+      }]);
+    }
+  };
+  
+  // Handle challenge selection from overlay
+  const handleChallengeSelect = useCallback(async (challengeId, challengeName, challengeDescription) => {
+    console.log('Challenge selected from overlay:', challengeId, challengeName);
+    
+    // Initialize messages array to control order
+    const messagesToDisplay = [];
+    
+    // Add SUCCESS message first
+    messagesToDisplay.push({
+      type: 'success',
+      text: `Started challenge: ${challengeName}`
+    });
+    
+    // Add CHALLENGE description if available
+    if (challengeDescription) {
+      messagesToDisplay.push({
+        type: 'system',
+        text: `[CHALLENGE]: ${challengeDescription}`
+      });
+    }
+    
+    // Fetch existing challenge messages
+    try {
+      const contextResponse = await getChallengeContextChallengesChallengeIdContextGet({
+        path: {
+          challenge_id: challengeId
+        },
+        requiresAuth: true
+      });
+      
+      if (contextResponse.data) {
+        // Update canContribute status
+        const canContribute = contextResponse.data.user_challenge_context?.can_contribute ?? true;
+        
+        // Update remaining message count
+        if (contextResponse.data.remaining_message_count !== undefined) {
+          wargamesContext.setRemainingMessageCount(contextResponse.data.remaining_message_count);
+        }
+        
+        // Process eval_result
+        if (contextResponse.data.eval_result) {
+          const evalResult = contextResponse.data.eval_result;
+          wargamesContext.setEvaluationStatus(evalResult.status);
+          
+          // Add evaluation messages for non-terminal states
+          if (evalResult.status === 'NOT_EVALUATED') {
+            messagesToDisplay.push({
+              type: 'system',
+              text: 'Challenge has not been evaluated yet.'
+            });
+          } else if (!['SUCCEEDED', 'FAILED', 'ERRORED'].includes(evalResult.status)) {
+            messagesToDisplay.push({
+              type: 'system',
+              text: `Evaluation Status: ${evalResult.status}`
+            });
+          }
+          
+          // Add reason if provided
+          if (evalResult.reason) {
+            messagesToDisplay.push({
+              type: 'system',
+              text: `Reason: ${evalResult.reason}`
+            });
+          }
+        }
+        
+        if (contextResponse.data.messages && contextResponse.data.messages.length > 0) {
+          console.log('Found existing messages:', contextResponse.data.messages.length);
+          // Filter out system messages from the context endpoint
+          // Only include user and assistant messages
+          const existingMessages = contextResponse.data.messages
+            .filter(msg => msg.role !== 'system')
+            .map(msg => ({
+              type: msg.role,
+              text: msg.content
+            }));
+          messagesToDisplay.push(...existingMessages);
+        }
+        
+        // Add completion message if challenge is complete
+        if (!canContribute) {
+          messagesToDisplay.push({
+            type: 'system',
+            text: 'This challenge has been completed and cannot accept new messages.'
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching challenge context:', err);
+    }
+    
+    // Set all messages at once in the correct order
+    setMessages(messagesToDisplay);
+  }, [wargamesContext]);
+  
+  // Confirm evaluation and actually run it
+  const confirmEvaluation = async () => {
+    setShowEvalConfirmModal(false);
     
     setMessages(prev => [...prev, {
       type: 'system',
@@ -485,6 +615,9 @@ const WargamesChallengeContent = () => {
         
         // Handle the EvalResult response
         const evalResult = response.data;
+        
+        // Update evaluation status in context
+        wargamesContext.setEvaluationStatus(evalResult.status);
         
         // Display status
         switch (evalResult.status) {
@@ -589,6 +722,18 @@ const WargamesChallengeContent = () => {
               <span className="text-xs text-gray-500 uppercase">TrustBuilder</span>
             </div>
             <div className="flex items-center space-x-4">
+              {session && (
+                <>
+                  <span className="text-sm text-gray-400">{session.user.email}</span>
+                  <button 
+                    onClick={handleLogout}
+                    className="text-sm text-gray-400 hover:text-red-400 transition-colors"
+                  >
+                    Logout
+                  </button>
+                  <span className="text-gray-400">|</span>
+                </>
+              )}
               <Link to="https://trb.ai.localhost" className="text-sm text-gray-400 hover:text-green-400 transition-colors">
                 ← Back to Landing
               </Link>
@@ -606,7 +751,6 @@ const WargamesChallengeContent = () => {
           <div className="flex-1 flex flex-col gap-10">
             <ModelOutput 
               messages={getDisplayMessages()} 
-              loading={commandExecuting}
               error={null}
             />
             
@@ -674,16 +818,13 @@ const WargamesChallengeContent = () => {
               handleOtpVerification={handleOtpVerification}
               setShowOtpInput={setShowOtpInput}
               setOtpMessage={setOtpMessage}
-              onHistoryClick={() => console.log('History clicked')}
-              onExportClick={() => console.log('Export clicked')}
-              onSettingsClick={() => console.log('Settings clicked')}
-              onHelpClick={() => console.log('Help clicked')}
+              onChallengesClick={() => setShowChallengesOverlay(true)}
               onModeChange={(mode) => console.log('Mode changed to:', mode)}
               onRunEval={handleEvaluate}
               onViewResults={handleEvaluate}
             />
 
-            <GameStatus status={gameStatus} />
+            <GameStatus status={gameStatus} remainingMessageCount={wargamesContext.remainingMessageCount} />
           </div>
         </div>
       </main>
@@ -717,6 +858,23 @@ const WargamesChallengeContent = () => {
           </div>
         </div>
       </footer>
+
+      {/* Evaluation Confirmation Modal */}
+      <EvaluationConfirmModal
+        isOpen={showEvalConfirmModal}
+        onConfirm={confirmEvaluation}
+        onCancel={() => setShowEvalConfirmModal(false)}
+        theme={theme}
+      />
+      
+      {/* Challenges Overlay */}
+      <ChallengesOverlay
+        isOpen={showChallengesOverlay}
+        onClose={() => setShowChallengesOverlay(false)}
+        theme={theme}
+        wargamesContext={wargamesContext}
+        onSelectChallenge={handleChallengeSelect}
+      />
 
     </div>
   );

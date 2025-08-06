@@ -1,6 +1,6 @@
 import React from "react";
 
-const ToolsPanel = ({ onHistoryClick, onExportClick, onSettingsClick, onHelpClick }) => {
+const ToolsPanel = ({ onChallengesClick }) => {
   return (
     <div className="mb-8">
       <h3 className="text-sm font-semibold text-gray-400 mb-4 flex items-center">
@@ -9,28 +9,10 @@ const ToolsPanel = ({ onHistoryClick, onExportClick, onSettingsClick, onHelpClic
       </h3>
       <div className="grid grid-cols-2 gap-3">
         <button 
-          className="option-button"
-          onClick={onHistoryClick}
+          className="option-button col-span-2"
+          onClick={onChallengesClick}
         >
-          History
-        </button>
-        <button 
-          className="option-button"
-          onClick={onExportClick}
-        >
-          Export
-        </button>
-        <button 
-          className="option-button"
-          onClick={onSettingsClick}
-        >
-          Settings
-        </button>
-        <button 
-          className="option-button"
-          onClick={onHelpClick}
-        >
-          Help
+          Challenges
         </button>
       </div>
     </div>

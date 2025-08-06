@@ -13,6 +13,7 @@ import {
   getChallengeContextChallengesChallengeIdContextGet,
   addMessageToChallengeChallengesChallengeIdAddMessagePost,
 } from "../backend_client/sdk.gen";
+import { WARGAMES_CONSTANTS } from "../constants/wargames";
 import "./Tournaments.css";
 
 export function Tournaments() {
@@ -101,7 +102,7 @@ export function Tournaments() {
       query: {
         tournament_id: selectedTournament?.id || 0,
         page_index: 0,
-        count: 50,
+        count: WARGAMES_CONSTANTS.CHALLENGES_PAGE_SIZE,
       },
     },
   });

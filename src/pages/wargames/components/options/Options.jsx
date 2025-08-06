@@ -5,6 +5,7 @@ import JoinGame from "./JoinGame";
 import ToolsPanel from "./ToolsPanel";
 import ModeSelector from "./ModeSelector";
 import EvalPanel from "./EvalPanel";
+import FeedbackPanel from "./FeedbackPanel";
 
 const Options = ({ 
   session,
@@ -23,10 +24,7 @@ const Options = ({
   handleOtpVerification,
   setShowOtpInput,
   setOtpMessage,
-  onHistoryClick,
-  onExportClick,
-  onSettingsClick,
-  onHelpClick,
+  onChallengesClick,
   onModeChange,
   onRunEval,
   onViewResults
@@ -60,10 +58,7 @@ const Options = ({
       )}
       
       <ToolsPanel 
-        onHistoryClick={onHistoryClick}
-        onExportClick={onExportClick}
-        onSettingsClick={onSettingsClick}
-        onHelpClick={onHelpClick}
+        onChallengesClick={onChallengesClick}
       />
       
       <ModeSelector 
@@ -75,6 +70,8 @@ const Options = ({
         onRunEval={onRunEval}
         onViewResults={onViewResults}
       />
+      
+      <FeedbackPanel />
     </div>
   );
 };

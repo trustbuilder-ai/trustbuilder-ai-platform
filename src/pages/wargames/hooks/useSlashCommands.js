@@ -7,12 +7,12 @@ import {
 } from '../utils/commandDefinitions';
 import {
   listTournamentsTournamentsGet,
-  joinTournamentTournamentsTournamentIdJoinPost,
   startChallengeChallengesChallengeIdStartPost,
   listChallengesChallengesGet,
   getCurrentUserInfoUsersMeGet,
   getChallengeContextChallengesChallengeIdContextGet
 } from '../../../backend_client/sdk.gen';
+import { WARGAMES_CONSTANTS } from '../../../constants/wargames';
 
 /**
  * Custom hook for managing slash commands in the Wargames interface
@@ -134,50 +134,6 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
           }
           break;
           
-        case COMMAND_TYPES.JOIN_TOURNAMENT:
-          if (!session) {
-            results = [{
-              type: 'error',
-              text: 'You must be logged in to join tournaments'
-            }];
-            break;
-          }
-          
-          const tournamentId = parseInt(args[0]);
-          if (isNaN(tournamentId)) {
-            results = [{
-              type: 'error',
-              text: 'Invalid tournament ID. Please provide a number.'
-            }];
-            break;
-          }
-          
-          const joinResponse = await joinTournamentTournamentsTournamentIdJoinPost({
-            path: {
-              tournament_id: tournamentId
-            },
-            requiresAuth: true
-          });
-          
-          if (joinResponse.data) {
-            // Get tournament details to store the name
-            const tournamentsResponse = await listTournamentsTournamentsGet({
-              requiresAuth: true
-            });
-            
-            const tournament = tournamentsResponse.data?.find(t => t.id === tournamentId);
-            const tournamentName = tournament?.name || `Tournament ${tournamentId}`;
-            
-            // Update context
-            wargamesContext.joinTournament(tournamentId, tournamentName);
-            
-            results = [{
-              type: 'success',
-              text: `Successfully joined tournament: ${tournamentName}`
-            }];
-          }
-          break;
-          
         case COMMAND_TYPES.LIST_CHALLENGES:
           if (!session) {
             results = [{
@@ -187,39 +143,56 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
             break;
           }
           
-          if (!wargamesContext.hasTournament) {
-            results = [{
-              type: 'error',
-              text: 'You must join a tournament first. Use /join-tournament <id>'
-            }];
-            break;
-          }
-          
           const challengesResponse = await listChallengesChallengesGet({
             query: {
-              tournament_id: wargamesContext.currentTournamentId
+              count: WARGAMES_CONSTANTS.CHALLENGES_PAGE_SIZE
             },
             requiresAuth: true
           });
           
-          if (challengesResponse.data) {
-            results = [
-              {
-                type: 'system',
-                text: `=== CHALLENGES IN ${wargamesContext.tournamentName.toUpperCase()} ===`
-              },
-              ...challengesResponse.data.map(challenge => ({
-                type: 'system',
-                text: `[${challenge.id}] ${challenge.name} - ${challenge.description || 'No description'}`
-              }))
-            ];
+          if (challengesResponse.data && challengesResponse.data.length > 0) {
+            // Group challenges by tournament_name
+            const challengesByTournament = {};
+            challengesResponse.data.forEach(item => {
+              const tournamentName = item.tournament_name;
+              if (!challengesByTournament[tournamentName]) {
+                challengesByTournament[tournamentName] = [];
+              }
+              challengesByTournament[tournamentName].push(item.challenge);
+            });
             
-            if (challengesResponse.data.length === 0) {
+            results = [{
+              type: 'system',
+              text: '=== ALL AVAILABLE CHALLENGES ==='
+            }];
+            
+            // Format output by tournament
+            Object.entries(challengesByTournament).forEach(([tournamentName, challenges]) => {
               results.push({
                 type: 'system',
-                text: 'No challenges available in this tournament.'
+                text: ''  // Empty line before tournament
               });
-            }
+              results.push({
+                type: 'system',
+                text: tournamentName.toUpperCase()
+              });
+              results.push({
+                type: 'system',
+                text: ''  // Empty line after tournament name
+              });
+              
+              challenges.forEach(challenge => {
+                results.push({
+                  type: 'system',
+                  text: `[${challenge.id}] ${challenge.name}`
+                });
+              });
+            });
+          } else {
+            results = [{
+              type: 'system',
+              text: 'No challenges available.'
+            }];
           }
           break;
           
@@ -255,10 +228,13 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
             if (startResponse.data || (startResponse.response && startResponse.response.ok)) {
               // Get challenge details
               const challengesResponse = await listChallengesChallengesGet({
+                query: {
+                  count: WARGAMES_CONSTANTS.CHALLENGES_PAGE_SIZE
+                },
                 requiresAuth: true
               });
               
-              const challenge = challengesResponse.data?.find(c => c.id === challengeId);
+              const challenge = challengesResponse.data?.find(item => item.challenge.id === challengeId)?.challenge;
               const challengeName = challenge?.name || `Challenge ${challengeId}`;
               
               // Update context (assume can contribute for new challenge)
@@ -266,8 +242,9 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
               wargamesContext.startChallenge(challengeId, challengeName, true);
               
               // Fetch existing challenge messages
+              let contextResponse;
               try {
-                const contextResponse = await getChallengeContextChallengesChallengeIdContextGet({
+                contextResponse = await getChallengeContextChallengesChallengeIdContextGet({
                   path: {
                     challenge_id: challengeId
                   },
@@ -279,13 +256,49 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
                   const canContribute = contextResponse.data.user_challenge_context?.can_contribute ?? true;
                   wargamesContext.startChallenge(challengeId, challengeName, canContribute);
                   
+                  // Update remaining message count
+                  if (contextResponse.data.remaining_message_count !== undefined) {
+                    wargamesContext.setRemainingMessageCount(contextResponse.data.remaining_message_count);
+                  }
+                  
+                  // Process eval_result
+                  if (contextResponse.data.eval_result) {
+                    const evalResult = contextResponse.data.eval_result;
+                    
+                    // Update evaluation status in context
+                    wargamesContext.setEvaluationStatus(evalResult.status);
+                    
+                    // Add evaluation messages for non-terminal states
+                    if (evalResult.status === 'NOT_EVALUATED') {
+                      onChallengeMessages([{
+                        type: 'system',
+                        text: 'Challenge has not been evaluated yet.'
+                      }]);
+                    } else if (!['SUCCEEDED', 'FAILED', 'ERRORED'].includes(evalResult.status)) {
+                      onChallengeMessages([{
+                        type: 'system',
+                        text: `Evaluation Status: ${evalResult.status}`
+                      }]);
+                    }
+                    
+                    // Add reason if provided
+                    if (evalResult.reason) {
+                      onChallengeMessages([{
+                        type: 'system',
+                        text: `Reason: ${evalResult.reason}`
+                      }]);
+                    }
+                  }
+                  
                   if (contextResponse.data.messages && contextResponse.data.messages.length > 0) {
                     console.log('Found existing messages:', contextResponse.data.messages.length);
-                    // Convert messages to display format
-                    const existingMessages = contextResponse.data.messages.map(msg => ({
-                      type: msg.role,
-                      text: msg.content
-                    }));
+                    // Filter out system messages and convert to display format
+                    const existingMessages = contextResponse.data.messages
+                      .filter(msg => msg.role !== 'system')
+                      .map(msg => ({
+                        type: msg.role,
+                        text: msg.content
+                      }));
                     onChallengeMessages(existingMessages);
                   }
                   
@@ -304,10 +317,15 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
               results = [{
                 type: 'success',
                 text: `Started challenge: ${challengeName}`
-              }, {
-                type: 'system',
-                text: 'You can now send messages to interact with the challenge.'
               }];
+              
+              // Add challenge description if available
+              if (challenge?.description) {
+                results.push({
+                  type: 'system',
+                  text: `[CHALLENGE]: ${challenge.description}`
+                });
+              }
             } else {
               // Handle case where response doesn't have data
               console.error('Start challenge response missing data:', startResponse);
@@ -345,10 +363,11 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
                       console.log('Challenge already active, updating context');
                       // Need to get canContribute status
                       let canContribute = true;
+                      let contextResponse;
                       
                       // Fetch existing challenge messages
                       try {
-                        const contextResponse = await getChallengeContextChallengesChallengeIdContextGet({
+                        contextResponse = await getChallengeContextChallengesChallengeIdContextGet({
                           path: {
                             challenge_id: challengeId
                           },
@@ -359,13 +378,49 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
                           // Get canContribute status
                           canContribute = contextResponse.data.user_challenge_context?.can_contribute ?? true;
                           
+                          // Update remaining message count
+                          if (contextResponse.data.remaining_message_count !== undefined) {
+                            wargamesContext.setRemainingMessageCount(contextResponse.data.remaining_message_count);
+                          }
+                          
+                          // Process eval_result
+                          if (contextResponse.data.eval_result) {
+                            const evalResult = contextResponse.data.eval_result;
+                            
+                            // Update evaluation status in context
+                            wargamesContext.setEvaluationStatus(evalResult.status);
+                            
+                            // Add evaluation messages for non-terminal states
+                            if (evalResult.status === 'NOT_EVALUATED') {
+                              onChallengeMessages([{
+                                type: 'system',
+                                text: 'Challenge has not been evaluated yet.'
+                              }]);
+                            } else if (!['SUCCEEDED', 'FAILED', 'ERRORED'].includes(evalResult.status)) {
+                              onChallengeMessages([{
+                                type: 'system',
+                                text: `Evaluation Status: ${evalResult.status}`
+                              }]);
+                            }
+                            
+                            // Add reason if provided
+                            if (evalResult.reason) {
+                              onChallengeMessages([{
+                                type: 'system',
+                                text: `Reason: ${evalResult.reason}`
+                              }]);
+                            }
+                          }
+                          
                           if (contextResponse.data.messages && contextResponse.data.messages.length > 0) {
                             console.log('Found existing messages:', contextResponse.data.messages.length);
-                            // Convert messages to display format
-                            const existingMessages = contextResponse.data.messages.map(msg => ({
-                              type: msg.role,
-                              text: msg.content
-                            }));
+                            // Filter out system messages and convert to display format
+                            const existingMessages = contextResponse.data.messages
+                              .filter(msg => msg.role !== 'system')
+                              .map(msg => ({
+                                type: msg.role,
+                                text: msg.content
+                              }));
                             onChallengeMessages(existingMessages);
                           }
                         }
@@ -381,12 +436,15 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
                         text: `Challenge already active: ${activeChallenge.name}`
                       }];
                       
-                      if (canContribute) {
+                      // Add challenge description if available  
+                      if (activeChallenge.description) {
                         results.push({
                           type: 'system',
-                          text: 'You can now send messages to interact with the challenge.'
+                          text: `[CHALLENGE]: ${activeChallenge.description}`
                         });
-                      } else {
+                      }
+                      
+                      if (!canContribute) {
                         results.push({
                           type: 'system',
                           text: 'This challenge has been completed and cannot accept new messages.'
