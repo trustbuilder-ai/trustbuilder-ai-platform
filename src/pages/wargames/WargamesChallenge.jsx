@@ -21,6 +21,7 @@ import {
   getChallengeContextChallengesChallengeIdContextGet,
   evaluateChallengeContextChallengesChallengeIdEvaluateGet
 } from "../../backend_client/sdk.gen";
+import "./tailwind.css";
 import "./WargamesChallenge.css";
 
 const WargamesChallengeContent = () => {
@@ -161,7 +162,7 @@ const WargamesChallengeContent = () => {
     // Create and add new theme link
     const themeLink = document.createElement('link');
     themeLink.rel = 'stylesheet';
-    themeLink.href = `/src/pages/wargames/themes/${theme}.css`;
+    themeLink.href = `${import.meta.env.BASE_URL}src/pages/wargames/themes/${theme}.css`;
     themeLink.setAttribute('data-wargames-theme', theme);
     
     // Add to head

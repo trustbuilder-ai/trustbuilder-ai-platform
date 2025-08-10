@@ -5,26 +5,8 @@ const useWargamesScripts = () => {
     // Track loaded scripts to avoid duplicates
     const loadedScripts = [];
 
-    // Load Tailwind CSS
-    const loadTailwind = () => {
-      if (!document.querySelector('script[src*="tailwindcss.com"]')) {
-        const script = document.createElement('script');
-        script.src = 'https://cdn.tailwindcss.com';
-        script.async = true;
-        document.head.appendChild(script);
-        loadedScripts.push(script);
-        
-        // Configure Tailwind to only apply to wargames container
-        script.onload = () => {
-          if (window.tailwind && window.tailwind.config) {
-            window.tailwind.config = {
-              ...window.tailwind.config,
-              important: '.wargames-challenge-container',
-            };
-          }
-        };
-      }
-    };
+    // Tailwind CSS is now loaded as a project dependency
+    // No need to load it via CDN anymore
 
     // Load Flowbite
     const loadFlowbite = () => {
@@ -85,7 +67,6 @@ const useWargamesScripts = () => {
 
     // Load all scripts
     loadFonts();
-    loadTailwind();
     loadFlowbite();
     loadLucide();
 
