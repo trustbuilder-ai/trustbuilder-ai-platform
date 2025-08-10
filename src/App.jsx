@@ -4,7 +4,7 @@ import RootLayout from "./layouts/RootLayout";
 import ConsoleLayout from "./layouts/ConsoleLayout";
 import WargamesLayout from "./layouts/WargamesLayout";
 import Home from "./pages/Home";
-import Wargames from "./pages/Wargames";
+import WargamesDashboard from "./pages/Wargames";
 import Models from "./pages/Models";
 import RedTeaming from "./pages/RedTeaming";
 import Dashboard from "./pages/Dashboard";
@@ -33,7 +33,7 @@ function App() {
           <Route path="/console" element={<ConsoleLayout />}>
             <Route index element={<Home />} />
             <Route path="dashboard" element={<Dashboard />} />
-            <Route path="wargames" element={<Wargames />} />
+            <Route path="wargames-dashboard" element={<WargamesDashboard />} />
             <Route path="models" element={<Models />} />
             <Route path="redteaming" element={<RedTeaming />} />
             <Route path="tournaments" element={<Tournaments />} />

@@ -5,17 +5,17 @@ import "./SearchBar.css";
 const PAGES = [
   { path: "/", name: "Home", keywords: ["home", "dashboard", "main"] },
   {
-    path: "/wargames",
-    name: "Wargames",
+    path: "/console/wargames-dashboard",
+    name: "Wargames Dashboard",
     keywords: ["war games", "wargame", "simulation", "security testing"],
   },
   {
-    path: "/models",
+    path: "/console/models",
     name: "Models",
     keywords: ["ai models", "machine learning", "ml", "neural networks"],
   },
   {
-    path: "/redteaming",
+    path: "/console/redteaming",
     name: "RedTeaming",
     keywords: ["red team", "red teaming", "security", "penetration testing"],
   },

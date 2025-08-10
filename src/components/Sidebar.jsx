@@ -6,7 +6,7 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
   const navItems = [
     { path: "/console/dashboard", name: "Dashboard", icon: "📊" },
     { path: "/console/tournaments", name: "Tournaments", icon: "🏆" },
-    { path: "/console/wargames", name: "Wargames", icon: "🎯" },
+    { path: "/console/wargames-dashboard", name: "Wargames", icon: "🎯" },
     { path: "/console/models", name: "Models", icon: "🤖" },
     { path: "/console/redteaming", name: "RedTeaming", icon: "🛡️" },
     { path: "/console/challenge-debug", name: "Debug", icon: "🔍" },

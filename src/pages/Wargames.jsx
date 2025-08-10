@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { ProtectedCard } from "../components/ProtectedCard";
 import "./Pages.css";
 
-const Wargames = () => {
+const WargamesDashboard = () => {
   return (
     <div className="page-content">
       <h1>Wargames</h1>
@@ -88,4 +88,4 @@ const Wargames = () => {
   );
 };
 
-export default Wargames;
+export default WargamesDashboard;
