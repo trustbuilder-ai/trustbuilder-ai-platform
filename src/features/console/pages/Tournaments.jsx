@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useApiData, usePaginatedData } from "../hooks";
-import { ProtectedCard } from "../components/ProtectedCard";
+import { useApiData, usePaginatedData } from "../../../shared/hooks";
+import { ProtectedCard } from "../../../shared/components/ProtectedCard";
 import { DataCard } from "../components/DataCard";
 import {
   listTournamentsTournamentsGet,
@@ -12,8 +12,8 @@ import {
   getCurrentUserInfoUsersMeGet,
   getChallengeContextChallengesChallengeIdContextGet,
   addMessageToChallengeChallengesChallengeIdAddMessagePost,
-} from "../backend_client/sdk.gen";
-import { WARGAMES_CONSTANTS } from "../constants/wargames";
+} from "../../../backend_client/sdk.gen";
+import { WARGAMES_CONSTANTS } from "../../../shared/constants/wargames";
 import "./Tournaments.css";
 
 export function Tournaments() {

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { useApiData, usePaginatedData } from "../hooks";
-import { ProtectedCard } from "../components/ProtectedCard";
+import { useApiData, usePaginatedData } from "../../../shared/hooks";
+import { ProtectedCard } from "../../../shared/components/ProtectedCard";
 import { DataCard } from "../components/DataCard";
 import {
   healthCheckHealthCheckGet, // Public: ${BACKEND_URL}/health_check
@@ -8,10 +8,10 @@ import {
   getCurrentUserInfoUsersMeGet, // Protected: ${BACKEND_URL}/users/me
   listBadgesBadgesGet, // Protected: ${BACKEND_URL}/badges
   listChallengesChallengesGet, // Public: ${BACKEND_URL}/challenges
-} from "../backend_client/sdk.gen";
-import type { SelectionFilter, UserInfo, Badges, Tournaments, Challenges } from "../backend_client/types.gen";
-import { BACKEND_URL } from "../config";
-import { WARGAMES_CONSTANTS } from "../constants/wargames";
+} from "../../../backend_client/sdk.gen";
+import type { SelectionFilter, UserInfo, Badges, Tournaments, Challenges } from "../../../backend_client/types.gen";
+import { BACKEND_URL } from "../../../config";
+import { WARGAMES_CONSTANTS } from "../../../shared/constants/wargames";
 import "./Dashboard.css";
 
 export function Dashboard() {

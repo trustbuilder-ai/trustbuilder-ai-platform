@@ -1,5 +1,5 @@
 import React from "react";
-import OtpInputStyled from "../../../../components/auth/OtpInputStyled";
+import OtpInputStyled from "../../../../shared/components/auth/OtpInputStyled";
 
 const JoinGame = ({ 
   session,

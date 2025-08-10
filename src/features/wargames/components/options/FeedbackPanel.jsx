@@ -1,5 +1,5 @@
 import React from "react";
-import { WARGAMES_CONSTANTS } from "../../../../constants/wargames";
+import { WARGAMES_CONSTANTS } from "../../../../shared/constants/wargames";
 
 const FeedbackPanel = () => {
   const handleFeedbackClick = (type) => {

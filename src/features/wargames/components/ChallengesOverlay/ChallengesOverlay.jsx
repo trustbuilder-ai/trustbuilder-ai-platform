@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import ReactDOM from 'react-dom';
-import { useAuth } from '../../../../hooks/useAuth';
+import { useAuth } from '../../../../shared/hooks/useAuth';
 import TournamentSection from './TournamentSection';
 import {
   listChallengesChallengesGet,
   startChallengeChallengesChallengeIdStartPost,
   getCurrentUserInfoUsersMeGet
 } from '../../../../backend_client/sdk.gen';
-import { WARGAMES_CONSTANTS } from '../../../../constants/wargames';
+import { WARGAMES_CONSTANTS } from '../../../../shared/constants/wargames';
 import './ChallengesOverlay.css';
 
 // Helper function to derive challenge context from UserInfo data

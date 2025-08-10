@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from "../config";
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "../../config";
 
 const supabaseAnonKey =
   import.meta.env.VITE_SUPABASE_PUBLIC_ANON_KEY || SUPABASE_ANON_KEY;

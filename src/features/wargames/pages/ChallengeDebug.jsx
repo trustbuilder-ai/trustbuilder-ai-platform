@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { useApiData } from "../hooks";
-import { getChallengeContextChallengesChallengeIdContextGet } from "../backend_client/sdk.gen";
-import { ProtectedCard } from "../components/ProtectedCard";
+import { useApiData } from "../../../shared/hooks";
+import { getChallengeContextChallengesChallengeIdContextGet } from "../../../backend_client/sdk.gen";
+import { ProtectedCard } from "../../../shared/components/ProtectedCard";
 import "./ChallengeDebug.css";
 
 export function ChallengeDebug() {

@@ -1,5 +1,5 @@
-import { client } from "../backend_client/client.gen";
-import { BACKEND_URL } from "../config";
+import { client } from "../../backend_client/client.gen";
+import { BACKEND_URL } from "../../config";
 import { supabase } from "./supabase";
 
 /**

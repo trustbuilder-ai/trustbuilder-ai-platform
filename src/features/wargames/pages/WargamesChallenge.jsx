@@ -1,18 +1,18 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
-import { useApiData } from "../../hooks";
-import { auth } from "../../lib/supabase";
-import useWargamesScripts from "./hooks/useWargamesScripts";
-import useSlashCommands from "./hooks/useSlashCommands";
-import GameStatus from "./components/GameStatus";
-import ModelOutput from "./components/ModelOutput";
-import Options from "./components/options/Options";
-import SlashCommandAutocomplete from "./components/SlashCommandAutocomplete";
-import EvaluationConfirmModal from "./components/EvaluationConfirmModal";
-import ChallengesOverlay from "./components/ChallengesOverlay";
-import { parseCommand } from "./utils/commandDefinitions";
-import { WargamesProvider, useWargamesContext } from "./context/WargamesContext";
+import { useAuth } from "../../../shared/hooks/useAuth";
+import { useApiData } from "../../../shared/hooks";
+import { auth } from "../../../shared/lib/supabase";
+import useWargamesScripts from "../hooks/useWargamesScripts";
+import useSlashCommands from "../hooks/useSlashCommands";
+import GameStatus from "../components/GameStatus";
+import ModelOutput from "../components/ModelOutput";
+import Options from "../components/options/Options";
+import SlashCommandAutocomplete from "../components/SlashCommandAutocomplete";
+import EvaluationConfirmModal from "../components/EvaluationConfirmModal";
+import ChallengesOverlay from "../components/ChallengesOverlay";
+import { parseCommand } from "../components/commandDefinitions";
+import { WargamesProvider, useWargamesContext } from "../context/WargamesContext";
 import { 
   addMessageToChallengeChallengesChallengeIdAddMessagePost,
   getCurrentUserInfoUsersMeGet,
@@ -20,8 +20,8 @@ import {
   listChallengesChallengesGet,
   getChallengeContextChallengesChallengeIdContextGet,
   evaluateChallengeContextChallengesChallengeIdEvaluateGet
-} from "../../backend_client/sdk.gen";
-import "./tailwind.css";
+} from "../../../backend_client/sdk.gen";
+import "../styles/tailwind.css";
 import "./WargamesChallenge.css";
 
 const WargamesChallengeContent = () => {
@@ -162,7 +162,7 @@ const WargamesChallengeContent = () => {
     // Create and add new theme link
     const themeLink = document.createElement('link');
     themeLink.rel = 'stylesheet';
-    themeLink.href = `${import.meta.env.BASE_URL}src/pages/wargames/themes/${theme}.css`;
+    themeLink.href = `${import.meta.env.BASE_URL}src/features/wargames/themes/${theme}.css`;
     themeLink.setAttribute('data-wargames-theme', theme);
     
     // Add to head

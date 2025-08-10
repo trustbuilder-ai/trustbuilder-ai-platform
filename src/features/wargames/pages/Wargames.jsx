@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { ProtectedCard } from "../components/ProtectedCard";
-import "./Pages.css";
+import { ProtectedCard } from "../../../shared/components/ProtectedCard";
+import "../../../pages/Pages.css";
 
 const WargamesDashboard = () => {
   return (

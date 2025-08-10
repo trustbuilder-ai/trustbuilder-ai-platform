@@ -4,7 +4,7 @@ import {
   getCommandSuggestions, 
   generateHelpText,
   COMMAND_TYPES 
-} from '../utils/commandDefinitions';
+} from '../components/commandDefinitions';
 import {
   listTournamentsTournamentsGet,
   startChallengeChallengesChallengeIdStartPost,
@@ -12,7 +12,7 @@ import {
   getCurrentUserInfoUsersMeGet,
   getChallengeContextChallengesChallengeIdContextGet
 } from '../../../backend_client/sdk.gen';
-import { WARGAMES_CONSTANTS } from '../../../constants/wargames';
+import { WARGAMES_CONSTANTS } from '../../../shared/constants/wargames';
 
 /**
  * Custom hook for managing slash commands in the Wargames interface

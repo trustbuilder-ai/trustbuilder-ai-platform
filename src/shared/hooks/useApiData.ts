@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "./useAuth";
-import type { Options } from "../backend_client/sdk.gen";
+import type { Options } from "../../backend_client/sdk.gen";
 
 interface UseApiDataOptions<TParams> {
   requiresAuth?: boolean;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatCommandDisplay } from '../utils/commandDefinitions';
+import { formatCommandDisplay } from './commandDefinitions';
 import './SlashCommandAutocomplete.css';
 
 const SlashCommandAutocomplete = ({ 
