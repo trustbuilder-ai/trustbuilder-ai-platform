@@ -122,7 +122,7 @@ export function Dashboard() {
 
         {/* Paginated public data from ${BACKEND_URL}/tournaments */}
         <DataCard
-          data={paginatedTournaments.data}
+          data={paginatedTournaments.data as Tournaments[] | null}
           error={paginatedTournaments.error}
           loading={paginatedTournaments.loading}
           title="Tournaments"
@@ -134,12 +134,6 @@ export function Dashboard() {
                 {data.map((tournament) => (
                   <div key={tournament.id} className="tournament-item">
                     <h3>{tournament.name}</h3>
-                    <p className="status">
-                      Status:{" "}
-                      <span className={tournament.status}>
-                        {tournament.status}
-                      </span>
-                    </p>
                     <p>
                       Starts:{" "}
                       {new Date(tournament.start_date).toLocaleDateString()}
@@ -181,8 +175,8 @@ export function Dashboard() {
                 <div key={challenge.id} className="challenge-item">
                   <h4>{challenge.name}</h4>
                   {challenge.description && <p>{challenge.description}</p>}
-                  {challenge.tools_available && (
-                    <p className="tools">Tools: {challenge.tools_available}</p>
+                  {challenge.required_tools && (
+                    <p className="tools">Tools: {challenge.required_tools}</p>
                   )}
                 </div>
               ))}
@@ -200,14 +194,10 @@ export function Dashboard() {
           {(data: UserInfo) => (
             <div className="user-info">
               <p>
-                <strong>Username:</strong> {data.username}
+                <strong>User ID:</strong> {data.user_id}
               </p>
               <p>
                 <strong>Email:</strong> {data.email}
-              </p>
-              <p>
-                <strong>Member since:</strong>{" "}
-                {new Date(data.created_at).toLocaleDateString()}
               </p>
             </div>
           )}
@@ -215,7 +205,7 @@ export function Dashboard() {
 
         {/* Paginated protected data from ${BACKEND_URL}/badges */}
         <DataCard 
-          data={paginatedUserBadges.data}
+          data={paginatedUserBadges.data as Badges[] | null}
           error={paginatedUserBadges.error}
           loading={paginatedUserBadges.loading}
           title="Your Badges">
@@ -224,16 +214,8 @@ export function Dashboard() {
               <div className="badges-grid">
                 {data.map((badge) => (
                   <div key={badge.id} className="badge-card">
-                    {badge.icon_url && (
-                      <img src={badge.icon_url} alt={badge.name} />
-                    )}
-                    <h4>{badge.name}</h4>
-                    {badge.description && <p>{badge.description}</p>}
-                    {badge.earned_at && (
-                      <small>
-                        Earned: {new Date(badge.earned_at).toLocaleDateString()}
-                      </small>
-                    )}
+                    <h4>Badge #{badge.id}</h4>
+                    <p>Challenge ID: {badge.challenge_id}</p>
                   </div>
                 ))}
               </div>
