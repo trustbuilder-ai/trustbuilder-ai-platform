@@ -84,7 +84,7 @@ const ChallengesOverlay = ({ isOpen, onClose, theme, wargamesContext, onSelectCh
       }
     };
 
-    loadChallenges();
+    void loadChallenges();
   }, [isOpen]);
 
   // Load user info for authenticated users
@@ -109,7 +109,7 @@ const ChallengesOverlay = ({ isOpen, onClose, theme, wargamesContext, onSelectCh
       }
     };
 
-    loadUserInfo();
+    void loadUserInfo();
   }, [session, isOpen]);
 
   const handleStartChallenge = useCallback(async (challengeId) => {
@@ -173,14 +173,14 @@ const ChallengesOverlay = ({ isOpen, onClose, theme, wargamesContext, onSelectCh
       setPendingChallengeId(challengeId);
       alert('Please sign in to start this challenge');
     } else {
-      handleStartChallenge(challengeId);
+      void handleStartChallenge(challengeId);
     }
   }, [session, handleStartChallenge]);
 
   // Auto-start pending challenge on authentication
   useEffect(() => {
     if (session && pendingChallengeId && !startingChallenge) {
-      handleStartChallenge(pendingChallengeId);
+      void handleStartChallenge(pendingChallengeId);
       setPendingChallengeId(null);
     }
   }, [session, pendingChallengeId, startingChallenge, handleStartChallenge]);

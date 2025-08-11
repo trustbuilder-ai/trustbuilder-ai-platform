@@ -66,7 +66,7 @@ export function Tournaments() {
       }
     };
 
-    fetchChallengeContexts();
+    void fetchChallengeContexts();
   }, [userInfo.data?.active_challenges]);
 
   // Paginated tournaments list
@@ -661,7 +661,7 @@ export function Tournaments() {
                 onKeyPress={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
-                    handleSendMessage();
+                    void handleSendMessage();
                   }
                 }}
                 disabled={sendingMessage}

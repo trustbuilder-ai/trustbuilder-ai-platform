@@ -79,7 +79,7 @@ const WargamesChallengeContent = () => {
       }
     };
     
-    checkActiveTournament();
+    void checkActiveTournament();
   }, [session]); // Only run when session changes
   
   // Sync evaluation status to game status
@@ -361,7 +361,7 @@ const WargamesChallengeContent = () => {
     // Handle regular enter key
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      void handleSendMessage();
     }
   };
   

@@ -100,7 +100,7 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
           results = generateHelpText();
           break;
           
-        case COMMAND_TYPES.LIST_TOURNAMENTS:
+        case COMMAND_TYPES.LIST_TOURNAMENTS: {
           if (!session) {
             results = [{
               type: 'error',
@@ -133,8 +133,9 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
             }
           }
           break;
+        }
           
-        case COMMAND_TYPES.LIST_CHALLENGES:
+        case COMMAND_TYPES.LIST_CHALLENGES: {
           if (!session) {
             results = [{
               type: 'error',
@@ -195,8 +196,9 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
             }];
           }
           break;
+        }
           
-        case COMMAND_TYPES.START_CHALLENGE:
+        case COMMAND_TYPES.START_CHALLENGE: {
           if (!session) {
             results = [{
               type: 'error',
@@ -468,6 +470,7 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
             throw err; // Re-throw to be caught by outer try-catch
           }
           break;
+        }
           
         default:
           results = [{

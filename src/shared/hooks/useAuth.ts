@@ -7,7 +7,7 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    auth.getSession().then(({ data: { session } }) => {
+    void auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
     });

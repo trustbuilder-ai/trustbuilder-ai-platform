@@ -93,7 +93,7 @@ export function useApiData<
 
   // Initial fetch and refetch when params change
   useEffect(() => {
-    fetchData(params);
+    void fetchData(params);
 
     return () => {
       abortControllerRef.current?.abort();
@@ -106,7 +106,7 @@ export function useApiData<
       if (newParams !== undefined) {
         setParams(newParams);
       } else {
-        fetchData(params);
+        void fetchData(params);
       }
     },
     [fetchData, params],

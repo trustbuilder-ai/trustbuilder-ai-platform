@@ -26,7 +26,7 @@ const Callback = () => {
           });
 
           if (!error) {
-            navigate("/");
+            void navigate("/");
           } else {
             setError("Invalid or expired authentication link.");
           }
@@ -38,7 +38,7 @@ const Callback = () => {
       }
     };
 
-    handleCallback();
+    void handleCallback();
   }, [navigate]);
 
   if (error) {

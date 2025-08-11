@@ -58,7 +58,7 @@ const SearchBar = () => {
   }, [query]);
 
   const handleSelect = (path) => {
-    navigate(path);
+    void navigate(path);
     setQuery("");
     setShowDropdown(false);
   };

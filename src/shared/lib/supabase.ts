@@ -8,20 +8,20 @@ export const supabase = createClient(SUPABASE_URL, supabaseAnonKey);
 
 export const auth = {
   signInWithOtp: async (email: string) => {
-    return await supabase.auth.signInWithOtp({
+    return supabase.auth.signInWithOtp({
       email,
       // Removed emailRedirectTo to send OTP code instead of magic link
     });
   },
   verifyOtp: async (email: string, token: string) => {
-    return await supabase.auth.verifyOtp({
+    return supabase.auth.verifyOtp({
       email,
       token,
       type: "email",
     });
   },
-  signOut: async () => await supabase.auth.signOut(),
-  getSession: async () => await supabase.auth.getSession(),
+  signOut: async () => supabase.auth.signOut(),
+  getSession: async () => supabase.auth.getSession(),
   onAuthStateChange: (callback: (event: any, session: any) => void) => {
     return supabase.auth.onAuthStateChange(callback);
   },
