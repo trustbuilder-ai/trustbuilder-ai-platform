@@ -9,6 +9,9 @@ build:
 preview:
 	pnpm run preview
 
+lint:
+	pnpm run lint
+
 typecheck:
 	pnpm run typecheck
 

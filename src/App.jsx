@@ -1,18 +1,18 @@
 import React, { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import RootLayout from "./layouts/RootLayout";
-import ConsoleLayout from "./layouts/ConsoleLayout";
-import WargamesLayout from "./layouts/WargamesLayout";
+import ConsoleLayout from "./features/console/layouts/ConsoleLayout";
+import WargamesLayout from "./features/wargames/layouts/WargamesLayout";
 import Home from "./pages/Home";
-import Wargames from "./pages/Wargames";
-import Models from "./pages/Models";
-import RedTeaming from "./pages/RedTeaming";
-import Dashboard from "./pages/Dashboard";
-import Tournaments from "./pages/Tournaments";
-import ChallengeDebug from "./pages/ChallengeDebug";
-import WargamesChallenge from "./pages/wargames/WargamesChallenge";
-import Callback from "./pages/auth/Callback";
-import { setupApiClient } from "./lib/api-client";
+import WargamesDashboard from "./features/wargames/pages/Wargames";
+import Models from "./features/console/pages/Models";
+import RedTeaming from "./features/console/pages/RedTeaming";
+import Dashboard from "./features/console/pages/Dashboard";
+import Tournaments from "./features/console/pages/Tournaments";
+import ChallengeDebug from "./features/wargames/pages/ChallengeDebug";
+import WargamesChallenge from "./features/wargames/pages/WargamesChallenge";
+import Callback from "./shared/components/auth/Callback";
+import { setupApiClient } from "./shared/lib/api-client";
 import "./App.css";
 
 function App() {
@@ -33,7 +33,7 @@ function App() {
           <Route path="/console" element={<ConsoleLayout />}>
             <Route index element={<Home />} />
             <Route path="dashboard" element={<Dashboard />} />
-            <Route path="wargames" element={<Wargames />} />
+            <Route path="wargames-dashboard" element={<WargamesDashboard />} />
             <Route path="models" element={<Models />} />
             <Route path="redteaming" element={<RedTeaming />} />
             <Route path="tournaments" element={<Tournaments />} />
