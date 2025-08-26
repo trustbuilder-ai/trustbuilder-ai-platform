@@ -2,7 +2,12 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import "./Sidebar.css";
 
-const Sidebar = ({ isCollapsed, isMobile }) => {
+interface SidebarProps {
+  isCollapsed: boolean;
+  isMobile: boolean;
+}
+
+const Sidebar = ({ isCollapsed, isMobile }: SidebarProps) => {
   const navItems = [
     { path: "/console/dashboard", name: "Dashboard", icon: "📊" },
     { path: "/console/tournaments", name: "Tournaments", icon: "🏆" },
