@@ -5,7 +5,7 @@ import "./Breadcrumbs.css";
 const Breadcrumbs = () => {
   const location = useLocation();
 
-  const getPageName = (path) => {
+  const getPageName = (path: string) => {
     // Remove /dashboard prefix for matching
     const cleanPath = path.replace(/^\/dashboard/, '') || '/';
     
