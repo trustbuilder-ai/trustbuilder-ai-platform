@@ -21,5 +21,8 @@ clean:
 install:
 	pnpm install
 
+test:
+	pnpm test
+
 serve: build
 	pnpm serve -s dist -l 3000

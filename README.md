@@ -24,6 +24,16 @@ See contents of test-health-check.ts for simple client use.
 npx tsx test-health-check.ts
 ```
 
+## Testing
+
+Install Chrome for Puppeteer and start dev server before running tests:
+
+```sh
+npx puppeteer browsers install chrome
+make dev
+make test  # or pnpm test
+```
+
 ## Environment
 
 Set `SUPABASE_PUBLIC_ANON_KEY` to supabase anonymous key or add to .env.
