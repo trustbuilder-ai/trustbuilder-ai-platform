@@ -25,8 +25,8 @@ Renders graph data on the scrollytell view.
 [LLM UI](https://github.com/richardgill/llm-ui)  
 Styles the LLM messages on all three views.  
 
-[Dagre](https://reactflow.dev/examples/layout/dagre)  
-Used to render the message tree on the tree view.
+Custom Tree Layout Algorithm  
+Renders the message tree with vertical columns for each conversation branch, maintaining visual consistency with LLM-UI styled messages.
 
 ## Interface
 
