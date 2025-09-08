@@ -15,16 +15,23 @@
     "test:headful": "HEADLESS=false jest"
   },
   "dependencies": {
+    "@llm-ui/markdown": "^0.13.3",
+    "@llm-ui/react": "^0.13.3",
+    "@react-spring/web": "^10.0.2",
     "@supabase/supabase-js": "^2.52.1",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.7.0",
+    "d3": "^7.9.0",
+    "dagre": "^0.8.5",
     "dotenv": "^17.2.1",
     "eslint": "^9.32.0",
     "prettier": "^3.6.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.7.1",
+    "react-scrollama": "^2.4.2",
+    "reactflow": "^11.11.4",
     "vite": "^7.0.6"
   },
   "devDependencies": {
