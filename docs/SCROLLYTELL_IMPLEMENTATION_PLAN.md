@@ -87,14 +87,14 @@ export * from './types';
 7. Create SVG connection component for tree visualization
 
 ### Phase 2: ScrollyTell View
-**completion_date:** _Not completed_
+**completion_date:** 2025-09-08
 1. Implement ScrollySection component with react-scrollama
 2. Create StreamingText component for animated message display
 3. Implement scroll-triggered animation logic
 4. Add text interpolation based on scroll position
 
 ### Phase 3: Data Visualizations
-**completion_date:** _Not completed_
+**completion_date:** 2025-09-08
 1. Create AnimatedGraph wrapper component
 2. Implement PieChart, BarChart, LineChart using D3
 3. Add scroll-triggered graph animations

@@ -1,8 +1,9 @@
 import React from 'react';
 import { Scrollama, Step } from 'react-scrollama';
-import { ScrollyTellSection, MessageContainer } from '../types';
+import { ScrollyTellSection, MessageContainer, VisualData } from '../types';
 import { useScrollProgress } from '../hooks';
 import MessageDisplay from './MessageDisplay';
+import AnimatedGraph from './AnimatedGraph';
 import './ScrollySection.css';
 
 interface ScrollySectionProps {
@@ -84,10 +85,11 @@ const ScrollySection: React.FC<ScrollySectionProps> = ({
           )}
           
           {['pie', 'bar', 'line'].includes(section.data.type) && (
-            <div className="visual-placeholder">
-              <h3>{section.data.label?.title || section.data.label}</h3>
-              <p>📊 {section.data.type} chart visualization (Phase 3)</p>
-            </div>
+            <AnimatedGraph
+              data={section.data as VisualData}
+              isActive={isActive}
+              progress={stepProgress}
+            />
           )}
         </div>
       </div>

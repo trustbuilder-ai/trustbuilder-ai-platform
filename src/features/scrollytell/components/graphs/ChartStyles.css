@@ -1,0 +1,211 @@
+/* Common styles for all chart components */
+
+.pie-chart-container,
+.bar-chart-container,
+.line-chart-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* SVG styling */
+.pie-chart-container svg,
+.bar-chart-container svg,
+.line-chart-container svg {
+  display: block;
+  margin: 0 auto;
+}
+
+/* Axis styling */
+.x-axis,
+.y-axis {
+  font-size: 12px;
+  color: #666;
+}
+
+.x-axis path,
+.y-axis path,
+.x-axis line,
+.y-axis line {
+  stroke: #ddd;
+  shape-rendering: crispEdges;
+}
+
+.x-axis text,
+.y-axis text {
+  fill: #666;
+}
+
+/* Grid styling */
+.grid line {
+  stroke: #e0e0e0;
+  stroke-opacity: 0.7;
+  shape-rendering: crispEdges;
+}
+
+.grid path {
+  stroke-width: 0;
+}
+
+/* Bar chart specific */
+.bar {
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.bar:hover {
+  filter: brightness(1.1);
+}
+
+/* Line chart specific */
+.line-series path {
+  fill: none;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.dot {
+  transition: r 0.2s ease;
+}
+
+/* Pie chart specific */
+.slice {
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.slice path {
+  stroke: white;
+  stroke-width: 2px;
+}
+
+/* Legend styling */
+.legend {
+  font-size: 12px;
+  font-family: inherit;
+}
+
+.legend rect {
+  stroke: none;
+}
+
+.legend text {
+  fill: #666;
+  alignment-baseline: middle;
+}
+
+/* Value labels */
+.value-label {
+  pointer-events: none;
+  font-family: inherit;
+}
+
+/* Center text for donut charts */
+.center-text text {
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+/* Tooltip styling (global) */
+.chart-tooltip {
+  position: absolute;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  border-radius: 4px;
+  pointer-events: none;
+  font-size: 12px;
+  line-height: 1.4;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  max-width: 200px;
+}
+
+.chart-tooltip strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #fff;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .x-axis text,
+  .y-axis text,
+  .legend text {
+    fill: #aaa;
+  }
+
+  .x-axis path,
+  .y-axis path,
+  .x-axis line,
+  .y-axis line {
+    stroke: #555;
+  }
+
+  .grid line {
+    stroke: #333;
+  }
+
+  .center-text text {
+    fill: #ddd;
+  }
+
+  .value-label {
+    fill: #fff !important;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .x-axis,
+  .y-axis {
+    font-size: 10px;
+  }
+
+  .legend {
+    font-size: 10px;
+  }
+
+  .chart-tooltip {
+    font-size: 11px;
+  }
+}
+
+/* Animation classes */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.chart-animate-enter {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Loading state */
+.chart-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  color: #999;
+}
+
+.chart-loading::after {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  margin-left: 10px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #666;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
