@@ -1,0 +1,26 @@
+.streaming-text {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.streaming-text.animating .cursor {
+  animation: blink 1s infinite;
+  color: #4ECDC4;
+  font-weight: 300;
+  margin-left: 2px;
+}
+
+@keyframes blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+}
+
+.displayed-text {
+  white-space: pre-wrap;
+  color: #00E5CC;
+}

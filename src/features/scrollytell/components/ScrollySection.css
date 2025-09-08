@@ -1,0 +1,70 @@
+.scrolly-section {
+  position: relative;
+  padding: 2rem 0;
+}
+
+.scrolly-step {
+  min-height: 100vh;
+  margin-bottom: 50vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scrolly-content {
+  max-width: 800px;
+  width: 100%;
+  padding: 2rem;
+}
+
+.messages-container {
+  margin-bottom: 2rem;
+}
+
+.section-data {
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.markdown-content,
+.html-content,
+.text-content {
+  line-height: 1.6;
+}
+
+.markdown-content h3,
+.html-content h3,
+.text-content h3 {
+  margin-bottom: 1rem;
+  color: #4ECDC4;
+}
+
+.visual-placeholder {
+  padding: 3rem;
+  text-align: center;
+  border: 2px dashed rgba(78, 205, 196, 0.3);
+  border-radius: 8px;
+  background: rgba(78, 205, 196, 0.05);
+}
+
+.visual-placeholder h3 {
+  color: #4ECDC4;
+  margin-bottom: 1rem;
+}
+
+.visual-placeholder p {
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
+}
+
+/* Sticky graphic support */
+.sticky-graphic {
+  position: sticky;
+  top: 10vh;
+  height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

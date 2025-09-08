@@ -3,6 +3,12 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import RootLayout from "./layouts/RootLayout";
 import ConsoleLayout from "./features/console/layouts/ConsoleLayout";
 import WargamesLayout from "./features/wargames/layouts/WargamesLayout";
+import { 
+  ScrollyTellLayout, 
+  ScrollyTellView, 
+  ChatView, 
+  TreeView 
+} from "./features/scrollytell";
 import Home from "./pages/Home";
 import WargamesDashboard from "./features/console/pages/WargamesDashboard";
 import Models from "./features/console/pages/Models";
@@ -49,6 +55,13 @@ function App() {
           <Route path="challenge" element={<WargamesChallenge />} />
           <Route path="challenge/:challengeId" element={<WargamesChallenge />} />
         </Route> }
+        
+        {/* ScrollyTell routes */}
+        <Route path="/scrollytell" element={<ScrollyTellLayout />}>
+          <Route index element={<ScrollyTellView />} />
+          <Route path="chat" element={<ChatView />} />
+          <Route path="tree" element={<TreeView />} />
+        </Route>
       </Routes>
     </div>
   );

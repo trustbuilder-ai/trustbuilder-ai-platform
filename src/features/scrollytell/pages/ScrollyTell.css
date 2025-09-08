@@ -1,3 +1,39 @@
+/* ScrollyTell specific styles */
+.scrollytell-view {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: #fff;
+}
+
+.scrollytell-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.scrollytell-intro {
+  text-align: center;
+  padding: 4rem 2rem;
+  margin-bottom: 2rem;
+}
+
+.scrollytell-intro h1 {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #4ECDC4 0%, #45B7D1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.scrollytell-intro .subtitle {
+  font-size: 1.25rem;
+  color: rgba(255, 255, 255, 0.7);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Standard view container for Chat and Tree views */
 .view-container {
   background: white;
   border-radius: 12px;
@@ -16,8 +52,8 @@
   margin-bottom: 2rem;
 }
 
-/* ScrollyTell View Styles */
-.scrollytell-view .data-info {
+/* Data info for placeholder */
+.data-info {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1rem;
