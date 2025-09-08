@@ -2,6 +2,8 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MessageContainer } from '../types';
 import StreamingText from './StreamingText';
+import { useScrollyTell } from '../context/ScrollyTellContext';
+import { isTemporaryId } from '../utils/forkUtils';
 import './MessageDisplay.css';
 
 interface MessageDisplayProps {
@@ -20,10 +22,21 @@ const MessageDisplay: React.FC<MessageDisplayProps> = ({
   onComplete
 }) => {
   const navigate = useNavigate();
+  const { forkMessage, setCurrentView } = useScrollyTell();
   
   const handleFork = () => {
-    // TODO: Implement fork functionality in Phase 4
-    console.log('Fork from message:', message.id);
+    // Create a new forked message from this message
+    const forkedMessage = forkMessage(message.id, 'user', '');
+    
+    if (forkedMessage) {
+      // Navigate to chat view with the new forked message as the leaf
+      // This gives users a fresh chat canvas starting from the fork point
+      setCurrentView('chat');
+      navigate('/scrollytell/chat');
+      console.log(`Created fork from message ${message.id}, opening chat with new leaf ${forkedMessage.id}`);
+    } else {
+      console.error('Failed to create fork from message:', message.id);
+    }
   };
   
   const handleTreeView = () => {
@@ -57,8 +70,10 @@ const MessageDisplay: React.FC<MessageDisplayProps> = ({
     }
   };
   
+  const isDraft = isTemporaryId(message.id);
+  
   return (
-    <div className={`message-display ${getRoleClass(message.message.role)}`}>
+    <div className={`message-display ${getRoleClass(message.message.role)} ${isDraft ? 'message-draft' : ''}`}>
       <div className="message-header">
         <span className="message-role">{getRoleLabel(message.message.role)}</span>
         <div className="message-actions">

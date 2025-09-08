@@ -8,6 +8,7 @@ import {
   MessageContainer 
 } from '../types';
 import { messageTree as defaultMessageTree, scrollyTellData as defaultScrollyTellData, defaultChatLeafId } from '../data/sampleData';
+import { createForkedMessage } from '../utils/forkUtils';
 
 const ScrollyTellContext = createContext<ScrollyTellContextValue | undefined>(undefined);
 
@@ -44,6 +45,42 @@ export const ScrollyTellProvider: React.FC<ScrollyTellProviderProps> = ({ childr
     return path;
   }, [messageTree]);
 
+  /**
+   * Creates a new forked message from an existing message.
+   * The new message will have a temporary negative ID until persisted to the server.
+   * After forking, the current chat leaf is updated to the new message.
+   */
+  const forkMessage = useCallback((
+    parentMessageId: number,
+    role: 'user' | 'assistant' | 'system' = 'user',
+    content: string = ''
+  ): MessageContainer | null => {
+    const parentMessage = messageTree.find(m => m.id === parentMessageId);
+    if (!parentMessage) {
+      console.error(`Cannot fork: parent message ${parentMessageId} not found`);
+      return null;
+    }
+
+    // Create the new forked message with a temporary ID
+    const forkedMessage = createForkedMessage(parentMessage, messageTree, role);
+    
+    // If content is provided, set it
+    if (content) {
+      forkedMessage.message.content = content;
+    }
+
+    // Add the new message to the tree
+    const newTree = [...messageTree, forkedMessage];
+    setMessageTree(newTree);
+
+    // Update the current chat leaf to the new message
+    setCurrentChatLeafId(forkedMessage.id);
+
+    console.log(`Created fork from message ${parentMessageId} with temporary ID ${forkedMessage.id}`);
+    
+    return forkedMessage;
+  }, [messageTree]);
+
   const value: ScrollyTellContextValue = {
     currentChatLeafId,
     setCurrentChatLeafId,
@@ -53,7 +90,8 @@ export const ScrollyTellProvider: React.FC<ScrollyTellProviderProps> = ({ childr
     updateScrollyTellData,
     currentView,
     setCurrentView,
-    getMessagePath
+    getMessagePath,
+    forkMessage
   };
 
   return (

@@ -47,4 +47,5 @@ export interface ScrollyTellContextValue extends ScrollyTellState {
   currentView: ViewType;
   setCurrentView: (view: ViewType) => void;
   getMessagePath: (leafId: number) => MessageContainer[];
+  forkMessage: (parentMessageId: number, role?: 'user' | 'assistant' | 'system', content?: string) => MessageContainer | null;
 }

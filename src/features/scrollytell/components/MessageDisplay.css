@@ -96,3 +96,24 @@
   line-height: 1.6;
   color: #00E5CC;
 }
+
+/* Draft/temporary message indicator */
+.message-draft {
+  position: relative;
+  border-style: dashed !important;
+  opacity: 0.95;
+}
+
+.message-draft::after {
+  content: 'DRAFT';
+  position: absolute;
+  top: -8px;
+  right: 12px;
+  background: #fbbf24;
+  color: #92400e;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
