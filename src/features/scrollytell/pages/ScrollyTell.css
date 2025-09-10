@@ -213,6 +213,66 @@
   border-left: 4px solid #28a745;
 }
 
+/* Tree node styles for LLM UI integration */
+.tree-node {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tree-node:hover {
+  transform: translateY(-2px);
+}
+
+.tree-node.active .tree-node-content .llm-ui-message {
+  border-color: #667eea !important;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.tree-node-header {
+  position: absolute;
+  top: -20px;
+  left: 8px;
+  background: #667eea;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  z-index: 5;
+}
+
+.tree-node.active .tree-node-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.tree-node-content {
+  /* Make the LLM UI message smaller for tree view */
+  font-size: 0.875rem;
+}
+
+.tree-node-content .llm-ui-message {
+  margin-bottom: 0;
+  padding: 0.5rem;
+  cursor: pointer;
+}
+
+.tree-node-content .llm-ui-message-header {
+  margin-bottom: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+.tree-node-content .llm-ui-message-content {
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+/* Hide the truncation indicator in tree view */
+.tree-node-content .llm-ui-message-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .message-header {
   display: flex;
   justify-content: space-between;

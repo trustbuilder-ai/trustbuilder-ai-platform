@@ -99,7 +99,7 @@ const ScrollySection: React.FC<ScrollySectionProps> = ({
   return (
     <div className="scrolly-section">
       <Scrollama
-        offset={0.75}
+        offset={0.25}  // Trigger when element is 25% from top (75% up the page)
         onStepEnter={handleStepEnter}
         onStepProgress={handleStepProgress}
         onStepExit={handleStepExit}

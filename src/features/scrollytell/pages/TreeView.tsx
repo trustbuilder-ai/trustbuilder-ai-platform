@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { useScrollyTell } from '../context/ScrollyTellContext';
 import { calculateTreeLayout, calculateBoundingBox } from '../utils/treeLayout';
 import TreeConnections from '../components/TreeConnections';
+import LLMUIMessage from '../components/LLMUIMessage';
 import './ScrollyTell.css';
 
 const TreeView: React.FC = () => {
@@ -36,7 +37,7 @@ const TreeView: React.FC = () => {
               return (
                 <div
                   key={container.id}
-                  className={`tree-message role-${container.message.role} ${isActive ? 'active' : ''}`}
+                  className={`tree-node ${isActive ? 'active' : ''}`}
                   style={{
                     position: 'absolute',
                     left: position.x,
@@ -45,12 +46,16 @@ const TreeView: React.FC = () => {
                   }}
                   onClick={() => setCurrentChatLeafId(container.id)}
                 >
-                  <div className="message-header">
-                    <span className="message-id">#{container.id}</span>
-                    <span className="message-role">{container.message.role}</span>
+                  <div className="tree-node-header">
+                    <span className="node-id">#{container.id}</span>
                   </div>
-                  <div className="message-text">
-                    {container.message.content.substring(0, 50)}...
+                  <div className="tree-node-content">
+                    <LLMUIMessage
+                      message={container}
+                      truncate={true}
+                      maxLength={50}
+                      showActions={false}
+                    />
                   </div>
                 </div>
               );

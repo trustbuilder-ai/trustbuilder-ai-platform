@@ -1,11 +1,26 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useScrollyTell } from '../context/ScrollyTellContext';
+import LLMUIMessage from '../components/LLMUIMessage';
 import './ScrollyTell.css';
 
 const ChatView: React.FC = () => {
-  const { messageTree, currentChatLeafId, getMessagePath } = useScrollyTell();
+  const { messageTree, currentChatLeafId, getMessagePath, forkMessage, setCurrentView } = useScrollyTell();
+  const navigate = useNavigate();
   
   const messagePath = getMessagePath(currentChatLeafId);
+
+  const handleFork = (messageId: number) => {
+    const forkedMessage = forkMessage(messageId, 'user', '');
+    if (forkedMessage) {
+      console.log(`Created fork from message ${messageId}, new leaf ${forkedMessage.id}`);
+    }
+  };
+
+  const handleTreeView = (messageId: number) => {
+    setCurrentView('tree');
+    navigate(`/scrollytell/tree?messageId=${messageId}`);
+  };
 
   return (
     <div className="chat-view">
@@ -18,11 +33,13 @@ const ChatView: React.FC = () => {
         <div className="chat-messages">
           <div className="messages-container">
             {messagePath.map((container) => (
-              <div key={container.id} className={`message message-${container.message.role}`}>
-                <div className="message-role">{container.message.role}</div>
-                <div className="message-content">{container.message.content}</div>
-                <div className="message-id">ID: {container.id}</div>
-              </div>
+              <LLMUIMessage
+                key={container.id}
+                message={container}
+                showActions={true}
+                onFork={() => handleFork(container.id)}
+                onTreeView={() => handleTreeView(container.id)}
+              />
             ))}
           </div>
         </div>

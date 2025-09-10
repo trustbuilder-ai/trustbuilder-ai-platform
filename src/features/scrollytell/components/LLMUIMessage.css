@@ -1,0 +1,302 @@
+/* LLM UI Message Component Styles */
+.llm-ui-message {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .llm-ui-message {
+    background: #1f2937;
+    border-color: #374151;
+    color: #f3f4f6;
+  }
+}
+
+.llm-ui-message:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Role-specific styling matching ChatGPT patterns */
+.llm-ui-system {
+  background: linear-gradient(to right, #fef3c7 0%, #ffffff 100%);
+  border-left: 3px solid #f59e0b;
+}
+
+.llm-ui-user {
+  background: linear-gradient(to right, #dbeafe 0%, #ffffff 100%);
+  border-left: 3px solid #3b82f6;
+}
+
+.llm-ui-assistant {
+  background: linear-gradient(to right, #f3f4f6 0%, #ffffff 100%);
+  border-left: 3px solid #10b981;
+}
+
+/* Dark mode role-specific styles */
+@media (prefers-color-scheme: dark) {
+  .llm-ui-system {
+    background: linear-gradient(to right, #78350f 0%, #1f2937 100%);
+    border-left-color: #fbbf24;
+  }
+  
+  .llm-ui-user {
+    background: linear-gradient(to right, #1e3a8a 0%, #1f2937 100%);
+    border-left-color: #60a5fa;
+  }
+  
+  .llm-ui-assistant {
+    background: linear-gradient(to right, #064e3b 0%, #1f2937 100%);
+    border-left-color: #34d399;
+  }
+}
+
+/* Header */
+.llm-ui-message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+@media (prefers-color-scheme: dark) {
+  .llm-ui-message-header {
+    border-bottom-color: #374151;
+  }
+}
+
+.llm-ui-message-role {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  color: #6b7280;
+}
+
+@media (prefers-color-scheme: dark) {
+  .llm-ui-message-role {
+    color: #9ca3af;
+  }
+}
+
+.llm-ui-system .llm-ui-message-role {
+  color: #f59e0b;
+}
+
+.llm-ui-user .llm-ui-message-role {
+  color: #3b82f6;
+}
+
+.llm-ui-assistant .llm-ui-message-role {
+  color: #10b981;
+}
+
+/* Action buttons */
+.llm-ui-message-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.llm-ui-action-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.75rem;
+  background: transparent;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  color: #4b5563;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  .llm-ui-action-button {
+    border-color: #4b5563;
+    color: #d1d5db;
+  }
+}
+
+.llm-ui-action-button:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+  color: #1f2937;
+}
+
+@media (prefers-color-scheme: dark) {
+  .llm-ui-action-button:hover {
+    background: #374151;
+    border-color: #6b7280;
+    color: #f3f4f6;
+  }
+}
+
+.llm-ui-action-button svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Content area */
+.llm-ui-message-content {
+  font-size: 1rem;
+  line-height: 1.75;
+  color: #1f2937;
+}
+
+@media (prefers-color-scheme: dark) {
+  .llm-ui-message-content {
+    color: #f3f4f6;
+  }
+}
+
+.llm-ui-message-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Markdown content styling */
+.llm-ui-block {
+  margin: 0.5rem 0;
+}
+
+.llm-ui-block:first-child {
+  margin-top: 0;
+}
+
+.llm-ui-block:last-child {
+  margin-bottom: 0;
+}
+
+/* Markdown elements */
+.llm-ui-message-content h1,
+.llm-ui-message-content h2,
+.llm-ui-message-content h3,
+.llm-ui-message-content h4,
+.llm-ui-message-content h5,
+.llm-ui-message-content h6 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+@media (prefers-color-scheme: dark) {
+  .llm-ui-message-content h1,
+  .llm-ui-message-content h2,
+  .llm-ui-message-content h3,
+  .llm-ui-message-content h4,
+  .llm-ui-message-content h5,
+  .llm-ui-message-content h6 {
+    color: #f9fafb;
+  }
+}
+
+.llm-ui-message-content p {
+  margin: 0.75rem 0;
+}
+
+.llm-ui-message-content ul,
+.llm-ui-message-content ol {
+  margin: 0.75rem 0;
+  padding-left: 1.5rem;
+}
+
+.llm-ui-message-content li {
+  margin: 0.25rem 0;
+}
+
+.llm-ui-message-content code {
+  background: #f3f4f6;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  .llm-ui-message-content code {
+    background: #374151;
+  }
+}
+
+.llm-ui-message-content pre {
+  background: #1f2937;
+  color: #f3f4f6;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .llm-ui-message-content pre {
+    background: #111827;
+  }
+}
+
+.llm-ui-message-content pre code {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+}
+
+.llm-ui-message-content blockquote {
+  border-left: 3px solid #d1d5db;
+  padding-left: 1rem;
+  margin: 1rem 0;
+  font-style: italic;
+  color: #6b7280;
+}
+
+@media (prefers-color-scheme: dark) {
+  .llm-ui-message-content blockquote {
+    border-left-color: #4b5563;
+    color: #9ca3af;
+  }
+}
+
+.llm-ui-message-content a {
+  color: #3b82f6;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.llm-ui-message-content a:hover {
+  color: #2563eb;
+}
+
+@media (prefers-color-scheme: dark) {
+  .llm-ui-message-content a {
+    color: #60a5fa;
+  }
+  
+  .llm-ui-message-content a:hover {
+    color: #93c5fd;
+  }
+}
+
+/* Streaming animation */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.llm-ui-message-content.streaming::after {
+  content: '▋';
+  animation: pulse 1s infinite;
+  color: #6b7280;
+  margin-left: 2px;
+}

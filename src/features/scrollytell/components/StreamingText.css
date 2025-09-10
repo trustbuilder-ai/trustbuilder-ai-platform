@@ -22,5 +22,5 @@
 
 .displayed-text {
   white-space: pre-wrap;
-  color: #00E5CC;
+  /* Inherit color from parent for proper light/dark mode support */
 }
