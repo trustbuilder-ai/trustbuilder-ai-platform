@@ -6,8 +6,10 @@ export interface MessageAnimationState {
   isAnimating: boolean;
 }
 
+/* Bugs are in here. */
+
 const WORDS_PER_SECOND = 40; // Base streaming speed
-const INTERVAL_MS = 50; // Update frequency
+const INTERVAL_MS = 500; // Update frequency
 const TARGET_COMPLETION_PROGRESS = 0.75; // Complete at 75% scroll progress
 
 export function useMessageAnimation(
@@ -38,7 +40,7 @@ export function useMessageAnimation(
     if (isActive && canStart && !hasStarted.current && progress > 0) {
       hasStarted.current = true;
       lastProgress.current = progress;
-      
+      console.log("Render message progress:", progress);
       // Start the interval for continuous streaming with progress-based acceleration
       intervalRef.current = setInterval(() => {
         if (currentWordIndex.current < words.current.length) {
@@ -155,6 +157,9 @@ export function useSequentialMessageAnimation(messageCount: number) {
   const [completedMessages, setCompletedMessages] = useState<Set<number>>(new Set());
   
   const markComplete = (messageIndex: number) => {
+    //throw new Error('Test error for traceback');
+    /* Print traceback here without throwing an error */
+    console.trace(`Message ${messageIndex} completed`);
     setCompletedMessages(prev => new Set(prev).add(messageIndex));
   };
   

@@ -23,6 +23,7 @@ export function useScrollProgress() {
   }, []);
 
   const handleStepProgress = useCallback(({ data, progress }: any) => {
+    console.log(`Step ${data.index} progress:`, progress);
     setState(prev => ({
       ...prev,
       currentStepIndex: data.index,

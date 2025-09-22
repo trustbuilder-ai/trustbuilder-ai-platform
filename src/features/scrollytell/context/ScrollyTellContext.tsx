@@ -39,7 +39,7 @@ export const ScrollyTellProvider: React.FC<ScrollyTellProviderProps> = ({ childr
       if (currentMessage.parent_message_id === null || currentMessage.parent_message_id === 0) {
         break;
       }
-      currentMessage = messageTree.find(m => m.id === currentMessage.parent_message_id);
+      currentMessage = messageTree.find(m => m.id === currentMessage?.parent_message_id);
     }
     
     return path;

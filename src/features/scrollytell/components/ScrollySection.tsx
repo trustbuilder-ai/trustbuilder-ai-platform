@@ -37,16 +37,21 @@ const ScrollySection: React.FC<ScrollySectionProps> = ({
   const renderSectionContent = (section: ScrollyTellSection, index: number) => {
     const messages = getMessagesForSection(section.message_ids);
     const isActive = currentStepIndex === index;
-    
+    console.log('rendering messages for section', index, messages);
     return (
       <div className="scrolly-content">
         {/* Render messages if present */}
         {messages.length > 0 && (
           <div className="messages-container">
             {messages.map((message, msgIndex) => {
+              /* Line below is broken; the previous message id is defined as parent_message_id
+               * if parent_message_id >= 1, otherwise it's the previous message in the array.
+                * This allows for non-linear message trees.
+                * */
               const previousMessageId = msgIndex > 0 ? messages[msgIndex - 1].id : null;
+              console.log('Rendering message', message.id, 'isActive:', isActive, 'previousMessageId:', previousMessageId);
               const canStart = !previousMessageId || completedMessages.has(previousMessageId);
-              
+              console.log(`completedMessages:`, Array.from(completedMessages));
               return (
                 <MessageDisplay
                   key={message.id}
@@ -99,11 +104,12 @@ const ScrollySection: React.FC<ScrollySectionProps> = ({
   return (
     <div className="scrolly-section">
       <Scrollama
-        offset={0.25}  // Trigger when element is 25% from top (75% up the page)
+        offset={0.75}  // Trigger when element is 25% from bottom (75% from top)
         onStepEnter={handleStepEnter}
         onStepProgress={handleStepProgress}
         onStepExit={handleStepExit}
-        debug={false}
+        progress={true}
+        debug={true}
       >
         {sections.map((section, index) => (
           <Step data={{ index, section }} key={index}>

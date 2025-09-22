@@ -25,12 +25,13 @@ const StreamingText: React.FC<StreamingTextProps> = ({
     isActive,
     canStart
   );
-  
+  //console.log('StreamingText state:', { text, progress, isActive, canStart, displayedText, isComplete, isAnimating });
   const hasCalledComplete = useRef(false);
 
   useEffect(() => {
     if (isComplete && onComplete && !hasCalledComplete.current) {
       hasCalledComplete.current = true;
+      console.log('Message complete, calling onComplete for text:', text);
       onComplete();
     }
   }, [isComplete, onComplete]);
