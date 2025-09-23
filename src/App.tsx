@@ -9,7 +9,6 @@ import {
   ChatView,
   TreeView
 } from "./features/scrollytell";
-import { ScrollamaDemo } from "./features/scrollama-demo";
 import Home from "./pages/Home";
 import WargamesDashboard from "./features/console/pages/WargamesDashboard";
 import Models from "./features/console/pages/Models";
@@ -67,9 +66,6 @@ function App() {
           <Route path="chat" element={<ChatView />} />
           <Route path="tree" element={<TreeView />} />
         </Route>
-        
-        {/* Scrollama Demo route */}
-        <Route path="/scrollama-demo" element={<ScrollamaDemo />} />
       </Routes>
     </div>
   );

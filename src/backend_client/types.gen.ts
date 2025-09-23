@@ -356,6 +356,34 @@ export type Message = {
 };
 
 /**
+ * MessageContainer
+ * Container for a message with its position in the message tree.
+ *
+ * Used for the ScrollyTell feature to represent hierarchical message structures.
+ *
+ * Attributes:
+ * id: Unique identifier for the message container.
+ * parent_message_id: ID of the parent message, null for root.
+ * message: The actual message content.
+ */
+export type MessageContainer = {
+    /**
+     * Id
+     * Unique identifier for the message container
+     */
+    id: number;
+    /**
+     * Parent Message Id
+     * ID of the parent message, null for root
+     */
+    parent_message_id?: number | null;
+    /**
+     * The actual message content
+     */
+    message: Message;
+};
+
+/**
  * ModelInfo
  * Information about an available model.
  *
@@ -896,6 +924,37 @@ export type GetChallengeContextChallengesChallengeIdContextGetResponses = {
 };
 
 export type GetChallengeContextChallengesChallengeIdContextGetResponse = GetChallengeContextChallengesChallengeIdContextGetResponses[keyof GetChallengeContextChallengesChallengeIdContextGetResponses];
+
+export type GetMessageTreeMessageTreeUserChallengeContextIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * User Challenge Context Id
+         */
+        user_challenge_context_id: number;
+    };
+    query?: never;
+    url: '/message_tree/{user_challenge_context_id}';
+};
+
+export type GetMessageTreeMessageTreeUserChallengeContextIdGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetMessageTreeMessageTreeUserChallengeContextIdGetError = GetMessageTreeMessageTreeUserChallengeContextIdGetErrors[keyof GetMessageTreeMessageTreeUserChallengeContextIdGetErrors];
+
+export type GetMessageTreeMessageTreeUserChallengeContextIdGetResponses = {
+    /**
+     * Response Get Message Tree Message Tree  User Challenge Context Id  Get
+     * Successful Response
+     */
+    200: Array<MessageContainer>;
+};
+
+export type GetMessageTreeMessageTreeUserChallengeContextIdGetResponse = GetMessageTreeMessageTreeUserChallengeContextIdGetResponses[keyof GetMessageTreeMessageTreeUserChallengeContextIdGetResponses];
 
 export type CreateChatCompletionLlmChatCompletionsPostData = {
     body: ChatRequest;

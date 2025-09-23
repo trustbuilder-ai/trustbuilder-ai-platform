@@ -1,11 +1,9 @@
-import { Message } from '../../../backend_client/types.gen';
+import { Message, MessageContainer } from '../../../backend_client/types.gen';
 
-export interface MessageContainer {
-  id: number;
-  parent_message_id: number | null;
-  message: Message;
-}
+// Re-export MessageContainer from generated types
+export type { MessageContainer };
 
+// MessageTree type alias using the generated MessageContainer type
 export type MessageTree = MessageContainer[];
 
 export interface VisualData {
