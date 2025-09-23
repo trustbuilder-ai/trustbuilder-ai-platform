@@ -3,12 +3,13 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import RootLayout from "./layouts/RootLayout";
 import ConsoleLayout from "./features/console/layouts/ConsoleLayout";
 import WargamesLayout from "./features/wargames/layouts/WargamesLayout";
-import { 
-  ScrollyTellLayout, 
-  ScrollyTellView, 
-  ChatView, 
-  TreeView 
+import {
+  ScrollyTellLayout,
+  ScrollyTellView,
+  ChatView,
+  TreeView
 } from "./features/scrollytell";
+import { ScrollamaDemo } from "./features/scrollama-demo";
 import Home from "./pages/Home";
 import WargamesDashboard from "./features/console/pages/WargamesDashboard";
 import Models from "./features/console/pages/Models";
@@ -18,6 +19,8 @@ import Tournaments from "./features/console/pages/Tournaments";
 import ChallengeDebug from "./features/console/pages/ChallengeDebug";
 import WargamesChallenge from "./features/wargames/pages/WargamesChallenge";
 import Callback from "./shared/components/auth/Callback";
+import ResetPassword from "./pages/ResetPassword";
+import AccountSettings from "./pages/AccountSettings";
 import { setupApiClient } from "./shared/lib/api-client";
 import "./App.css";
 
@@ -48,6 +51,8 @@ function App() {
           
           {/* Auth routes without sidebar */}
           <Route path="/auth/callback" element={<Callback />} />
+          <Route path="/auth/reset-password" element={<ResetPassword />} />
+          <Route path="/account-settings" element={<AccountSettings />} />
         </Route>
         
         {/* Wargames routes without Header */}
@@ -62,6 +67,9 @@ function App() {
           <Route path="chat" element={<ChatView />} />
           <Route path="tree" element={<TreeView />} />
         </Route>
+        
+        {/* Scrollama Demo route */}
+        <Route path="/scrollama-demo" element={<ScrollamaDemo />} />
       </Routes>
     </div>
   );

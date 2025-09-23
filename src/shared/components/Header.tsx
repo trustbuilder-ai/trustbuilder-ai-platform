@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import LoginModal from "./LoginModal";
 import SearchBar from "./SearchBar";
 import { useAuth } from "../hooks/useAuth";
@@ -13,7 +14,8 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { session } = useAuth();
+  const navigate = useNavigate();
+  const { session, authMethod } = useAuth();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -63,6 +65,15 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
               </button>
               {showUserDropdown && (
                 <div className="user-dropdown">
+                  {authMethod === "password" && (
+                    <>
+                      <button onClick={() => {
+                        navigate("/account-settings");
+                        setShowUserDropdown(false);
+                      }}>Account Settings</button>
+                      <div className="dropdown-divider" />
+                    </>
+                  )}
                   <button onClick={handleLogout}>Log Out</button>
                 </div>
               )}

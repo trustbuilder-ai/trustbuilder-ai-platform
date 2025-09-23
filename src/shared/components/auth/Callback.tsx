@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import "./Callback.css";
 
 const Callback = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -18,17 +19,40 @@ const Callback = () => {
         const token_hash =
           hashParams.get("token_hash") || queryParams.get("token_hash");
         const type = hashParams.get("type") || queryParams.get("type");
+        const next = hashParams.get("next") || queryParams.get("next") || "/";
 
         if (token_hash && type) {
-          const { error } = await supabase.auth.verifyOtp({
-            token_hash,
-            type,
-          });
+          // Handle different callback types
+          if (type === "recovery") {
+            // Password reset flow - let Supabase handle the session
+            // The ResetPassword page will handle the actual password update
+            const fullUrl = `${window.location.origin}/auth/reset-password${window.location.hash}${window.location.search}`;
+            window.location.href = fullUrl;
+            return;
+          } else if (type === "email" || type === "signup") {
+            // Email confirmation flow
+            const { error } = await supabase.auth.verifyOtp({
+              token_hash,
+              type,
+            });
 
-          if (!error) {
-            void navigate("/");
+            if (!error) {
+              void navigate(next);
+            } else {
+              setError("Invalid or expired authentication link.");
+            }
           } else {
-            setError("Invalid or expired authentication link.");
+            // Other OTP verification types
+            const { error } = await supabase.auth.verifyOtp({
+              token_hash,
+              type,
+            });
+
+            if (!error) {
+              void navigate(next);
+            } else {
+              setError("Invalid or expired authentication link.");
+            }
           }
         } else {
           setError("Missing authentication parameters.");
@@ -39,7 +63,7 @@ const Callback = () => {
     };
 
     void handleCallback();
-  }, [navigate]);
+  }, [navigate, location]);
 
   if (error) {
     return (
