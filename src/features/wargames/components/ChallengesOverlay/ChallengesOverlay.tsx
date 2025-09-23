@@ -3,8 +3,8 @@ import ReactDOM from 'react-dom';
 import { useAuth } from '../../../../shared/hooks/useAuth';
 import TournamentSection from './TournamentSection';
 import {
-  listChallengesChallengesGet,
-  startChallengeChallengesChallengeIdStartPost,
+  listChatTemplatesChatTemplatesGet,
+  startChatTemplateChatTemplatesChatTemplateIdStartPost,
   getCurrentUserInfoUsersMeGet
 } from '../../../../backend_client/sdk.gen';
 import { WARGAMES_CONSTANTS } from '../../../../shared/constants/wargames';
@@ -14,14 +14,14 @@ import './ChallengesOverlay.css';
 const getChallengeContextFromUserInfo = (challengeId, userInfo) => {
   if (!userInfo) return null;
   
-  // Find the challenge context in active_challenge_contexts
-  const activeContext = userInfo.active_challenge_contexts?.find(
-    ctx => ctx.challenge_id === challengeId
+  // Find the challenge context in active_chat_template_contexts
+  const activeContext = userInfo.active_chat_template_contexts?.find(
+    ctx => ctx.chat_template_id === challengeId
   );
-  
+
   // Find the evaluation result in eval_results
   const evalResult = userInfo.eval_results?.find(
-    result => result.challenge_id === challengeId
+    result => result.chat_template_id === challengeId
   );
   
   // If no active context, challenge hasn't been started
@@ -53,7 +53,7 @@ const ChallengesOverlay = ({ isOpen, onClose, theme, wargamesContext, onSelectCh
       
       setIsLoading(true);
       try {
-        const response = await listChallengesChallengesGet({
+        const response = await listChatTemplatesChatTemplatesGet({
           query: {
             count: WARGAMES_CONSTANTS.CHALLENGES_PAGE_SIZE,
             page_index: 0
@@ -67,11 +67,11 @@ const ChallengesOverlay = ({ isOpen, onClose, theme, wargamesContext, onSelectCh
           
           // Group by tournament_name
           const grouped = response.data.reduce((acc, item) => {
-            const tournamentName = item.tournament_name;
+            const tournamentName = item.container_name;
             if (!acc[tournamentName]) {
               acc[tournamentName] = [];
             }
-            acc[tournamentName].push(item.challenge);
+            acc[tournamentName].push(item.chat_template);
             return acc;
           }, {});
           
@@ -117,25 +117,25 @@ const ChallengesOverlay = ({ isOpen, onClose, theme, wargamesContext, onSelectCh
     
     try {
       // Find the challenge data from our stored data
-      const challengeData = allChallengesData.find(item => item.challenge.id === challengeId);
+      const challengeData = allChallengesData.find(item => item.chat_template.id === challengeId);
       
       if (!challengeData) {
         throw new Error('Challenge not found');
       }
       
-      const targetChallenge = challengeData.challenge;
-      const tournamentName = challengeData.tournament_name;
-      
-      // Update context with tournament info (backend auto-joins tournament when challenge starts)
-      const tournamentId = targetChallenge.tournament_id;
+      const targetChallenge = challengeData.chat_template;
+      const tournamentName = challengeData.container_name;
+
+      // Update context with tournament info (no enrollment needed anymore)
+      const tournamentId = targetChallenge.chat_template_container_id;
       if (tournamentId) {
-        wargamesContext.joinTournament(tournamentId, tournamentName);
+        wargamesContext.setCurrentTournament(tournamentId, tournamentName);
       }
 
       // Start the challenge
       console.log('Starting challenge:', challengeId);
-      const startResponse = await startChallengeChallengesChallengeIdStartPost({
-        path: { challenge_id: challengeId },
+      const startResponse = await startChatTemplateChatTemplatesChatTemplateIdStartPost({
+        path: { chat_template_id: challengeId },
         requiresAuth: true
       });
 

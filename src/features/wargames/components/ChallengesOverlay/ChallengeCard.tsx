@@ -9,7 +9,7 @@ const ChallengeCard = ({
 }) => {
   // Determine challenge status
   const evalStatus = context?.eval_result?.status;
-  const canContribute = context?.user_challenge_context?.can_contribute;
+  const canContribute = context?.user_chat_template_context?.can_contribute;
   const hasContext = context && context !== null;
   
   // Determine button text and status

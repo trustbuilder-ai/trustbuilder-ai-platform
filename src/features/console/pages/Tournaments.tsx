@@ -4,14 +4,13 @@ import { useApiData, usePaginatedData } from "../../../shared/hooks";
 import { ProtectedCard } from "../../../shared/components/ProtectedCard";
 import { DataCard } from "../components/DataCard";
 import {
-  listTournamentsTournamentsGet,
-  getTournamentTournamentsTournamentIdGet,
-  listChallengesChallengesGet,
-  joinTournamentTournamentsTournamentIdJoinPost,
-  startChallengeChallengesChallengeIdStartPost,
+  listChatTemplateContainersChatTemplateContainersGet,
+  getChatTemplateContainerChatTemplateContainersChatTemplateContainerIdGet,
+  listChatTemplatesChatTemplatesGet,
+  startChatTemplateChatTemplatesChatTemplateIdStartPost,
   getCurrentUserInfoUsersMeGet,
-  getChallengeContextChallengesChallengeIdContextGet,
-  addMessageToChallengeChallengesChallengeIdAddMessagePost,
+  getChatTemplateContextChatTemplatesChatTemplateIdContextGet,
+  addMessageToChatTemplateChatTemplatesChatTemplateIdAddMessagePost,
 } from "../../../backend_client/sdk.gen";
 import { WARGAMES_CONSTANTS } from "../../../shared/constants/wargames";
 import "./Tournaments.css";
@@ -36,9 +35,9 @@ export function Tournaments() {
 
   // Update joined tournaments when user info loads
   useEffect(() => {
-    if (userInfo.data?.active_tournaments) {
+    if (userInfo.data?.active_chat_template_containers) {
       const joinedIds = new Set(
-        userInfo.data.active_tournaments.map((t) => t.id)
+        userInfo.data.active_chat_template_containers.map((t: any) => t.id)
       );
       setJoinedTournaments(joinedIds);
     }
@@ -47,19 +46,19 @@ export function Tournaments() {
   // Fetch challenge contexts for active challenges
   useEffect(() => {
     const fetchChallengeContexts = async () => {
-      if (userInfo.data?.active_challenges) {
+      if (userInfo.data?.active_chat_template_contexts) {
         const contexts = {};
-        for (const challenge of userInfo.data.active_challenges) {
+        for (const context of userInfo.data.active_chat_template_contexts) {
           try {
-            const response = await getChallengeContextChallengesChallengeIdContextGet({
-              path: { challenge_id: challenge.id },
+            const response = await getChatTemplateContextChatTemplatesChatTemplateIdContextGet({
+              path: { chat_template_id: context.chat_template_id },
               requiresAuth: true,
             });
-            if (response.data?.user_challenge_context) {
-              contexts[challenge.id] = response.data.user_challenge_context;
+            if (response.data?.user_chat_template_context) {
+              contexts[context.chat_template_id] = response.data.user_chat_template_context;
             }
           } catch (error) {
-            console.error(`Failed to fetch context for challenge ${challenge.id}:`, error);
+            console.error(`Failed to fetch context for challenge ${context.chat_template_id}:`, error);
           }
         }
         setChallengeContexts(contexts);
@@ -67,10 +66,10 @@ export function Tournaments() {
     };
 
     void fetchChallengeContexts();
-  }, [userInfo.data?.active_challenges]);
+  }, [userInfo.data?.active_chat_template_contexts]);
 
   // Paginated tournaments list
-  const tournaments = usePaginatedData(listTournamentsTournamentsGet, {
+  const tournaments = usePaginatedData(listChatTemplateContainersChatTemplateContainersGet, {
     pageSize: 12,
     initialParams: {
       query: {
@@ -81,26 +80,26 @@ export function Tournaments() {
 
   // Selected tournament details
   const tournamentDetails = useApiData(
-    getTournamentTournamentsTournamentIdGet,
+    getChatTemplateContainerChatTemplateContainersChatTemplateContainerIdGet,
     {
       requiresAuth: true,
       enabled: !!selectedTournament,
       initialParams: selectedTournament
         ? {
             path: {
-              tournament_id: selectedTournament.id,
+              chat_template_container_id: selectedTournament.id,
             },
           }
         : undefined,
     }
   );
   // Challenges for selected tournament
-  const challenges = useApiData(listChallengesChallengesGet, {
+  const challenges = useApiData(listChatTemplatesChatTemplatesGet, {
     requiresAuth: true,
     enabled: !!selectedTournament,
     initialParams: {
       query: {
-        tournament_id: selectedTournament?.id || 0,
+        chat_template_container_id: selectedTournament?.id || 0,
         page_index: 0,
         count: WARGAMES_CONSTANTS.CHALLENGES_PAGE_SIZE,
       },
@@ -112,7 +111,7 @@ export function Tournaments() {
     if (selectedTournament && challenges.updateParams) {
       challenges.updateParams({
         query: {
-          tournament_id: selectedTournament.id,
+          chat_template_container_id: selectedTournament.id,
           page_index: 0,
           count: 50,
         },
@@ -121,13 +120,13 @@ export function Tournaments() {
   }, [selectedTournament?.id]);
 
   // Fetch context for active challenge (including messages)
-  const challengeMessages = useApiData(getChallengeContextChallengesChallengeIdContextGet, {
+  const challengeMessages = useApiData(getChatTemplateContextChatTemplatesChatTemplateIdContextGet, {
     requiresAuth: true,
     enabled: !!activeChallenge,
     initialParams: activeChallenge
       ? {
           path: {
-            challenge_id: activeChallenge.id,
+            chat_template_id: activeChallenge.id,
           },
         }
       : undefined,
@@ -139,7 +138,7 @@ export function Tournaments() {
       console.log("Fetching messages for challenge:", activeChallenge.id);
       challengeMessages.updateParams({
         path: {
-          challenge_id: activeChallenge.id,
+          chat_template_id: activeChallenge.id,
         },
       });
     }
@@ -177,42 +176,23 @@ export function Tournaments() {
     setSelectedTournament(tournament);
   };
 
-  // Handle joining a tournament
+  // Tournament enrollment is no longer needed
   const handleJoinTournament = async (tournamentId, event) => {
     // Stop propagation to prevent card selection
     if (event) {
       event.stopPropagation();
     }
-    
-    setJoiningTournament(tournamentId);
-    try {
-      const response = await joinTournamentTournamentsTournamentIdJoinPost({
-        path: {
-          tournament_id: tournamentId,
-        },
-        requiresAuth: true,
-      });
-
-      if (response.data) {
-        // Update joined tournaments
-        setJoinedTournaments((prev) => new Set([...prev, tournamentId]));
-        // Refetch user info
-        userInfo.refetch();
-      }
-    } catch (error) {
-      console.error("Failed to join tournament:", error);
-    } finally {
-      setJoiningTournament(null);
-    }
+    // Tournaments are automatically associated when starting a challenge
+    console.log('Tournament enrollment no longer required - challenges can be started directly');
   };
 
   // Handle starting a challenge
   const handleStartChallenge = async (challengeId) => {
     setStartingChallenge(challengeId);
     try {
-      const response = await startChallengeChallengesChallengeIdStartPost({
+      const response = await startChatTemplateChatTemplatesChatTemplateIdStartPost({
         path: {
-          challenge_id: challengeId,
+          chat_template_id: challengeId,
         },
         requiresAuth: true,
       });
@@ -238,9 +218,9 @@ export function Tournaments() {
 
     setSendingMessage(true);
     try {
-      const response = await addMessageToChallengeChallengesChallengeIdAddMessagePost({
+      const response = await addMessageToChatTemplateChatTemplatesChatTemplateIdAddMessagePost({
         path: {
-          challenge_id: activeChallenge.id,
+          chat_template_id: activeChallenge.id,
         },
         query: {
           message: messageInput.trim(),
@@ -472,10 +452,11 @@ export function Tournaments() {
                             No challenges available yet
                           </p>
                         ) : (
-                          data.map((challenge) => {
+                          data.map((item) => {
+                            const challenge = item.chat_template;
                             const isActive =
-                              userInfo.data?.active_challenges?.some(
-                                (c) => c.id === challenge.id
+                              userInfo.data?.active_chat_template_contexts?.some(
+                                (c) => c.chat_template_id === challenge.id
                               );
                             const context = challengeContexts[challenge.id];
                             const canContribute = context?.can_contribute !== false;
@@ -607,7 +588,7 @@ export function Tournaments() {
                   {(() => {
                     // Check different possible message locations
                     const messages = challengeMessages.data.messages || 
-                                   challengeMessages.data?.user_challenge_context?.messages || 
+                                   challengeMessages.data?.user_chat_template_context?.messages || 
                                    [];
                     
                     console.log("Messages array:", messages);

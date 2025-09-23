@@ -13,13 +13,13 @@ import EvaluationConfirmModal from "../components/EvaluationConfirmModal";
 import ChallengesOverlay from "../components/ChallengesOverlay";
 import { parseCommand } from "../components/commandDefinitions";
 import { WargamesProvider, useWargamesContext } from "../context/WargamesContext";
-import { 
-  addMessageToChallengeChallengesChallengeIdAddMessagePost,
+import {
+  addMessageToChatTemplateChatTemplatesChatTemplateIdAddMessagePost,
   getCurrentUserInfoUsersMeGet,
-  listTournamentsTournamentsGet,
-  listChallengesChallengesGet,
-  getChallengeContextChallengesChallengeIdContextGet,
-  evaluateChallengeContextChallengesChallengeIdEvaluateGet
+  listChatTemplateContainersChatTemplateContainersGet,
+  listChatTemplatesChatTemplatesGet,
+  getChatTemplateContextChatTemplatesChatTemplateIdContextGet,
+  evaluateChatTemplateContextChatTemplatesChatTemplateIdEvaluateGet
 } from "../../../backend_client/sdk.gen";
 import "../styles/tailwind.css";
 import "./WargamesChallenge.css";
@@ -55,30 +55,30 @@ const WargamesChallengeContent = () => {
     setMessages([]);
   }, []); // Empty dependency array means this runs only once on mount
   
-  // Check for active tournaments only (not challenges) on mount
+  // Check for active tournament container (formerly tournaments) on mount
   useEffect(() => {
     const checkActiveTournament = async () => {
       if (!session) return;
-      
+
       try {
-        // Get user info to check active tournaments
+        // Get user info to check active tournament containers
         const userInfo = await getCurrentUserInfoUsersMeGet({
           requiresAuth: true
         });
-        
+
         if (userInfo.data) {
-          // Check for active tournament only - don't auto-resume challenges
-          if (userInfo.data.active_tournaments && userInfo.data.active_tournaments.length > 0) {
-            const activeTournament = userInfo.data.active_tournaments[0];
+          // Check for active tournament container only - don't auto-resume challenges
+          if (userInfo.data.active_chat_template_containers && userInfo.data.active_chat_template_containers.length > 0) {
+            const activeTournament = userInfo.data.active_chat_template_containers[0];
             console.log('Found active tournament:', activeTournament);
-            wargamesContext.joinTournament(activeTournament.id, activeTournament.name);
+            wargamesContext.setCurrentTournament(activeTournament.id, activeTournament.name);
           }
         }
       } catch (error) {
         console.error('Error checking active tournament:', error);
       }
     };
-    
+
     void checkActiveTournament();
   }, [session]); // Only run when session changes
   
@@ -279,9 +279,9 @@ const WargamesChallengeContent = () => {
       
       try {
         // Send message to the active challenge
-        const response = await addMessageToChallengeChallengesChallengeIdAddMessagePost({
+        const response = await addMessageToChatTemplateChatTemplatesChatTemplateIdAddMessagePost({
           path: {
-            challenge_id: wargamesContext.activeChallengeId
+            chat_template_id: wargamesContext.activeChallengeId
           },
           query: {
             message: trimmedInput,
@@ -514,16 +514,16 @@ const WargamesChallengeContent = () => {
     
     // Fetch existing challenge messages
     try {
-      const contextResponse = await getChallengeContextChallengesChallengeIdContextGet({
+      const contextResponse = await getChatTemplateContextChatTemplatesChatTemplateIdContextGet({
         path: {
-          challenge_id: challengeId
+          chat_template_id: challengeId
         },
         requiresAuth: true
       });
       
       if (contextResponse.data) {
         // Update canContribute status
-        const canContribute = contextResponse.data.user_challenge_context?.can_contribute ?? true;
+        const canContribute = contextResponse.data.user_chat_template_context?.can_contribute ?? true;
         
         // Update remaining message count
         if (contextResponse.data.remaining_message_count !== undefined) {
@@ -596,9 +596,9 @@ const WargamesChallengeContent = () => {
     }]);
     
     try {
-      const response = await evaluateChallengeContextChallengesChallengeIdEvaluateGet({
+      const response = await evaluateChatTemplateContextChatTemplatesChatTemplateIdEvaluateGet({
         path: {
-          challenge_id: wargamesContext.activeChallengeId
+          chat_template_id: wargamesContext.activeChallengeId
         },
         requiresAuth: true
       });
@@ -671,15 +671,15 @@ const WargamesChallengeContent = () => {
           
           // We should fetch the updated context to confirm the challenge state
           try {
-            const contextResponse = await getChallengeContextChallengesChallengeIdContextGet({
+            const contextResponse = await getChatTemplateContextChatTemplatesChatTemplateIdContextGet({
               path: {
-                challenge_id: wargamesContext.activeChallengeId
+                chat_template_id: wargamesContext.activeChallengeId
               },
               requiresAuth: true
             });
             
-            if (contextResponse.data?.user_challenge_context) {
-              const canContribute = contextResponse.data.user_challenge_context.can_contribute;
+            if (contextResponse.data?.user_chat_template_context) {
+              const canContribute = contextResponse.data.user_chat_template_context.can_contribute;
               if (canContribute !== wargamesContext.canContribute) {
                 wargamesContext.startChallenge(
                   wargamesContext.activeChallengeId,

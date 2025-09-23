@@ -4,12 +4,12 @@ import { ProtectedCard } from "../../../shared/components/ProtectedCard";
 import { DataCard } from "../components/DataCard";
 import {
   healthCheckHealthCheckGet, // Public: ${BACKEND_URL}/health_check
-  listTournamentsTournamentsGet, // Public: ${BACKEND_URL}/tournaments
+  listChatTemplateContainersChatTemplateContainersGet, // Public: ${BACKEND_URL}/chat_template_containers
   getCurrentUserInfoUsersMeGet, // Protected: ${BACKEND_URL}/users/me
   listBadgesBadgesGet, // Protected: ${BACKEND_URL}/badges
-  listChallengesChallengesGet, // Public: ${BACKEND_URL}/challenges
+  listChatTemplatesChatTemplatesGet, // Public: ${BACKEND_URL}/chat_templates
 } from "../../../backend_client/sdk.gen";
-import type { SelectionFilter, UserInfo, Badges, Tournaments, Challenges } from "../../../backend_client/types.gen";
+import type { SelectionFilter, UserInfo, Badges, ChatTemplateContainer, ChatTemplatesPublic } from "../../../backend_client/types.gen";
 import { BACKEND_URL } from "../../../config";
 import { WARGAMES_CONSTANTS } from "../../../shared/constants/wargames";
 import "./Dashboard.css";
@@ -23,11 +23,11 @@ export function Dashboard() {
   // Health check - hits https://wargames-ai-backend-357559285333.us-west1.run.app/health_check
   const healthStatus = useApiData<any>(healthCheckHealthCheckGet);
 
-  // Simple public data fetch - hits ${BACKEND_URL}/tournaments
-  const allTournaments = useApiData<Tournaments[]>(listTournamentsTournamentsGet);
+  // Simple public data fetch - hits ${BACKEND_URL}/chat_template_containers
+  const allTournaments = useApiData<ChatTemplateContainer[]>(listChatTemplateContainersChatTemplateContainersGet);
 
-  // Public data with pagination - hits ${BACKEND_URL}/tournaments?page_index=0&count=10
-  const paginatedTournaments = usePaginatedData<Tournaments[]>(listTournamentsTournamentsGet, {
+  // Public data with pagination - hits ${BACKEND_URL}/chat_template_containers?page_index=0&count=10
+  const paginatedTournaments = usePaginatedData<ChatTemplateContainer[]>(listChatTemplateContainersChatTemplateContainersGet, {
     pageSize: 10,
     initialParams: {
       query: {
@@ -37,10 +37,10 @@ export function Dashboard() {
   });
 
   // Public data with manual parameter control - hits ${BACKEND_URL}/challenges?tournament_id=1&page_index=0&count=20
-  const challenges = useApiData<Challenges[]>(listChallengesChallengesGet, {
+  const challenges = useApiData<ChatTemplatesPublic[]>(listChatTemplatesChatTemplatesGet, {
     initialParams: {
       query: {
-        tournament_id: 1,
+        chat_template_container_id: 1,
         page_index: 0,
         count: WARGAMES_CONSTANTS.CHALLENGES_PAGE_SIZE,
       },
@@ -122,13 +122,13 @@ export function Dashboard() {
 
         {/* Paginated public data from ${BACKEND_URL}/tournaments */}
         <DataCard
-          data={paginatedTournaments.data as Tournaments[] | null}
+          data={paginatedTournaments.data as ChatTemplateContainer[] | null}
           error={paginatedTournaments.error}
           loading={paginatedTournaments.loading}
           title="Tournaments"
           className="tournaments-list"
         >
-          {(data: Tournaments[]) => (
+          {(data: ChatTemplateContainer[]) => (
             <>
               <div className="tournament-grid">
                 {data.map((tournament) => (
@@ -171,12 +171,12 @@ export function Dashboard() {
         <DataCard {...challenges} title="Latest Challenges">
           {(data) => (
             <div className="challenges-list">
-              {data.map((challenge) => (
-                <div key={challenge.id} className="challenge-item">
-                  <h4>{challenge.name}</h4>
-                  {challenge.description && <p>{challenge.description}</p>}
-                  {challenge.required_tools && (
-                    <p className="tools">Tools: {challenge.required_tools}</p>
+              {data.map((item) => (
+                <div key={item.chat_template.id} className="challenge-item">
+                  <h4>{item.chat_template.name}</h4>
+                  {item.chat_template.description && <p>{item.chat_template.description}</p>}
+                  {item.chat_template.required_tools && (
+                    <p className="tools">Tools: {item.chat_template.required_tools}</p>
                   )}
                 </div>
               ))}
@@ -215,7 +215,7 @@ export function Dashboard() {
                 {data.map((badge) => (
                   <div key={badge.id} className="badge-card">
                     <h4>Badge #{badge.id}</h4>
-                    <p>Challenge ID: {badge.challenge_id}</p>
+                    <p>Challenge ID: {badge.chat_template_id}</p>
                   </div>
                 ))}
               </div>

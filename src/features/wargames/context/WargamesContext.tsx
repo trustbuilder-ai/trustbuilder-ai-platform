@@ -13,7 +13,7 @@ interface WargamesContextValue {
   evaluationStatus: any | null; // TODO: Define proper evaluation status type
   
   // Actions
-  joinTournament: (tournamentId: string, name: string) => void;
+  setCurrentTournament: (tournamentId: string, name: string) => void;
   startChallenge: (challengeId: string, name: string, canContributeFlag?: boolean, messageCount?: number | null) => void;
   clearState: () => void;
   setRemainingMessageCount: (count: number | null) => void;
@@ -46,10 +46,10 @@ export const WargamesProvider = ({ children }: WargamesProviderProps) => {
   const [evaluationStatus, setEvaluationStatus] = useState<any | null>(null);
   
   // Helper functions
-  const joinTournament = (tournamentId: string, name: string) => {
+  const setCurrentTournament = (tournamentId: string, name: string) => {
     setCurrentTournamentId(tournamentId);
     setTournamentName(name);
-    // Reset challenge when joining a new tournament
+    // Reset challenge when setting a new tournament
     setActiveChallengeId(null);
     setChallengeName('');
   };
@@ -84,7 +84,7 @@ export const WargamesProvider = ({ children }: WargamesProviderProps) => {
     evaluationStatus,
     
     // Actions
-    joinTournament,
+    setCurrentTournament,
     startChallenge,
     clearState,
     setRemainingMessageCount,

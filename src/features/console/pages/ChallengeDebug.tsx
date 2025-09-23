@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useApiData } from "../../../shared/hooks";
-import { getChallengeContextChallengesChallengeIdContextGet } from "../../../backend_client/sdk.gen";
+import { getChatTemplateContextChatTemplatesChatTemplateIdContextGet } from "../../../backend_client/sdk.gen";
 import { ProtectedCard } from "../../../shared/components/ProtectedCard";
 import "./ChallengeDebug.css";
 
@@ -9,13 +9,13 @@ export function ChallengeDebug() {
   const [inputValue, setInputValue] = useState("");
 
   // Fetch challenge context
-  const challengeContext = useApiData(getChallengeContextChallengesChallengeIdContextGet, {
+  const challengeContext = useApiData(getChatTemplateContextChatTemplatesChatTemplateIdContextGet, {
     requiresAuth: true,
     enabled: !!challengeId && !isNaN(Number(challengeId)),
     initialParams: challengeId && !isNaN(Number(challengeId))
       ? {
           path: {
-            challenge_id: Number(challengeId),
+            chat_template_id: Number(challengeId),
           },
         }
       : undefined,
@@ -28,7 +28,7 @@ export function ChallengeDebug() {
       // Update params to trigger fetch
       challengeContext.updateParams({
         path: {
-          challenge_id: Number(inputValue.trim()),
+          chat_template_id: Number(inputValue.trim()),
         },
       });
     }
@@ -87,7 +87,7 @@ export function ChallengeDebug() {
               <div className="context-data">
                 <h3>User Challenge Context:</h3>
                 <pre className="json-display">
-                  {JSON.stringify(challengeContext.data.user_challenge_context, null, 2)}
+                  {JSON.stringify(challengeContext.data.user_chat_template_context, null, 2)}
                 </pre>
                 
                 <h3>Messages ({challengeContext.data.messages?.length || 0}):</h3>

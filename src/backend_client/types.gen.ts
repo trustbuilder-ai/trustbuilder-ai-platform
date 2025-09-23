@@ -9,91 +9,9 @@ export type Badges = {
      */
     id?: number | null;
     /**
-     * Challenge Id
+     * Chat Template Id
      */
-    challenge_id: number;
-};
-
-/**
- * ChallengeContextLLMResponse
- * Represents a response from the LLM call.
- */
-export type ChallengeContextLlmResponse = {
-    /**
-     * Remaining Message Count
-     */
-    remaining_message_count: number;
-    /**
-     * Messages
-     */
-    messages: Array<Message>;
-};
-
-/**
- * ChallengeContextResponse
- * Represents the full message context for a challenge, including user challenge context
- * and messages.
- */
-export type ChallengeContextResponse = {
-    user_challenge_context: UserChallengeContexts;
-    /**
-     * Messages
-     */
-    messages?: Array<Message>;
-    eval_result?: EvalResult | null;
-    /**
-     * Remaining Message Count
-     */
-    remaining_message_count?: number;
-};
-
-/**
- * Challenges
- */
-export type Challenges = {
-    /**
-     * Id
-     */
-    id?: number | null;
-    /**
-     * Name
-     */
-    name: string;
-    /**
-     * Tournament Id
-     */
-    tournament_id: number;
-    /**
-     * Description
-     */
-    description?: string | null;
-    /**
-     * Required Tools
-     */
-    required_tools?: string | null;
-    /**
-     * Evaluation Prompt
-     */
-    evaluation_prompt?: string | null;
-    /**
-     * System Prompt
-     */
-    system_prompt?: string | null;
-    /**
-     * Initial Llm Prompt
-     */
-    initial_llm_prompt?: string | null;
-};
-
-/**
- * ChallengesPublic
- */
-export type ChallengesPublic = {
-    challenge: Challenges;
-    /**
-     * Tournament Name
-     */
-    tournament_name: string;
+    chat_template_id: number;
 };
 
 /**
@@ -217,6 +135,112 @@ export type ChatResponse = {
 };
 
 /**
+ * ChatTemplate
+ */
+export type ChatTemplate = {
+    /**
+     * Id
+     */
+    id?: number | null;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Chat Template Container Id
+     */
+    chat_template_container_id: number;
+    /**
+     * Description
+     */
+    description?: string | null;
+    /**
+     * Required Tools
+     */
+    required_tools?: string | null;
+    /**
+     * Evaluation Prompt
+     */
+    evaluation_prompt?: string | null;
+    /**
+     * Message Tree
+     */
+    message_tree?: {
+        [key: string]: unknown;
+    } | null;
+};
+
+/**
+ * ChatTemplateContainer
+ */
+export type ChatTemplateContainer = {
+    /**
+     * Id
+     */
+    id?: number | null;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Start Date
+     */
+    start_date: string;
+    /**
+     * End Date
+     */
+    end_date: string;
+    /**
+     * Description
+     */
+    description?: string | null;
+};
+
+/**
+ * ChatTemplateContextLLMResponse
+ * Represents a response from the LLM call.
+ */
+export type ChatTemplateContextLlmResponse = {
+    /**
+     * Remaining Message Count
+     */
+    remaining_message_count: number;
+    /**
+     * Messages
+     */
+    messages: Array<Message>;
+};
+
+/**
+ * ChatTemplateContextResponse
+ * Represents the full message context for a chat template, including user chat template context
+ * and messages.
+ */
+export type ChatTemplateContextResponse = {
+    user_chat_template_context: UserChatTemplateContext;
+    /**
+     * Messages
+     */
+    messages?: Array<Message>;
+    eval_result?: EvalResult | null;
+    /**
+     * Remaining Message Count
+     */
+    remaining_message_count?: number;
+};
+
+/**
+ * ChatTemplatesPublic
+ */
+export type ChatTemplatesPublic = {
+    chat_template: ChatTemplate;
+    /**
+     * Container Name
+     */
+    container_name: string;
+};
+
+/**
  * ChatUsage
  * Token usage information for the chat completion.
  *
@@ -250,9 +274,9 @@ export type EvalResult = {
     reason?: string | null;
     status: EvalStatus;
     /**
-     * Challenge Id
+     * Chat Template Id
      */
-    challenge_id?: number | null;
+    chat_template_id?: number | null;
 };
 
 /**
@@ -473,35 +497,9 @@ export type ToolCall = {
 };
 
 /**
- * Tournaments
+ * UserChatTemplateContext
  */
-export type Tournaments = {
-    /**
-     * Id
-     */
-    id?: number | null;
-    /**
-     * Name
-     */
-    name: string;
-    /**
-     * Start Date
-     */
-    start_date: string;
-    /**
-     * End Date
-     */
-    end_date: string;
-    /**
-     * Description
-     */
-    description?: string | null;
-};
-
-/**
- * UserChallengeContexts
- */
-export type UserChallengeContexts = {
+export type UserChatTemplateContext = {
     /**
      * Id
      */
@@ -511,9 +509,9 @@ export type UserChallengeContexts = {
      */
     can_contribute: boolean;
     /**
-     * Challenge Id
+     * Chat Template Id
      */
-    challenge_id: number;
+    chat_template_id: number;
     /**
      * Started At
      */
@@ -522,11 +520,27 @@ export type UserChallengeContexts = {
      * User Id
      */
     user_id: number;
+    /**
+     * Last Message Version
+     */
+    last_message_version: number;
+    /**
+     * Processing Token
+     */
+    processing_token?: string | null;
+    /**
+     * Processing Started At
+     */
+    processing_started_at?: string | null;
+    /**
+     * Last Message Id
+     */
+    last_message_id?: number | null;
 };
 
 /**
  * UserInfo
- * Represents a user's information including active tournaments, challenges,
+ * Represents a user's information including active chat template containers, chat templates,
  * and badges.
  */
 export type UserInfo = {
@@ -539,13 +553,13 @@ export type UserInfo = {
      */
     email?: string | null;
     /**
-     * Active Tournaments
+     * Active Chat Template Containers
      */
-    active_tournaments: Array<Tournaments>;
+    active_chat_template_containers: Array<ChatTemplateContainer>;
     /**
-     * Active Challenge Contexts
+     * Active Chat Template Contexts
      */
-    active_challenge_contexts: Array<UserChallengeContexts>;
+    active_chat_template_contexts: Array<UserChatTemplateContext>;
     /**
      * Badges
      */
@@ -574,7 +588,7 @@ export type ValidationError = {
     type: string;
 };
 
-export type ListTournamentsTournamentsGetData = {
+export type ListChatTemplateContainersChatTemplateContainersGetData = {
     body?: never;
     path?: never;
     query?: {
@@ -588,57 +602,57 @@ export type ListTournamentsTournamentsGetData = {
          */
         count?: number;
     };
-    url: '/tournaments';
+    url: '/chat_template_containers';
 };
 
-export type ListTournamentsTournamentsGetErrors = {
+export type ListChatTemplateContainersChatTemplateContainersGetErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type ListTournamentsTournamentsGetError = ListTournamentsTournamentsGetErrors[keyof ListTournamentsTournamentsGetErrors];
+export type ListChatTemplateContainersChatTemplateContainersGetError = ListChatTemplateContainersChatTemplateContainersGetErrors[keyof ListChatTemplateContainersChatTemplateContainersGetErrors];
 
-export type ListTournamentsTournamentsGetResponses = {
+export type ListChatTemplateContainersChatTemplateContainersGetResponses = {
     /**
-     * Response List Tournaments Tournaments Get
+     * Response List Chat Template Containers Chat Template Containers Get
      * Successful Response
      */
-    200: Array<Tournaments>;
+    200: Array<ChatTemplateContainer>;
 };
 
-export type ListTournamentsTournamentsGetResponse = ListTournamentsTournamentsGetResponses[keyof ListTournamentsTournamentsGetResponses];
+export type ListChatTemplateContainersChatTemplateContainersGetResponse = ListChatTemplateContainersChatTemplateContainersGetResponses[keyof ListChatTemplateContainersChatTemplateContainersGetResponses];
 
-export type GetTournamentTournamentsTournamentIdGetData = {
+export type GetChatTemplateContainerChatTemplateContainersChatTemplateContainerIdGetData = {
     body?: never;
     path: {
         /**
-         * Tournament Id
+         * Chat Template Container Id
          */
-        tournament_id: number;
+        chat_template_container_id: number;
     };
     query?: never;
-    url: '/tournaments/{tournament_id}';
+    url: '/chat_template_containers/{chat_template_container_id}';
 };
 
-export type GetTournamentTournamentsTournamentIdGetErrors = {
+export type GetChatTemplateContainerChatTemplateContainersChatTemplateContainerIdGetErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type GetTournamentTournamentsTournamentIdGetError = GetTournamentTournamentsTournamentIdGetErrors[keyof GetTournamentTournamentsTournamentIdGetErrors];
+export type GetChatTemplateContainerChatTemplateContainersChatTemplateContainerIdGetError = GetChatTemplateContainerChatTemplateContainersChatTemplateContainerIdGetErrors[keyof GetChatTemplateContainerChatTemplateContainersChatTemplateContainerIdGetErrors];
 
-export type GetTournamentTournamentsTournamentIdGetResponses = {
+export type GetChatTemplateContainerChatTemplateContainersChatTemplateContainerIdGetResponses = {
     /**
      * Successful Response
      */
-    200: Tournaments;
+    200: ChatTemplateContainer;
 };
 
-export type GetTournamentTournamentsTournamentIdGetResponse = GetTournamentTournamentsTournamentIdGetResponses[keyof GetTournamentTournamentsTournamentIdGetResponses];
+export type GetChatTemplateContainerChatTemplateContainersChatTemplateContainerIdGetResponse = GetChatTemplateContainerChatTemplateContainersChatTemplateContainerIdGetResponses[keyof GetChatTemplateContainerChatTemplateContainersChatTemplateContainerIdGetResponses];
 
 export type ListBadgesBadgesGetData = {
     body?: never;
@@ -709,14 +723,14 @@ export type GetBadgeBadgesBadgeIdGetResponses = {
 
 export type GetBadgeBadgesBadgeIdGetResponse = GetBadgeBadgesBadgeIdGetResponses[keyof GetBadgeBadgesBadgeIdGetResponses];
 
-export type ListChallengesChallengesGetData = {
+export type ListChatTemplatesChatTemplatesGetData = {
     body?: never;
     path?: never;
     query?: {
         /**
-         * Tournament Id
+         * Chat Template Container Id
          */
-        tournament_id?: number | null;
+        chat_template_container_id?: number | null;
         /**
          * Page Index
          */
@@ -726,65 +740,65 @@ export type ListChallengesChallengesGetData = {
          */
         count?: number;
     };
-    url: '/challenges';
+    url: '/chat_templates';
 };
 
-export type ListChallengesChallengesGetErrors = {
+export type ListChatTemplatesChatTemplatesGetErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type ListChallengesChallengesGetError = ListChallengesChallengesGetErrors[keyof ListChallengesChallengesGetErrors];
+export type ListChatTemplatesChatTemplatesGetError = ListChatTemplatesChatTemplatesGetErrors[keyof ListChatTemplatesChatTemplatesGetErrors];
 
-export type ListChallengesChallengesGetResponses = {
+export type ListChatTemplatesChatTemplatesGetResponses = {
     /**
-     * Response List Challenges Challenges Get
+     * Response List Chat Templates Chat Templates Get
      * Successful Response
      */
-    200: Array<ChallengesPublic>;
+    200: Array<ChatTemplatesPublic>;
 };
 
-export type ListChallengesChallengesGetResponse = ListChallengesChallengesGetResponses[keyof ListChallengesChallengesGetResponses];
+export type ListChatTemplatesChatTemplatesGetResponse = ListChatTemplatesChatTemplatesGetResponses[keyof ListChatTemplatesChatTemplatesGetResponses];
 
-export type StartChallengeChallengesChallengeIdStartPostData = {
+export type StartChatTemplateChatTemplatesChatTemplateIdStartPostData = {
     body?: never;
     path: {
         /**
-         * Challenge Id
+         * Chat Template Id
          */
-        challenge_id: number;
+        chat_template_id: number;
     };
     query?: never;
-    url: '/challenges/{challenge_id}/start';
+    url: '/chat_templates/{chat_template_id}/start';
 };
 
-export type StartChallengeChallengesChallengeIdStartPostErrors = {
+export type StartChatTemplateChatTemplatesChatTemplateIdStartPostErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type StartChallengeChallengesChallengeIdStartPostError = StartChallengeChallengesChallengeIdStartPostErrors[keyof StartChallengeChallengesChallengeIdStartPostErrors];
+export type StartChatTemplateChatTemplatesChatTemplateIdStartPostError = StartChatTemplateChatTemplatesChatTemplateIdStartPostErrors[keyof StartChatTemplateChatTemplatesChatTemplateIdStartPostErrors];
 
-export type StartChallengeChallengesChallengeIdStartPostResponses = {
+export type StartChatTemplateChatTemplatesChatTemplateIdStartPostResponses = {
     /**
      * Successful Response
      */
-    200: UserChallengeContexts;
+    200: UserChatTemplateContext;
 };
 
-export type StartChallengeChallengesChallengeIdStartPostResponse = StartChallengeChallengesChallengeIdStartPostResponses[keyof StartChallengeChallengesChallengeIdStartPostResponses];
+export type StartChatTemplateChatTemplatesChatTemplateIdStartPostResponse = StartChatTemplateChatTemplatesChatTemplateIdStartPostResponses[keyof StartChatTemplateChatTemplatesChatTemplateIdStartPostResponses];
 
-export type AddMessageToChallengeChallengesChallengeIdAddMessagePostData = {
+export type AddMessageToChatTemplateChatTemplatesChatTemplateIdAddMessagePostData = {
     body?: never;
     path: {
         /**
-         * Challenge Id
+         * Chat Template Id
          */
-        challenge_id: number;
+        chat_template_id: number;
     };
     query: {
         /**
@@ -800,84 +814,56 @@ export type AddMessageToChallengeChallengesChallengeIdAddMessagePostData = {
          */
         solicit_llm_response?: boolean;
     };
-    url: '/challenges/{challenge_id}/add_message';
+    url: '/chat_templates/{chat_template_id}/add_message';
 };
 
-export type AddMessageToChallengeChallengesChallengeIdAddMessagePostErrors = {
+export type AddMessageToChatTemplateChatTemplatesChatTemplateIdAddMessagePostErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type AddMessageToChallengeChallengesChallengeIdAddMessagePostError = AddMessageToChallengeChallengesChallengeIdAddMessagePostErrors[keyof AddMessageToChallengeChallengesChallengeIdAddMessagePostErrors];
+export type AddMessageToChatTemplateChatTemplatesChatTemplateIdAddMessagePostError = AddMessageToChatTemplateChatTemplatesChatTemplateIdAddMessagePostErrors[keyof AddMessageToChatTemplateChatTemplatesChatTemplateIdAddMessagePostErrors];
 
-export type AddMessageToChallengeChallengesChallengeIdAddMessagePostResponses = {
+export type AddMessageToChatTemplateChatTemplatesChatTemplateIdAddMessagePostResponses = {
     /**
      * Successful Response
      */
-    200: ChallengeContextLlmResponse;
+    200: ChatTemplateContextLlmResponse;
 };
 
-export type AddMessageToChallengeChallengesChallengeIdAddMessagePostResponse = AddMessageToChallengeChallengesChallengeIdAddMessagePostResponses[keyof AddMessageToChallengeChallengesChallengeIdAddMessagePostResponses];
+export type AddMessageToChatTemplateChatTemplatesChatTemplateIdAddMessagePostResponse = AddMessageToChatTemplateChatTemplatesChatTemplateIdAddMessagePostResponses[keyof AddMessageToChatTemplateChatTemplatesChatTemplateIdAddMessagePostResponses];
 
-export type EvaluateChallengeContextChallengesChallengeIdEvaluateGetData = {
+export type EvaluateChatTemplateContextChatTemplatesChatTemplateIdEvaluateGetData = {
     body?: never;
     path: {
         /**
-         * Challenge Id
+         * Chat Template Id
          */
-        challenge_id: number;
+        chat_template_id: number;
     };
     query?: never;
-    url: '/challenges/{challenge_id}/evaluate';
+    url: '/chat_templates/{chat_template_id}/evaluate';
 };
 
-export type EvaluateChallengeContextChallengesChallengeIdEvaluateGetErrors = {
+export type EvaluateChatTemplateContextChatTemplatesChatTemplateIdEvaluateGetErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type EvaluateChallengeContextChallengesChallengeIdEvaluateGetError = EvaluateChallengeContextChallengesChallengeIdEvaluateGetErrors[keyof EvaluateChallengeContextChallengesChallengeIdEvaluateGetErrors];
+export type EvaluateChatTemplateContextChatTemplatesChatTemplateIdEvaluateGetError = EvaluateChatTemplateContextChatTemplatesChatTemplateIdEvaluateGetErrors[keyof EvaluateChatTemplateContextChatTemplatesChatTemplateIdEvaluateGetErrors];
 
-export type EvaluateChallengeContextChallengesChallengeIdEvaluateGetResponses = {
+export type EvaluateChatTemplateContextChatTemplatesChatTemplateIdEvaluateGetResponses = {
     /**
      * Successful Response
      */
     200: EvalResult;
 };
 
-export type EvaluateChallengeContextChallengesChallengeIdEvaluateGetResponse = EvaluateChallengeContextChallengesChallengeIdEvaluateGetResponses[keyof EvaluateChallengeContextChallengesChallengeIdEvaluateGetResponses];
-
-export type JoinTournamentTournamentsTournamentIdJoinPostData = {
-    body?: never;
-    path: {
-        /**
-         * Tournament Id
-         */
-        tournament_id: number;
-    };
-    query?: never;
-    url: '/tournaments/{tournament_id}/join';
-};
-
-export type JoinTournamentTournamentsTournamentIdJoinPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type JoinTournamentTournamentsTournamentIdJoinPostError = JoinTournamentTournamentsTournamentIdJoinPostErrors[keyof JoinTournamentTournamentsTournamentIdJoinPostErrors];
-
-export type JoinTournamentTournamentsTournamentIdJoinPostResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
+export type EvaluateChatTemplateContextChatTemplatesChatTemplateIdEvaluateGetResponse = EvaluateChatTemplateContextChatTemplatesChatTemplateIdEvaluateGetResponses[keyof EvaluateChatTemplateContextChatTemplatesChatTemplateIdEvaluateGetResponses];
 
 export type GetCurrentUserInfoUsersMeGetData = {
     body?: never;
@@ -895,66 +881,66 @@ export type GetCurrentUserInfoUsersMeGetResponses = {
 
 export type GetCurrentUserInfoUsersMeGetResponse = GetCurrentUserInfoUsersMeGetResponses[keyof GetCurrentUserInfoUsersMeGetResponses];
 
-export type GetChallengeContextChallengesChallengeIdContextGetData = {
+export type GetChatTemplateContextChatTemplatesChatTemplateIdContextGetData = {
     body?: never;
     path: {
         /**
-         * Challenge Id
+         * Chat Template Id
          */
-        challenge_id: number;
+        chat_template_id: number;
     };
     query?: never;
-    url: '/challenges/{challenge_id}/context';
+    url: '/chat_templates/{chat_template_id}/context';
 };
 
-export type GetChallengeContextChallengesChallengeIdContextGetErrors = {
+export type GetChatTemplateContextChatTemplatesChatTemplateIdContextGetErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type GetChallengeContextChallengesChallengeIdContextGetError = GetChallengeContextChallengesChallengeIdContextGetErrors[keyof GetChallengeContextChallengesChallengeIdContextGetErrors];
+export type GetChatTemplateContextChatTemplatesChatTemplateIdContextGetError = GetChatTemplateContextChatTemplatesChatTemplateIdContextGetErrors[keyof GetChatTemplateContextChatTemplatesChatTemplateIdContextGetErrors];
 
-export type GetChallengeContextChallengesChallengeIdContextGetResponses = {
+export type GetChatTemplateContextChatTemplatesChatTemplateIdContextGetResponses = {
     /**
      * Successful Response
      */
-    200: ChallengeContextResponse;
+    200: ChatTemplateContextResponse;
 };
 
-export type GetChallengeContextChallengesChallengeIdContextGetResponse = GetChallengeContextChallengesChallengeIdContextGetResponses[keyof GetChallengeContextChallengesChallengeIdContextGetResponses];
+export type GetChatTemplateContextChatTemplatesChatTemplateIdContextGetResponse = GetChatTemplateContextChatTemplatesChatTemplateIdContextGetResponses[keyof GetChatTemplateContextChatTemplatesChatTemplateIdContextGetResponses];
 
-export type GetMessageTreeMessageTreeUserChallengeContextIdGetData = {
+export type GetMessageTreeMessageTreeUserChatTemplateContextIdGetData = {
     body?: never;
     path: {
         /**
-         * User Challenge Context Id
+         * User Chat Template Context Id
          */
-        user_challenge_context_id: number;
+        user_chat_template_context_id: number;
     };
     query?: never;
-    url: '/message_tree/{user_challenge_context_id}';
+    url: '/message_tree/{user_chat_template_context_id}';
 };
 
-export type GetMessageTreeMessageTreeUserChallengeContextIdGetErrors = {
+export type GetMessageTreeMessageTreeUserChatTemplateContextIdGetErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type GetMessageTreeMessageTreeUserChallengeContextIdGetError = GetMessageTreeMessageTreeUserChallengeContextIdGetErrors[keyof GetMessageTreeMessageTreeUserChallengeContextIdGetErrors];
+export type GetMessageTreeMessageTreeUserChatTemplateContextIdGetError = GetMessageTreeMessageTreeUserChatTemplateContextIdGetErrors[keyof GetMessageTreeMessageTreeUserChatTemplateContextIdGetErrors];
 
-export type GetMessageTreeMessageTreeUserChallengeContextIdGetResponses = {
+export type GetMessageTreeMessageTreeUserChatTemplateContextIdGetResponses = {
     /**
-     * Response Get Message Tree Message Tree  User Challenge Context Id  Get
+     * Response Get Message Tree Message Tree  User Chat Template Context Id  Get
      * Successful Response
      */
     200: Array<MessageContainer>;
 };
 
-export type GetMessageTreeMessageTreeUserChallengeContextIdGetResponse = GetMessageTreeMessageTreeUserChallengeContextIdGetResponses[keyof GetMessageTreeMessageTreeUserChallengeContextIdGetResponses];
+export type GetMessageTreeMessageTreeUserChatTemplateContextIdGetResponse = GetMessageTreeMessageTreeUserChatTemplateContextIdGetResponses[keyof GetMessageTreeMessageTreeUserChatTemplateContextIdGetResponses];
 
 export type CreateChatCompletionLlmChatCompletionsPostData = {
     body: ChatRequest;

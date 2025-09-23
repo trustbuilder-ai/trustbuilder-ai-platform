@@ -6,11 +6,11 @@ import {
   COMMAND_TYPES 
 } from '../components/commandDefinitions';
 import {
-  listTournamentsTournamentsGet,
-  startChallengeChallengesChallengeIdStartPost,
-  listChallengesChallengesGet,
+  listChatTemplateContainersChatTemplateContainersGet,
+  startChatTemplateChatTemplatesChatTemplateIdStartPost,
+  listChatTemplatesChatTemplatesGet,
   getCurrentUserInfoUsersMeGet,
-  getChallengeContextChallengesChallengeIdContextGet
+  getChatTemplateContextChatTemplatesChatTemplateIdContextGet
 } from '../../../backend_client/sdk.gen';
 import { WARGAMES_CONSTANTS } from '../../../shared/constants/wargames';
 
@@ -109,7 +109,7 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
             break;
           }
           
-          const tournamentsResponse = await listTournamentsTournamentsGet({
+          const tournamentsResponse = await listChatTemplateContainersChatTemplateContainersGet({
             requiresAuth: true
           });
           
@@ -144,7 +144,7 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
             break;
           }
           
-          const challengesResponse = await listChallengesChallengesGet({
+          const challengesResponse = await listChatTemplatesChatTemplatesGet({
             query: {
               count: WARGAMES_CONSTANTS.CHALLENGES_PAGE_SIZE
             },
@@ -152,14 +152,14 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
           });
           
           if (challengesResponse.data && challengesResponse.data.length > 0) {
-            // Group challenges by tournament_name
+            // Group challenges by container_name (tournament)
             const challengesByTournament = {};
             challengesResponse.data.forEach(item => {
-              const tournamentName = item.tournament_name;
+              const tournamentName = item.container_name;
               if (!challengesByTournament[tournamentName]) {
                 challengesByTournament[tournamentName] = [];
               }
-              challengesByTournament[tournamentName].push(item.challenge);
+              challengesByTournament[tournamentName].push(item.chat_template);
             });
             
             results = [{
@@ -217,9 +217,9 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
           }
           
           try {
-            const startResponse = await startChallengeChallengesChallengeIdStartPost({
+            const startResponse = await startChatTemplateChatTemplatesChatTemplateIdStartPost({
               path: {
-                challenge_id: challengeId
+                chat_template_id: challengeId
               },
               requiresAuth: true
             });
@@ -229,14 +229,14 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
             // Check if the response indicates success
             if (startResponse.data || (startResponse.response && startResponse.response.ok)) {
               // Get challenge details
-              const challengesResponse = await listChallengesChallengesGet({
+              const challengesResponse = await listChatTemplatesChatTemplatesGet({
                 query: {
                   count: WARGAMES_CONSTANTS.CHALLENGES_PAGE_SIZE
                 },
                 requiresAuth: true
               });
               
-              const challenge = challengesResponse.data?.find(item => item.challenge.id === challengeId)?.challenge;
+              const challenge = challengesResponse.data?.find(item => item.chat_template.id === parseInt(challengeId))?.chat_template;
               const challengeName = challenge?.name || `Challenge ${challengeId}`;
               
               // Update context (assume can contribute for new challenge)
@@ -246,16 +246,16 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
               // Fetch existing challenge messages
               let contextResponse;
               try {
-                contextResponse = await getChallengeContextChallengesChallengeIdContextGet({
+                contextResponse = await getChatTemplateContextChatTemplatesChatTemplateIdContextGet({
                   path: {
-                    challenge_id: challengeId
+                    chat_template_id: challengeId
                   },
                   requiresAuth: true
                 });
                 
                 if (contextResponse.data) {
                   // Update canContribute status
-                  const canContribute = contextResponse.data.user_challenge_context?.can_contribute ?? true;
+                  const canContribute = contextResponse.data.user_chat_template_context?.can_contribute ?? true;
                   wargamesContext.startChallenge(challengeId, challengeName, canContribute);
                   
                   // Update remaining message count
@@ -358,9 +358,9 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
                     requiresAuth: true
                   });
                   
-                  if (userInfo.data?.active_challenges) {
-                    const activeChallenge = userInfo.data.active_challenges.find(c => c.id === challengeId);
-                    if (activeChallenge) {
+                  if (userInfo.data?.active_chat_template_contexts) {
+                    const activeContext = userInfo.data.active_chat_template_contexts.find(c => c.chat_template_id === parseInt(challengeId));
+                    if (activeContext) {
                       // Challenge is already active, update context
                       console.log('Challenge already active, updating context');
                       // Need to get canContribute status
@@ -369,9 +369,9 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
                       
                       // Fetch existing challenge messages
                       try {
-                        contextResponse = await getChallengeContextChallengesChallengeIdContextGet({
+                        contextResponse = await getChatTemplateContextChatTemplatesChatTemplateIdContextGet({
                           path: {
-                            challenge_id: challengeId
+                            chat_template_id: challengeId
                           },
                           requiresAuth: true
                         });
@@ -431,11 +431,13 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
                       }
                       
                       // Update context with correct canContribute status
-                      wargamesContext.startChallenge(challengeId, activeChallenge.name, canContribute);
-                      
+                      // We need to get the challenge name - use challengeId as fallback
+                      const challengeName = `Challenge ${challengeId}`;
+                      wargamesContext.startChallenge(challengeId, challengeName, canContribute);
+
                       results = [{
                         type: 'success',
-                        text: `Challenge already active: ${activeChallenge.name}`
+                        text: `Challenge already active: ${challengeName}`
                       }];
                       
                       // Add challenge description if available  
