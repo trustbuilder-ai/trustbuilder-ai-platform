@@ -20,7 +20,7 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 
 /**
  * List Chat Template Containers
- * List tournaments with filtering
+ * List tournaments with filtering by date and container type
  */
 export const listChatTemplateContainersChatTemplateContainersGet = <ThrowOnError extends boolean = false>(options?: Options<ListChatTemplateContainersChatTemplateContainersGetData, ThrowOnError>) => {
     return (options?.client ?? _heyApiClient).get<ListChatTemplateContainersChatTemplateContainersGetResponses, ListChatTemplateContainersChatTemplateContainersGetErrors, ThrowOnError>({
@@ -82,7 +82,7 @@ export const getBadgeBadgesBadgeIdGet = <ThrowOnError extends boolean = false>(o
 
 /**
  * List Chat Templates
- * List chat templates with filtering
+ * List chat templates with filtering by container ID or container type
  */
 export const listChatTemplatesChatTemplatesGet = <ThrowOnError extends boolean = false>(options?: Options<ListChatTemplatesChatTemplatesGetData, ThrowOnError>) => {
     return (options?.client ?? _heyApiClient).get<ListChatTemplatesChatTemplatesGetResponses, ListChatTemplatesChatTemplatesGetErrors, ThrowOnError>({

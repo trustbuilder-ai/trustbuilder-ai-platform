@@ -183,17 +183,21 @@ export type ChatTemplateContainer = {
      */
     name: string;
     /**
-     * Start Date
+     * Type
      */
-    start_date: string;
-    /**
-     * End Date
-     */
-    end_date: string;
+    type: string;
     /**
      * Description
      */
     description?: string | null;
+    /**
+     * Start Date
+     */
+    start_date?: string | null;
+    /**
+     * End Date
+     */
+    end_date?: string | null;
 };
 
 /**
@@ -594,6 +598,10 @@ export type ListChatTemplateContainersChatTemplateContainersGetData = {
     query?: {
         selection_filter?: SelectionFilter;
         /**
+         * Container Type
+         */
+        container_type?: string | null;
+        /**
          * Page Index
          */
         page_index?: number;
@@ -731,6 +739,10 @@ export type ListChatTemplatesChatTemplatesGetData = {
          * Chat Template Container Id
          */
         chat_template_container_id?: number | null;
+        /**
+         * Container Type
+         */
+        container_type?: string | null;
         /**
          * Page Index
          */

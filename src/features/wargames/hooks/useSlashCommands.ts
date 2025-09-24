@@ -110,6 +110,9 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
           }
           
           const tournamentsResponse = await listChatTemplateContainersChatTemplateContainersGet({
+            query: {
+              container_type: 'challenge'
+            },
             requiresAuth: true
           });
           
@@ -146,7 +149,8 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
           
           const challengesResponse = await listChatTemplatesChatTemplatesGet({
             query: {
-              count: WARGAMES_CONSTANTS.CHALLENGES_PAGE_SIZE
+              count: WARGAMES_CONSTANTS.CHALLENGES_PAGE_SIZE,
+              container_type: 'challenge'
             },
             requiresAuth: true
           });
@@ -231,7 +235,8 @@ export default function useSlashCommands(session, wargamesContext, onChallengeMe
               // Get challenge details
               const challengesResponse = await listChatTemplatesChatTemplatesGet({
                 query: {
-                  count: WARGAMES_CONSTANTS.CHALLENGES_PAGE_SIZE
+                  count: WARGAMES_CONSTANTS.CHALLENGES_PAGE_SIZE,
+                  container_type: 'challenge'
                 },
                 requiresAuth: true
               });

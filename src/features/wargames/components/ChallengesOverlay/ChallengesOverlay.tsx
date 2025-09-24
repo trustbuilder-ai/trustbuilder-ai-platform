@@ -56,7 +56,8 @@ const ChallengesOverlay = ({ isOpen, onClose, theme, wargamesContext, onSelectCh
         const response = await listChatTemplatesChatTemplatesGet({
           query: {
             count: WARGAMES_CONSTANTS.CHALLENGES_PAGE_SIZE,
-            page_index: 0
+            page_index: 0,
+            container_type: 'challenge'
           },
           requiresAuth: false
         });
