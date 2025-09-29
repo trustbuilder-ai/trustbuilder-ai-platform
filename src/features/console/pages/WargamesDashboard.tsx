@@ -1,90 +1,73 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { Container, Heading, Text, Flex, Card, Button } from "@radix-ui/themes";
+import { ArrowRightIcon } from "@radix-ui/react-icons";
 import { ProtectedCard } from "../../../shared/components/ProtectedCard";
-import "../../../pages/Pages.css";
 
 const WargamesDashboard = () => {
   return (
-    <div className="page-content">
-      <h1>Wargames</h1>
-      
-      {/* Launch Challenge Section */}
-      <div className="launch-section" style={{
-        backgroundColor: '#f8f9fa',
-        padding: '24px',
-        borderRadius: '8px',
-        marginBottom: '32px',
-        border: '1px solid #e0e0e0'
-      }}>
-        <h2 style={{ marginTop: 0, marginBottom: '16px' }}>Wargames AI Challenge</h2>
-        <p style={{ marginBottom: '20px' }}>
-          Enter the Wargames AI Challenge interface - a cyberpunk-themed environment 
-          for strategic analysis and game simulations. Features multiple themes, 
-          real-time model interactions, and advanced evaluation tools.
-        </p>
-        <Link 
-          to="/wargames/challenge" 
-          className="launch-button"
-          style={{
-            display: 'inline-block',
-            padding: '12px 24px',
-            backgroundColor: '#1a73e8',
-            color: 'white',
-            textDecoration: 'none',
-            borderRadius: '4px',
-            fontWeight: '500',
-            fontSize: '16px',
-            transition: 'background-color 0.2s'
-          }}
-          onMouseEnter={e => e.target.style.backgroundColor = '#1765cc'}
-          onMouseLeave={e => e.target.style.backgroundColor = '#1a73e8'}
-        >
-          Launch Challenge Interface →
-        </Link>
-      </div>
+    <Container size="3" p="5">
+      <Heading size="8" mb="5">Wargames</Heading>
 
-      <div className="lorem-content">
-        <p>
+      {/* Launch Challenge Section */}
+      <Card mb="6">
+        <Flex direction="column" gap="3">
+          <Heading size="5">Wargames AI Challenge</Heading>
+          <Text color="gray">
+            Enter the Wargames AI Challenge interface - a cyberpunk-themed environment
+            for strategic analysis and game simulations. Features multiple themes,
+            real-time model interactions, and advanced evaluation tools.
+          </Text>
+          <Button asChild size="3">
+            <Link to="/wargames/challenge">
+              Launch Challenge Interface <ArrowRightIcon />
+            </Link>
+          </Button>
+        </Flex>
+      </Card>
+
+      <Flex direction="column" gap="4" mb="6">
+        <Text as="p">
           Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum ac
           diam sit amet quam vehicula elementum sed sit amet dui. Curabitur
           aliquet quam id dui posuere blandit.
-        </p>
-        <p>
+        </Text>
+        <Text as="p">
           Mauris blandit aliquet elit, eget tincidunt nibh pulvinar a. Vivamus
           magna justo, lacinia eget consectetur sed, convallis at tellus. Sed
           porttitor lectus nibh.
-        </p>
-        <p>
+        </Text>
+        <Text as="p">
           Nulla quis lorem ut libero malesuada feugiat. Praesent sapien massa,
           convallis a pellentesque nec, egestas non nisi. Vivamus suscipit
           tortor eget felis porttitor volutpat.
-        </p>
-        <p>
+        </Text>
+        <Text as="p">
           Cras ultricies ligula sed magna dictum porta. Vestibulum ante ipsum
           primis in faucibus orci luctus et ultrices posuere cubilia curae;
           Donec velit neque, auctor sit amet aliquam vel, ullamcorper sit amet
           ligula.
-        </p>
-      </div>
+        </Text>
+      </Flex>
 
-      <h2 style={{ marginTop: "40px" }}>Protected Content Example</h2>
-      <ProtectedCard className="protected-section">
-        <div className="lorem-content">
-          <h3>Premium Wargames Content</h3>
-          <p>
+      <Heading size="6" mb="4">Protected Content Example</Heading>
+      <ProtectedCard>
+        <Flex direction="column" gap="3">
+          <Heading size="4">Premium Wargames Content</Heading>
+          <Text as="p">
             This content is only visible to authenticated users. It contains
             advanced wargaming scenarios and strategic analysis that requires
             user authentication to access.
-          </p>
-          <p>
+          </Text>
+          <Text as="p">
             Sed ut perspiciatis unde omnis iste natus error sit voluptatem
             accusantium doloremque laudantium, totam rem aperiam, eaque ipsa
             quae ab illo inventore veritatis et quasi architecto beatae vitae
             dicta sunt explicabo.
-          </p>
-        </div>
+          </Text>
+        </Flex>
       </ProtectedCard>
-    </div>
+    </Container>
   );
 };
 

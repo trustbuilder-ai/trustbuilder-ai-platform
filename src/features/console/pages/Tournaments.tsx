@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  Box, Container, Flex, Grid, Heading, Text, Button, Badge,
+  Card, Spinner, Callout
+} from "@radix-ui/themes";
+import * as ToggleGroup from "@radix-ui/react-toggle-group";
+import * as ScrollArea from "@radix-ui/react-scroll-area";
+import { ChevronLeftIcon, ChevronRightIcon, Cross2Icon, ExclamationTriangleIcon } from "@radix-ui/react-icons";
 import { useApiData, usePaginatedData } from "../../../shared/hooks";
 import { ProtectedCard } from "../../../shared/components/ProtectedCard";
 import { DataCard } from "../components/DataCard";
@@ -13,7 +20,6 @@ import {
   addMessageToChatTemplateChatTemplatesChatTemplateIdAddMessagePost,
 } from "../../../backend_client/sdk.gen";
 import { WARGAMES_CONSTANTS } from "../../../shared/constants/wargames";
-import "./Tournaments.css";
 
 export function Tournaments() {
   const navigate = useNavigate();
@@ -264,405 +270,445 @@ export function Tournaments() {
   };
 
   return (
-    <div className="tournaments-page">
-      <div className="tournaments-header">
-        <h1>Tournaments</h1>
-        <p>Join tournaments and compete in cybersecurity challenges</p>
-      </div>
+    <Box style={{ backgroundColor: "var(--gray-2)", minHeight: "100vh" }}>
+      {/* Header */}
+      <Box style={{ backgroundColor: "white", borderBottom: "1px solid var(--gray-5)" }} p="5">
+        <Heading size="8" mb="1">Tournaments</Heading>
+        <Text color="gray">Join tournaments and compete in cybersecurity challenges</Text>
+      </Box>
 
-      <div className="tournaments-content">
-        {/* Tournament List */}
-        <div className="tournaments-list-section">
-          {/* Filter Controls */}
-          <div className="filter-controls">
-            <span className="filter-label">Filter by status:</span>
-            {["ACTIVE", "FUTURE", "PAST", "ACTIVE_AND_FUTURE"].map(
-              (filter) => (
-                <button
+      {/* Main Content */}
+      <Container size="4" p="5">
+        {/* Filter Controls */}
+        <Card mb="4">
+          <Flex gap="2" align="center" wrap="wrap">
+            <Text weight="medium" size="2">Filter by status:</Text>
+            <ToggleGroup.Root
+              type="single"
+              value={tournamentFilter}
+              onValueChange={(value) => value && handleFilterChange(value)}
+              style={{ display: "flex", gap: "0.5rem" }}
+            >
+              {["ACTIVE", "FUTURE", "PAST", "ACTIVE_AND_FUTURE"].map((filter) => (
+                <ToggleGroup.Item
                   key={filter}
-                  onClick={() => handleFilterChange(filter)}
-                  className={`filter-btn ${
-                    tournamentFilter === filter ? "active" : ""
-                  }`}
+                  value={filter}
+                  aria-label={`Filter by ${filter.toLowerCase().replace(/_/g, " ")} tournaments`}
+                  style={{
+                    padding: "0.5rem 1rem",
+                    border: "1px solid var(--gray-7)",
+                    borderRadius: "var(--radius-2)",
+                    backgroundColor: tournamentFilter === filter ? "var(--accent-9)" : "var(--color-background)",
+                    color: tournamentFilter === filter ? "white" : "var(--gray-12)",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                  }}
                 >
                   {filter.replace(/_/g, " ").replace(/AND/g, "&")}
-                </button>
-              )
-            )}
-          </div>
+                </ToggleGroup.Item>
+              ))}
+            </ToggleGroup.Root>
+          </Flex>
+        </Card>
 
-          {/* Tournament Grid */}
-          <DataCard
-            data={tournaments.data}
-            error={tournaments.error}
-            loading={tournaments.loading}
-            className="tournaments-grid-card"
-          >
-            {(data) => (
-              <div className="tournaments-container">
-                <div className="tournaments-grid">
-                  {data.map((tournament) => {
-                    const status = getTournamentStatus(tournament);
-                    const isJoined = joinedTournaments.has(tournament.id);
+        {/* Tournament Grid */}
+        <DataCard {...tournaments}>
+          {(data) => (
+            <>
+              <Grid columns={{ initial: "1", sm: "2", md: "3" }} gap="3" mb="4">
+                {data.map((tournament) => {
+                  const status = getTournamentStatus(tournament);
+                  const isJoined = joinedTournaments.has(tournament.id);
+                  const statusColor = status === "ACTIVE" ? "green" : status === "FUTURE" ? "blue" : "gray";
 
-                    return (
-                      <div
-                        key={tournament.id}
-                        className={`tournament-card ${
-                          selectedTournament?.id === tournament.id
-                            ? "selected"
-                            : ""
-                        }`}
-                        onClick={() => handleTournamentSelect(tournament)}
-                      >
-                        <div className="tournament-card-header">
-                          <h3>{tournament.name}</h3>
+                  return (
+                    <Card
+                      key={tournament.id}
+                      onClick={() => handleTournamentSelect(tournament)}
+                      style={{
+                        cursor: "pointer",
+                        border: selectedTournament?.id === tournament.id
+                          ? "2px solid var(--accent-9)"
+                          : "1px solid var(--gray-6)",
+                        transition: "all 0.2s",
+                      }}
+                    >
+                      <Flex direction="column" gap="3">
+                        <Flex justify="between" align="start">
+                          <Heading size="4">{tournament.name}</Heading>
                           {isJoined && (
-                            <span className="joined-badge">✓ Joined</span>
+                            <Badge color="green" size="2">✓ Joined</Badge>
                           )}
-                        </div>
-                        <div className="tournament-card-body">
-                          {tournament.description && (
-                            <p className="tournament-description">
-                              {tournament.description}
-                            </p>
-                          )}
-                          <div className="tournament-dates">
-                            <div className="date-item">
-                              <span className="date-label">Starts</span>
-                              <span className="date-value">
-                                {new Date(
-                                  tournament.start_date
-                                ).toLocaleDateString()}
-                              </span>
-                            </div>
-                            <div className="date-item">
-                              <span className="date-label">Ends</span>
-                              <span className="date-value">
-                                {new Date(
-                                  tournament.end_date
-                                ).toLocaleDateString()}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="tournament-footer">
-                            <span className={`status-badge status-${status}`}>
-                              {status}
-                            </span>
-                            {!isJoined && status !== "PAST" && (
-                              <button
-                                className="card-join-btn"
-                                onClick={(e) => handleJoinTournament(tournament.id, e)}
-                                disabled={joiningTournament === tournament.id}
-                              >
-                                {joiningTournament === tournament.id ? (
-                                  <><span className="loading-spinner"></span>Joining...</>
-                                ) : (
-                                  "Join"
-                                )}
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                        </Flex>
 
-                {/* Pagination */}
-                <div className="pagination">
-                  <div className="pagination-summary">
+                        {tournament.description && (
+                          <Text size="2" color="gray" style={{
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                          }}>
+                            {tournament.description}
+                          </Text>
+                        )}
+
+                        <Grid columns="2" gap="3" pt="2" style={{ borderTop: "1px solid var(--gray-5)" }}>
+                          <Flex direction="column" gap="1">
+                            <Text size="1" color="gray" weight="medium">STARTS</Text>
+                            <Text size="2">{new Date(tournament.start_date).toLocaleDateString()}</Text>
+                          </Flex>
+                          <Flex direction="column" gap="1">
+                            <Text size="1" color="gray" weight="medium">ENDS</Text>
+                            <Text size="2">{new Date(tournament.end_date).toLocaleDateString()}</Text>
+                          </Flex>
+                        </Grid>
+
+                        <Flex justify="between" align="center" pt="2" style={{ borderTop: "1px solid var(--gray-5)" }}>
+                          <Badge color={statusColor}>{status}</Badge>
+                          {!isJoined && status !== "PAST" && (
+                            <Button
+                              size="1"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleJoinTournament(tournament.id, e);
+                              }}
+                              disabled={joiningTournament === tournament.id}
+                            >
+                              {joiningTournament === tournament.id ? (
+                                <><Spinner size="1" /> Joining...</>
+                              ) : (
+                                "Join"
+                              )}
+                            </Button>
+                          )}
+                        </Flex>
+                      </Flex>
+                    </Card>
+                  );
+                })}
+              </Grid>
+
+              {/* Pagination */}
+              <Card>
+                <Flex justify="between" align="center">
+                  <Text size="2" color="gray">
                     Showing {Math.min((tournaments.currentPage * 12) + 1, data.length || 1)} - {Math.min((tournaments.currentPage + 1) * 12, (tournaments.currentPage * 12) + data.length)} tournaments
-                  </div>
-                  <div className="pagination-controls">
-                    <button
+                  </Text>
+                  <Flex gap="2" align="center">
+                    <Button
+                      variant="soft"
+                      size="2"
                       onClick={tournaments.prevPage}
                       disabled={!tournaments.hasPrevPage}
-                      className="pagination-btn"
                     >
-                      <span>←</span>
-                      Previous
-                    </button>
-                    <span className="pagination-info">
-                      Page {tournaments.currentPage + 1}
-                    </span>
-                    <button
+                      <ChevronLeftIcon /> Previous
+                    </Button>
+                    <Text size="2">Page {tournaments.currentPage + 1}</Text>
+                    <Button
+                      variant="soft"
+                      size="2"
                       onClick={tournaments.nextPage}
                       disabled={!tournaments.hasNextPage}
-                      className="pagination-btn"
                     >
-                      Next
-                      <span>→</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </DataCard>
-        </div>
+                      Next <ChevronRightIcon />
+                    </Button>
+                  </Flex>
+                </Flex>
+              </Card>
+            </>
+          )}
+        </DataCard>
 
         {/* Tournament Details */}
-        {selectedTournament && (
-          <div className="tournament-details-section">
-            <ProtectedCard className="tournament-details-card">
-              <div className="tournament-details-header">
-                <h2>{selectedTournament.name}</h2>
-                {!joinedTournaments.has(selectedTournament.id) && (
-                  <button
-                    className="join-tournament-btn"
-                    onClick={() => handleJoinTournament(selectedTournament.id)}
-                    disabled={joiningTournament === selectedTournament.id}
-                  >
-                    {joiningTournament === selectedTournament.id ? (
-                      <><span className="loading-spinner"></span>Joining...</>
-                    ) : (
-                      "Join Tournament"
-                    )}
-                  </button>
-                )}
-                {joinedTournaments.has(selectedTournament.id) && (
-                  <span className="joined-badge">✓ Joined</span>
-                )}
-              </div>
+        {selectedTournament && !activeChallenge && (
+          <Box mt="5">
+            <ProtectedCard>
+              <Flex direction="column" gap="4">
+                {/* Header */}
+                <Flex justify="between" align="center">
+                  <Heading size="6">{selectedTournament.name}</Heading>
+                  {!joinedTournaments.has(selectedTournament.id) ? (
+                    <Button
+                      onClick={() => handleJoinTournament(selectedTournament.id)}
+                      disabled={joiningTournament === selectedTournament.id}
+                    >
+                      {joiningTournament === selectedTournament.id ? (
+                        <><Spinner size="1" /> Joining...</>
+                      ) : (
+                        "Join Tournament"
+                      )}
+                    </Button>
+                  ) : (
+                    <Badge color="green" size="2">✓ Joined</Badge>
+                  )}
+                </Flex>
 
-              {selectedTournament.description && (
-                <p className="tournament-full-description">
-                  {selectedTournament.description}
-                </p>
-              )}
+                {/* Description */}
+                {selectedTournament.description && (
+                  <Text color="gray" style={{ borderBottom: "1px solid var(--gray-5)", paddingBottom: "var(--space-4)" }}>
+                    {selectedTournament.description}
+                  </Text>
+                )}
 
-              {/* Challenges List */}
-              <div className="challenges-section">
-                <h3>Challenges</h3>
-                {!joinedTournaments.has(selectedTournament.id) ? (
-                  <div className="join-prompt">
-                    <p>Join this tournament to view and start challenges</p>
-                  </div>
-                ) : (
-                  <DataCard
-                    data={challenges.data}
-                    error={challenges.error}
-                    loading={challenges.loading}
-                    className="challenges-list-card"
-                  >
-                    {(data) => (
-                      <div className="challenges-list">
-                        {data.length === 0 ? (
-                          <p className="no-challenges">
+                {/* Challenges Section */}
+                <Box>
+                  <Heading size="4" mb="3">Challenges</Heading>
+                  {!joinedTournaments.has(selectedTournament.id) ? (
+                    <Callout.Root color="amber">
+                      <Callout.Text>
+                        Join this tournament to view and start challenges
+                      </Callout.Text>
+                    </Callout.Root>
+                  ) : (
+                    <DataCard {...challenges}>
+                      {(data) => (
+                        data.length === 0 ? (
+                          <Text color="gray" style={{ textAlign: "center", padding: "var(--space-6)" }}>
                             No challenges available yet
-                          </p>
+                          </Text>
                         ) : (
-                          data.map((item) => {
-                            const challenge = item.chat_template;
-                            const isActive =
-                              userInfo.data?.active_chat_template_contexts?.some(
+                          <Flex direction="column" gap="3">
+                            {data.map((item) => {
+                              const challenge = item.chat_template;
+                              const isActive = userInfo.data?.active_chat_template_contexts?.some(
                                 (c) => c.chat_template_id === challenge.id
                               );
-                            const context = challengeContexts[challenge.id];
-                            const canContribute = context?.can_contribute !== false;
-                            const isCompleted = context?.succeeded_at != null;
+                              const context = challengeContexts[challenge.id];
+                              const canContribute = context?.can_contribute !== false;
+                              const isCompleted = context?.succeeded_at != null;
 
-                            return (
-                              <div
-                                key={challenge.id}
-                                className="challenge-item"
-                              >
-                                <div className="challenge-header">
-                                  <h4>{challenge.name}</h4>
-                                  <div className="challenge-status-badges">
-                                    {isCompleted && (
-                                      <span className="completed-badge">
-                                        ✓ Completed
-                                      </span>
+                              return (
+                                <Card key={challenge.id} style={{ backgroundColor: "var(--gray-2)" }}>
+                                  <Flex direction="column" gap="3">
+                                    {/* Challenge Header */}
+                                    <Flex justify="between" align="start">
+                                      <Heading size="3">{challenge.name}</Heading>
+                                      <Flex gap="1" wrap="wrap">
+                                        {isCompleted && <Badge color="green">✓ Completed</Badge>}
+                                        {isActive && !isCompleted && <Badge color="blue">Started</Badge>}
+                                        {isActive && !canContribute && !isCompleted && (
+                                          <Badge color="red">Locked</Badge>
+                                        )}
+                                      </Flex>
+                                    </Flex>
+
+                                    {/* Description */}
+                                    {challenge.description && (
+                                      <Text size="2" color="gray">{challenge.description}</Text>
                                     )}
-                                    {isActive && !isCompleted && (
-                                      <span className="active-badge">
-                                        Started
-                                      </span>
+
+                                    {/* Tools */}
+                                    {challenge.tools_available && (
+                                      <Flex gap="2" align="center">
+                                        <Text size="1" color="gray" weight="medium">Available tools:</Text>
+                                        <Badge variant="soft">{challenge.tools_available}</Badge>
+                                      </Flex>
                                     )}
-                                    {isActive && !canContribute && !isCompleted && (
-                                      <span className="locked-badge">
-                                        Locked
-                                      </span>
+
+                                    {/* Started date */}
+                                    {context?.started_at && (
+                                      <Flex gap="2" align="center">
+                                        <Text size="1" color="gray" weight="medium">Started:</Text>
+                                        <Text size="2">{new Date(context.started_at).toLocaleDateString()}</Text>
+                                      </Flex>
                                     )}
-                                  </div>
-                                </div>
-                                {challenge.description && (
-                                  <p className="challenge-description">
-                                    {challenge.description}
-                                  </p>
-                                )}
-                                {challenge.tools_available && (
-                                  <div className="challenge-tools">
-                                    <span className="tools-label">
-                                      Available tools:
-                                    </span>
-                                    <span className="tools-value">
-                                      {challenge.tools_available}
-                                    </span>
-                                  </div>
-                                )}
-                                {context?.started_at && (
-                                  <div className="challenge-meta">
-                                    <span className="meta-label">Started:</span>
-                                    <span className="meta-value">
-                                      {new Date(context.started_at).toLocaleDateString()}
-                                    </span>
-                                  </div>
-                                )}
-                                <div className="challenge-actions">
-                                  {!isCompleted && !isActive && (
-                                    <button
-                                      className={`start-challenge-btn ${!canContribute ? 'disabled' : ''}`}
-                                      onClick={() =>
-                                        canContribute && handleStartChallenge(challenge.id)
-                                      }
-                                      disabled={startingChallenge === challenge.id || !canContribute}
-                                      title={!canContribute ? "This challenge is locked and cannot be started" : ""}
-                                    >
-                                      {startingChallenge === challenge.id ? (
-                                        <><span className="loading-spinner"></span>Starting...</>
-                                      ) : !canContribute ? (
-                                        "Challenge Locked"
-                                      ) : (
-                                        "Start Challenge"
+
+                                    {/* Action buttons */}
+                                    <Flex justify="end">
+                                      {!isCompleted && !isActive && (
+                                        <Button
+                                          size="2"
+                                          color="green"
+                                          onClick={() => canContribute && handleStartChallenge(challenge.id)}
+                                          disabled={startingChallenge === challenge.id || !canContribute}
+                                        >
+                                          {startingChallenge === challenge.id ? (
+                                            <><Spinner size="1" /> Starting...</>
+                                          ) : !canContribute ? (
+                                            "Challenge Locked"
+                                          ) : (
+                                            "Start Challenge"
+                                          )}
+                                        </Button>
                                       )}
-                                    </button>
-                                  )}
-                                  {!isCompleted && isActive && (
-                                    <button
-                                      className="start-challenge-btn"
-                                      onClick={() => handleJoinChallenge(challenge)}
-                                    >
-                                      Join Challenge
-                                    </button>
-                                  )}
-                                  {isCompleted && (
-                                    <button
-                                      className="start-challenge-btn completed"
-                                      disabled
-                                    >
-                                      View Results
-                                    </button>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })
-                        )}
-                      </div>
-                    )}
-                  </DataCard>
-                )}
-              </div>
+                                      {!isCompleted && isActive && (
+                                        <Button
+                                          size="2"
+                                          onClick={() => handleJoinChallenge(challenge)}
+                                        >
+                                          Join Challenge
+                                        </Button>
+                                      )}
+                                      {isCompleted && (
+                                        <Button size="2" variant="soft" disabled>
+                                          View Results
+                                        </Button>
+                                      )}
+                                    </Flex>
+                                  </Flex>
+                                </Card>
+                              );
+                            })}
+                          </Flex>
+                        )
+                      )}
+                    </DataCard>
+                  )}
+                </Box>
+              </Flex>
             </ProtectedCard>
-          </div>
+          </Box>
         )}
-      </div>
 
-      {/* Chat Interface - Inline below tournaments */}
-      {activeChallenge && (
-        <div className="challenge-chat-section">
-          <div className="chat-container">
-            <div className="chat-header">
-              <h3>Challenge: {activeChallenge.name}</h3>
-              <button 
-                className="close-chat-btn"
-                onClick={() => setActiveChallenge(null)}
+        {/* Chat Interface */}
+        {activeChallenge && (
+          <Card mt="5">
+            <Flex direction="column" style={{ height: "600px" }}>
+              {/* Chat Header */}
+              <Flex
+                justify="between"
+                align="center"
+                p="4"
+                style={{ borderBottom: "1px solid var(--gray-5)" }}
               >
-                Close Chat
-              </button>
-            </div>
-            
-            <div className="chat-messages">
-              {challengeMessages.loading && (
-                <div className="chat-loading">Loading messages...</div>
-              )}
-              
-              {challengeMessages.error && (
-                <div className="chat-error">Failed to load messages</div>
-              )}
-              
-              {challengeMessages.data && (
-                <>
-                  {(() => {
-                    // Check different possible message locations
-                    const messages = challengeMessages.data.messages || 
-                                   challengeMessages.data?.user_chat_template_context?.messages || 
-                                   [];
-                    
-                    console.log("Messages array:", messages);
-                    
-                    if (messages.length > 0) {
-                      return messages.map((message, index) => {
-                        // Normalize role to handle different formats
-                        const role = message.role?.toLowerCase();
-                        const isUser = role === 'user';
-                        const displayRole = isUser ? 'You' : 'Assistant';
-                        
+                <Heading size="4">Challenge: {activeChallenge.name}</Heading>
+                <Button
+                  variant="ghost"
+                  onClick={() => setActiveChallenge(null)}
+                >
+                  <Cross2Icon /> Close Chat
+                </Button>
+              </Flex>
+
+              {/* Messages Area */}
+              <ScrollArea.Root
+                type="auto"
+                style={{ flex: 1 }}
+              >
+                <ScrollArea.Viewport style={{ width: "100%", height: "100%" }}>
+                  <Box p="4">
+                    {challengeMessages.loading && (
+                      <Flex align="center" justify="center" py="6">
+                        <Spinner size="3" />
+                        <Text color="gray" ml="2">Loading messages...</Text>
+                      </Flex>
+                    )}
+
+                    {challengeMessages.error && (
+                      <Callout.Root color="red">
+                        <Callout.Icon>
+                          <ExclamationTriangleIcon />
+                        </Callout.Icon>
+                        <Callout.Text>Failed to load messages</Callout.Text>
+                      </Callout.Root>
+                    )}
+
+                    {challengeMessages.data && (() => {
+                      const messages = challengeMessages.data.messages ||
+                                     challengeMessages.data?.user_chat_template_context?.messages ||
+                                     [];
+
+                      if (messages.length > 0) {
                         return (
-                          <div
-                            key={index}
-                            className={`chat-message ${isUser ? 'user' : 'assistant'}`}
-                          >
-                            <div className="message-role">
-                              {displayRole}
-                            </div>
-                            <div className="message-content">
-                              {message.content || message.text || message.message || '[No content]'}
-                            </div>
-                            {message.tool_name && (
-                              <div className="message-tool">
-                                Tool: {message.tool_name}
-                              </div>
-                            )}
-                          </div>
+                          <Flex direction="column" gap="3">
+                            {messages.map((message, index) => {
+                              const role = message.role?.toLowerCase();
+                              const isUser = role === 'user';
+                              const displayRole = isUser ? 'You' : 'Assistant';
+
+                              return (
+                                <Flex
+                                  key={index}
+                                  justify={isUser ? "end" : "start"}
+                                >
+                                  <Card
+                                    style={{
+                                      maxWidth: "80%",
+                                      backgroundColor: isUser
+                                        ? "var(--accent-9)"
+                                        : "var(--gray-3)",
+                                    }}
+                                  >
+                                    <Flex direction="column" gap="1">
+                                      <Badge size="1" variant="soft">
+                                        {displayRole}
+                                      </Badge>
+                                      <Text
+                                        size="2"
+                                        style={{
+                                          color: isUser ? "white" : "inherit",
+                                          whiteSpace: "pre-wrap",
+                                        }}
+                                      >
+                                        {message.content || message.text || message.message || '[No content]'}
+                                      </Text>
+                                      {message.tool_name && (
+                                        <Badge size="1" color="gray">
+                                          Tool: {message.tool_name}
+                                        </Badge>
+                                      )}
+                                    </Flex>
+                                  </Card>
+                                </Flex>
+                              );
+                            })}
+                            <div ref={messagesEndRef} />
+                          </Flex>
                         );
-                      });
-                    } else {
-                      return (
-                        <div className="chat-empty">
-                          No messages yet. Start the conversation!
-                        </div>
-                      );
-                    }
-                  })()}
-                </>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-            
-            <div className="chat-input-container">
-              <input
-                type="text"
-                className="chat-input"
-                placeholder="Type your message..."
-                value={messageInput}
-                onChange={(e) => setMessageInput(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    void handleSendMessage();
-                  }
-                }}
-                disabled={sendingMessage}
-              />
-              <button
-                className="chat-send-btn"
-                onClick={handleSendMessage}
-                disabled={sendingMessage || !messageInput.trim()}
+                      } else {
+                        return (
+                          <Text color="gray" style={{ textAlign: "center", fontStyle: "italic" }}>
+                            No messages yet. Start the conversation!
+                          </Text>
+                        );
+                      }
+                    })()}
+                  </Box>
+                </ScrollArea.Viewport>
+                <ScrollArea.Scrollbar orientation="vertical">
+                  <ScrollArea.Thumb />
+                </ScrollArea.Scrollbar>
+              </ScrollArea.Root>
+
+              {/* Input Area */}
+              <Flex
+                gap="2"
+                p="4"
+                style={{ borderTop: "1px solid var(--gray-5)" }}
               >
-                {sendingMessage ? (
-                  <span className="loading-spinner"></span>
-                ) : (
-                  "Send"
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+                <input
+                  type="text"
+                  placeholder="Type your message..."
+                  value={messageInput}
+                  onChange={(e) => setMessageInput(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      void handleSendMessage();
+                    }
+                  }}
+                  disabled={sendingMessage}
+                  style={{
+                    flex: 1,
+                    padding: "var(--space-2)",
+                    border: "1px solid var(--gray-7)",
+                    borderRadius: "var(--radius-2)",
+                    fontSize: "var(--font-size-2)",
+                    fontFamily: "var(--default-font-family)",
+                  }}
+                />
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={sendingMessage || !messageInput.trim()}
+                >
+                  {sendingMessage ? <Spinner size="1" /> : "Send"}
+                </Button>
+              </Flex>
+            </Flex>
+          </Card>
+        )}
+      </Container>
+    </Box>
   );
 }
 

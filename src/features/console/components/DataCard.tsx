@@ -1,5 +1,6 @@
 import React from "react";
-import "./DataCard.css";
+import { Card, Flex, Spinner, Text, Callout } from "@radix-ui/themes";
+import { ExclamationTriangleIcon, InfoCircledIcon } from "@radix-ui/react-icons";
 
 interface DataCardProps<T> {
   data: T | null;
@@ -13,6 +14,7 @@ interface DataCardProps<T> {
 /**
  * Generic component for displaying API data with loading, error, and empty states.
  * Works with any data type and handles all common display states.
+ * Now powered by Radix UI for accessibility and consistent styling.
  */
 export function DataCard<T>({
   data,
@@ -24,32 +26,48 @@ export function DataCard<T>({
 }: DataCardProps<T>) {
   if (loading) {
     return (
-      <div className={`data-card loading ${className}`}>
-        <div className="loading-spinner"></div>
-        <p>Loading{title ? ` ${title}` : ""}...</p>
-      </div>
+      <Card className={className}>
+        <Flex direction="column" align="center" justify="center" gap="3" py="6">
+          <Spinner size="3" />
+          <Text color="gray" size="2">
+            Loading{title ? ` ${title}` : ""}...
+          </Text>
+        </Flex>
+      </Card>
     );
   }
 
   if (error) {
     return (
-      <div className={`data-card error ${className}`}>
-        <p>
-          Error loading {title || "data"}: {error.message}
-        </p>
-      </div>
+      <Card className={className}>
+        <Callout.Root color="red">
+          <Callout.Icon>
+            <ExclamationTriangleIcon />
+          </Callout.Icon>
+          <Callout.Text>
+            Error loading {title || "data"}: {error.message}
+          </Callout.Text>
+        </Callout.Root>
+      </Card>
     );
   }
 
   if (!data) {
     return (
-      <div className={`data-card empty ${className}`}>
-        <p>No {title || "data"} available</p>
-      </div>
+      <Card className={className}>
+        <Callout.Root color="gray">
+          <Callout.Icon>
+            <InfoCircledIcon />
+          </Callout.Icon>
+          <Callout.Text>
+            No {title || "data"} available
+          </Callout.Text>
+        </Callout.Root>
+      </Card>
     );
   }
 
-  return <div className={`data-card ${className}`}>{children(data)}</div>;
+  return <Card className={className}>{children(data)}</Card>;
 }
 
 export default DataCard;

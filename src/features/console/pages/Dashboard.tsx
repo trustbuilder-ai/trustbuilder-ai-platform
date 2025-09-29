@@ -1,32 +1,30 @@
 import React, { useState } from "react";
+import { Box, Container, Flex, Grid, Heading, Text, Button, Badge, Card } from "@radix-ui/themes";
+import * as ToggleGroup from "@radix-ui/react-toggle-group";
 import { useApiData, usePaginatedData } from "../../../shared/hooks";
 import { ProtectedCard } from "../../../shared/components/ProtectedCard";
 import { DataCard } from "../components/DataCard";
 import {
-  healthCheckHealthCheckGet, // Public: ${BACKEND_URL}/health_check
-  listChatTemplateContainersChatTemplateContainersGet, // Public: ${BACKEND_URL}/chat_template_containers
-  getCurrentUserInfoUsersMeGet, // Protected: ${BACKEND_URL}/users/me
-  listBadgesBadgesGet, // Protected: ${BACKEND_URL}/badges
-  listChatTemplatesChatTemplatesGet, // Public: ${BACKEND_URL}/chat_templates
+  healthCheckHealthCheckGet,
+  listChatTemplateContainersChatTemplateContainersGet,
+  getCurrentUserInfoUsersMeGet,
+  listBadgesBadgesGet,
+  listChatTemplatesChatTemplatesGet,
 } from "../../../backend_client/sdk.gen";
 import type { SelectionFilter, UserInfo, Badges, ChatTemplateContainer, ChatTemplatesPublic } from "../../../backend_client/types.gen";
 import { BACKEND_URL } from "../../../config";
 import { WARGAMES_CONSTANTS } from "../../../shared/constants/wargames";
-import "./Dashboard.css";
+import { ChevronLeftIcon, ChevronRightIcon } from "@radix-ui/react-icons";
 
 export function Dashboard() {
   const [tournamentFilter, setTournamentFilter] =
     useState<SelectionFilter>("ACTIVE");
 
   // PUBLIC DATA - No authentication required
-
-  // Health check - hits https://wargames-ai-backend-357559285333.us-west1.run.app/health_check
   const healthStatus = useApiData<any>(healthCheckHealthCheckGet);
 
-  // Simple public data fetch - hits ${BACKEND_URL}/chat_template_containers
   const allTournaments = useApiData<ChatTemplateContainer[]>(listChatTemplateContainersChatTemplateContainersGet);
 
-  // Public data with pagination - hits ${BACKEND_URL}/chat_template_containers?page_index=0&count=10
   const paginatedTournaments = usePaginatedData<ChatTemplateContainer[]>(listChatTemplateContainersChatTemplateContainersGet, {
     pageSize: 10,
     initialParams: {
@@ -36,7 +34,6 @@ export function Dashboard() {
     },
   });
 
-  // Public data with manual parameter control - hits ${BACKEND_URL}/challenges?tournament_id=1&page_index=0&count=20
   const challenges = useApiData<ChatTemplatesPublic[]>(listChatTemplatesChatTemplatesGet, {
     initialParams: {
       query: {
@@ -48,13 +45,10 @@ export function Dashboard() {
   });
 
   // PROTECTED DATA - Requires authentication
-
-  // Simple protected data - hits ${BACKEND_URL}/users/me with Authorization header
   const userInfo = useApiData<UserInfo>(getCurrentUserInfoUsersMeGet, {
     requiresAuth: true,
   });
 
-  // Protected data with parameters - hits ${BACKEND_URL}/badges?user_badges_only=true
   const userBadges = useApiData<Badges[]>(listBadgesBadgesGet, {
     requiresAuth: true,
     initialParams: {
@@ -64,7 +58,6 @@ export function Dashboard() {
     },
   });
 
-  // Protected data with pagination - hits ${BACKEND_URL}/badges?user_badges_only=true&page_index=0&count=5
   const paginatedUserBadges = usePaginatedData<Badges[]>(listBadgesBadgesGet, {
     requiresAuth: true,
     pageSize: 5,
@@ -75,189 +68,233 @@ export function Dashboard() {
     },
   });
 
-  // Dynamic parameter updates (fully typed!)
   const handleFilterChange = (newFilter: SelectionFilter) => {
     setTournamentFilter(newFilter);
     paginatedTournaments.updateParams({
       query: {
-        selection_filter: newFilter, // TypeScript knows this field exists
-        page_index: 0, // Reset to first page
+        selection_filter: newFilter,
+        page_index: 0,
         count: 10,
       },
     });
   };
 
   return (
-    <div className="dashboard-page">
-      <h1>Wargames Dashboard</h1>
+    <Container size="4" p="5">
+      <Heading size="8" mb="2" align="center">Wargames Dashboard</Heading>
 
       {/* API Status Banner */}
-      <div className="api-status">
-        <DataCard {...healthStatus} className="health-banner">
+      <Box mb="4">
+        <DataCard {...healthStatus}>
           {(data) => (
-            <span className={`status ${data.status === "ok" ? "ok" : "error"}`}>
-              API Status: {data.status} | Backend: {BACKEND_URL}
-            </span>
+            <Flex align="center" justify="center" py="2">
+              <Badge color={data.status === "ok" ? "green" : "red"} size="2">
+                API Status: {data.status} | Backend: {BACKEND_URL}
+              </Badge>
+            </Flex>
           )}
         </DataCard>
-      </div>
+      </Box>
 
-      {/* PUBLIC SECTION - Always visible */}
-      <section className="public-section">
-        <h2>Public Information</h2>
+      {/* PUBLIC SECTION */}
+      <Box mb="6">
+        <Heading size="6" mb="4">Public Information</Heading>
 
         {/* Filter controls */}
-        <div className="filters">
-          <label>Tournament Status:</label>
-          {(["ACTIVE", "FUTURE", "PAST"] as const).map((filter) => (
-            <button
-              key={filter}
-              onClick={() => handleFilterChange(filter)}
-              className={tournamentFilter === filter ? "ACTIVE" : ""}
+        <Card mb="4">
+          <Flex gap="3" align="center" wrap="wrap">
+            <Text weight="medium">Tournament Status:</Text>
+            <ToggleGroup.Root
+              type="single"
+              value={tournamentFilter}
+              onValueChange={(value) => value && handleFilterChange(value as SelectionFilter)}
+              style={{ display: "flex", gap: "0.5rem" }}
             >
-              {filter.charAt(0).toUpperCase() + filter.slice(1)}
-            </button>
-          ))}
-        </div>
+              <ToggleGroup.Item
+                value="ACTIVE"
+                style={{
+                  padding: "0.5rem 1rem",
+                  border: "1px solid var(--gray-7)",
+                  borderRadius: "var(--radius-2)",
+                  backgroundColor: tournamentFilter === "ACTIVE" ? "var(--accent-9)" : "var(--color-background)",
+                  color: tournamentFilter === "ACTIVE" ? "white" : "var(--gray-12)",
+                  cursor: "pointer",
+                }}
+              >
+                Active
+              </ToggleGroup.Item>
+              <ToggleGroup.Item
+                value="FUTURE"
+                style={{
+                  padding: "0.5rem 1rem",
+                  border: "1px solid var(--gray-7)",
+                  borderRadius: "var(--radius-2)",
+                  backgroundColor: tournamentFilter === "FUTURE" ? "var(--accent-9)" : "var(--color-background)",
+                  color: tournamentFilter === "FUTURE" ? "white" : "var(--gray-12)",
+                  cursor: "pointer",
+                }}
+              >
+                Future
+              </ToggleGroup.Item>
+              <ToggleGroup.Item
+                value="PAST"
+                style={{
+                  padding: "0.5rem 1rem",
+                  border: "1px solid var(--gray-7)",
+                  borderRadius: "var(--radius-2)",
+                  backgroundColor: tournamentFilter === "PAST" ? "var(--accent-9)" : "var(--color-background)",
+                  color: tournamentFilter === "PAST" ? "white" : "var(--gray-12)",
+                  cursor: "pointer",
+                }}
+              >
+                Past
+              </ToggleGroup.Item>
+            </ToggleGroup.Root>
+          </Flex>
+        </Card>
 
-        {/* Paginated public data from ${BACKEND_URL}/tournaments */}
+        {/* Paginated tournaments */}
         <DataCard
           data={paginatedTournaments.data as ChatTemplateContainer[] | null}
           error={paginatedTournaments.error}
           loading={paginatedTournaments.loading}
           title="Tournaments"
-          className="tournaments-list"
         >
           {(data: ChatTemplateContainer[]) => (
             <>
-              <div className="tournament-grid">
+              <Grid columns={{ initial: "1", sm: "2", lg: "3" }} gap="4" mb="4">
                 {data.map((tournament) => (
-                  <div key={tournament.id} className="tournament-item">
-                    <h3>{tournament.name}</h3>
-                    <p>
-                      Starts:{" "}
-                      {new Date(tournament.start_date).toLocaleDateString()}
-                    </p>
+                  <Card key={tournament.id}>
+                    <Heading size="4" mb="2">{tournament.name}</Heading>
+                    <Text size="2" color="gray" mb="2">
+                      Starts: {new Date(tournament.start_date).toLocaleDateString()}
+                    </Text>
                     {tournament.end_date && (
-                      <p>
-                        Ends:{" "}
-                        {new Date(tournament.end_date).toLocaleDateString()}
-                      </p>
+                      <Text size="2" color="gray">
+                        Ends: {new Date(tournament.end_date).toLocaleDateString()}
+                      </Text>
                     )}
-                  </div>
+                  </Card>
                 ))}
-              </div>
+              </Grid>
 
-              <div className="pagination">
-                <button
-                  onClick={paginatedTournaments.prevPage}
-                  disabled={!paginatedTournaments.hasPrevPage}
-                >
-                  Previous
-                </button>
-                <span>Page {paginatedTournaments.currentPage + 1}</span>
-                <button
-                  onClick={paginatedTournaments.nextPage}
-                  disabled={!paginatedTournaments.hasNextPage}
-                >
-                  Next
-                </button>
-              </div>
+              <Card>
+                <Flex justify="between" align="center">
+                  <Button
+                    variant="soft"
+                    onClick={paginatedTournaments.prevPage}
+                    disabled={!paginatedTournaments.hasPrevPage}
+                  >
+                    <ChevronLeftIcon /> Previous
+                  </Button>
+                  <Text>Page {paginatedTournaments.currentPage + 1}</Text>
+                  <Button
+                    variant="soft"
+                    onClick={paginatedTournaments.nextPage}
+                    disabled={!paginatedTournaments.hasNextPage}
+                  >
+                    Next <ChevronRightIcon />
+                  </Button>
+                </Flex>
+              </Card>
             </>
           )}
         </DataCard>
 
-        {/* Simple public data from ${BACKEND_URL}/challenges */}
+        {/* Challenges */}
         <DataCard {...challenges} title="Latest Challenges">
           {(data) => (
-            <div className="challenges-list">
+            <Flex direction="column" gap="3">
               {data.map((item) => (
-                <div key={item.chat_template.id} className="challenge-item">
-                  <h4>{item.chat_template.name}</h4>
-                  {item.chat_template.description && <p>{item.chat_template.description}</p>}
-                  {item.chat_template.required_tools && (
-                    <p className="tools">Tools: {item.chat_template.required_tools}</p>
+                <Card key={item.chat_template.id}>
+                  <Heading size="3" mb="2">{item.chat_template.name}</Heading>
+                  {item.chat_template.description && (
+                    <Text size="2" color="gray" mb="2">{item.chat_template.description}</Text>
                   )}
-                </div>
+                  {item.chat_template.required_tools && (
+                    <Badge variant="soft">{item.chat_template.required_tools}</Badge>
+                  )}
+                </Card>
               ))}
-            </div>
+            </Flex>
           )}
         </DataCard>
-      </section>
+      </Box>
 
-      {/* PROTECTED SECTION - Only visible when authenticated */}
-      <ProtectedCard className="user-section">
-        <h2>Your Profile</h2>
+      {/* PROTECTED SECTION */}
+      <ProtectedCard>
+        <Heading size="6" mb="4">Your Profile</Heading>
 
-        {/* Simple protected data from ${BACKEND_URL}/users/me */}
         <DataCard {...userInfo} title="Account Info">
           {(data: UserInfo) => (
-            <div className="user-info">
-              <p>
-                <strong>User ID:</strong> {data.user_id}
-              </p>
-              <p>
-                <strong>Email:</strong> {data.email}
-              </p>
-            </div>
+            <Box>
+              <Flex direction="column" gap="2">
+                <Text><Text weight="bold">User ID:</Text> {data.user_id}</Text>
+                <Text><Text weight="bold">Email:</Text> {data.email}</Text>
+              </Flex>
+            </Box>
           )}
         </DataCard>
 
-        {/* Paginated protected data from ${BACKEND_URL}/badges */}
-        <DataCard 
+        <DataCard
           data={paginatedUserBadges.data as Badges[] | null}
           error={paginatedUserBadges.error}
           loading={paginatedUserBadges.loading}
-          title="Your Badges">
+          title="Your Badges"
+        >
           {(data: Badges[]) => (
             <>
-              <div className="badges-grid">
+              <Grid columns={{ initial: "2", sm: "3", lg: "5" }} gap="3" mb="4">
                 {data.map((badge) => (
-                  <div key={badge.id} className="badge-card">
-                    <h4>Badge #{badge.id}</h4>
-                    <p>Challenge ID: {badge.chat_template_id}</p>
-                  </div>
+                  <Card key={badge.id}>
+                    <Heading size="2" mb="1">Badge #{badge.id}</Heading>
+                    <Text size="1" color="gray">Challenge ID: {badge.chat_template_id}</Text>
+                  </Card>
                 ))}
-              </div>
+              </Grid>
 
-              <div className="pagination">
-                <button
-                  onClick={paginatedUserBadges.prevPage}
-                  disabled={!paginatedUserBadges.hasPrevPage}
-                >
-                  ←
-                </button>
-                <span>Page {paginatedUserBadges.currentPage + 1}</span>
-                <button
-                  onClick={paginatedUserBadges.nextPage}
-                  disabled={!paginatedUserBadges.hasNextPage}
-                >
-                  →
-                </button>
-              </div>
+              <Card>
+                <Flex justify="between" align="center">
+                  <Button
+                    variant="soft"
+                    size="1"
+                    onClick={paginatedUserBadges.prevPage}
+                    disabled={!paginatedUserBadges.hasPrevPage}
+                  >
+                    <ChevronLeftIcon />
+                  </Button>
+                  <Text size="2">Page {paginatedUserBadges.currentPage + 1}</Text>
+                  <Button
+                    variant="soft"
+                    size="1"
+                    onClick={paginatedUserBadges.nextPage}
+                    disabled={!paginatedUserBadges.hasNextPage}
+                  >
+                    <ChevronRightIcon />
+                  </Button>
+                </Flex>
+              </Card>
             </>
           )}
         </DataCard>
 
-        {/* Manual parameter control example */}
-        <div className="actions">
-          <button
+        <Flex justify="center" mt="4">
+          <Button
             onClick={() => {
               userBadges.refetch({
                 query: {
                   user_badges_only: true,
                   page_index: 0,
-                  count: 50, // Load more badges
+                  count: 50,
                 },
               });
             }}
-            className="load-all-btn"
           >
             Load All Badges
-          </button>
-        </div>
+          </Button>
+        </Flex>
       </ProtectedCard>
-    </div>
+    </Container>
   );
 }
 

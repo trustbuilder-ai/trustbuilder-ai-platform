@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { Box, Container, Card, Flex, Heading, Text, Spinner, Callout, Button } from "@radix-ui/themes";
+import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 import { supabase } from "../../lib/supabase";
-import "./Callback.css";
 
 const Callback = () => {
   const [error, setError] = useState(null);
@@ -67,37 +68,47 @@ const Callback = () => {
 
   if (error) {
     return (
-      <div className="callback-container">
-        <div className="callback-content error">
-          <div className="error-icon">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M12 8V12M12 16H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-          <h2>Authentication Error</h2>
-          <p>{error}</p>
-          <button onClick={() => navigate("/")} className="home-button">
-            Return to Home
-          </button>
-        </div>
-      </div>
+      <Box style={{ minHeight: "100vh", backgroundColor: "var(--gray-2)" }}>
+        <Flex align="center" justify="center" style={{ minHeight: "100vh" }}>
+          <Container size="1">
+            <Card>
+              <Flex direction="column" align="center" gap="4" p="6">
+                <Callout.Root color="red" size="2">
+                  <Callout.Icon>
+                    <ExclamationTriangleIcon width="24" height="24" />
+                  </Callout.Icon>
+                  <Callout.Text>
+                    <Heading size="4" mb="2">Authentication Error</Heading>
+                    <Text>{error}</Text>
+                  </Callout.Text>
+                </Callout.Root>
+                <Button onClick={() => navigate("/")} size="3">
+                  Return to Home
+                </Button>
+              </Flex>
+            </Card>
+          </Container>
+        </Flex>
+      </Box>
     );
   }
 
   return (
-    <div className="callback-container">
-      <div className="callback-content">
-        <div className="loading-spinner"></div>
-        <h2>Verifying your login...</h2>
-        <p>Please wait while we authenticate your session.</p>
-      </div>
-    </div>
+    <Box style={{ minHeight: "100vh", backgroundColor: "var(--gray-2)" }}>
+      <Flex align="center" justify="center" style={{ minHeight: "100vh" }}>
+        <Container size="1">
+          <Card>
+            <Flex direction="column" align="center" gap="4" p="6">
+              <Spinner size="3" />
+              <Heading size="5">Verifying your login...</Heading>
+              <Text color="gray" style={{ textAlign: "center" }}>
+                Please wait while we authenticate your session.
+              </Text>
+            </Flex>
+          </Card>
+        </Container>
+      </Flex>
+    </Box>
   );
 };
 

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
+import { Flex, Box } from "@radix-ui/themes";
 import Sidebar from "../components/Sidebar";
 import Breadcrumbs from "../components/Breadcrumbs";
-import "./ConsoleLayout.css";
 
 const ConsoleLayout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -38,15 +38,21 @@ const ConsoleLayout = () => {
   }, [sidebarCollapsed]);
 
   return (
-    <div className="dashboard-layout">
+    <Flex style={{ minHeight: "calc(100vh - 60px)", marginTop: "60px" }}>
       <Sidebar isCollapsed={sidebarCollapsed} isMobile={isMobile} />
-      <main
-        className={`dashboard-content ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}
+      <Box
+        flexGrow="1"
+        style={{
+          marginLeft: sidebarCollapsed ? "60px" : "250px",
+          transition: "margin-left 0.3s ease",
+          backgroundColor: "var(--color-background)",
+          minHeight: "calc(100vh - 60px)",
+        }}
       >
         <Breadcrumbs />
         <Outlet />
-      </main>
-    </div>
+      </Box>
+    </Flex>
   );
 };
 
