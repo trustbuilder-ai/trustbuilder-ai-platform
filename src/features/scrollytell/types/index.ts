@@ -27,8 +27,19 @@ export interface ScrollyTellSection {
 }
 
 export interface ScrollyTellData {
+  chat_template_id?: number;
   scrolly_tell_sections: ScrollyTellSection[];
 }
+
+export interface ScrollyTellRegistryEntry {
+  id: string;
+  name: string;
+  description: string;
+  scrollyTellData: ScrollyTellData;
+  defaultChatLeafId: number;
+}
+
+export type ScrollyTellRegistry = Record<string, ScrollyTellRegistryEntry>;
 
 export interface ScrollyTellState {
   currentChatLeafId: number;
@@ -46,4 +57,7 @@ export interface ScrollyTellContextValue extends ScrollyTellState {
   setCurrentView: (view: ViewType) => void;
   getMessagePath: (leafId: number) => MessageContainer[];
   forkMessage: (parentMessageId: number, role?: 'user' | 'assistant' | 'system', content?: string) => MessageContainer | null;
+  selectedSampleId: string | null;
+  availableSamples: ScrollyTellRegistryEntry[];
+  selectSample: (sampleId: string) => void;
 }

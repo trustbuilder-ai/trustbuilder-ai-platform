@@ -1,3 +1,13 @@
+/**
+ * @deprecated This file is deprecated in favor of scrollyTellRegistry.ts
+ *
+ * This file contains legacy sample data for the ScrollyTell feature.
+ * New code should use the registry system in scrollyTellRegistry.ts instead,
+ * which provides a more flexible way to manage multiple ScrollyTell samples.
+ *
+ * This file is kept for backward compatibility and will be removed in a future version.
+ */
+
 import { MessageTree, ScrollyTellData, ScrollyTellSection, VisualData, TextData } from '../types';
 
 export const messageTree: MessageTree = [

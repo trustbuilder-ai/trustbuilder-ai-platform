@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { ScrollyTellProvider, useScrollyTell } from '../context/ScrollyTellContext';
+import SampleSelector from '../components/SampleSelector';
 import './ScrollyTellLayout.css';
 
 const ViewSelector: React.FC = () => {
@@ -74,6 +75,7 @@ const ScrollyTellHeader: React.FC = () => {
         <h1 className="header-title">TrustBuilder</h1>
         <ViewSelector />
       </div>
+      <SampleSelector />
     </header>
   );
 };

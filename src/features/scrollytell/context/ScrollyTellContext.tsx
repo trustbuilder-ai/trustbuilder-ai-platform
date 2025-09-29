@@ -1,13 +1,14 @@
-import React, { createContext, useState, useContext, useCallback, ReactNode } from 'react';
-import { 
-  MessageTree, 
-  ScrollyTellData, 
-  ScrollyTellState, 
-  ScrollyTellContextValue, 
+import React, { createContext, useState, useContext, useCallback, ReactNode, useMemo } from 'react';
+import {
+  MessageTree,
+  ScrollyTellData,
+  ScrollyTellState,
+  ScrollyTellContextValue,
   ViewType,
-  MessageContainer 
+  MessageContainer,
+  ScrollyTellRegistryEntry
 } from '../types';
-import { messageTree as defaultMessageTree, scrollyTellData as defaultScrollyTellData, defaultChatLeafId } from '../data/sampleData';
+import { scrollyTellRegistry, getMessageTreeForSample } from '../data/scrollyTellRegistry';
 import { createForkedMessage } from '../utils/forkUtils';
 
 const ScrollyTellContext = createContext<ScrollyTellContextValue | undefined>(undefined);
@@ -16,11 +17,19 @@ interface ScrollyTellProviderProps {
   children: ReactNode;
 }
 
+// Get the first registry entry as default
+const defaultSampleId = Object.keys(scrollyTellRegistry)[0];
+const defaultSample = scrollyTellRegistry[defaultSampleId];
+
 export const ScrollyTellProvider: React.FC<ScrollyTellProviderProps> = ({ children }) => {
-  const [currentChatLeafId, setCurrentChatLeafId] = useState<number>(defaultChatLeafId);
-  const [messageTree, setMessageTree] = useState<MessageTree>(defaultMessageTree);
-  const [scrollyTellData, setScrollyTellData] = useState<ScrollyTellData>(defaultScrollyTellData);
+  const [selectedSampleId, setSelectedSampleId] = useState<string | null>(defaultSampleId);
+  const [currentChatLeafId, setCurrentChatLeafId] = useState<number>(defaultSample.defaultChatLeafId);
+  const [messageTree, setMessageTree] = useState<MessageTree>(getMessageTreeForSample(defaultSampleId));
+  const [scrollyTellData, setScrollyTellData] = useState<ScrollyTellData>(defaultSample.scrollyTellData);
   const [currentView, setCurrentView] = useState<ViewType>('scrollytell');
+
+  // Memoize available samples array
+  const availableSamples = useMemo(() => Object.values(scrollyTellRegistry), []);
 
   const updateMessageTree = useCallback((tree: MessageTree) => {
     setMessageTree(tree);
@@ -30,10 +39,32 @@ export const ScrollyTellProvider: React.FC<ScrollyTellProviderProps> = ({ childr
     setScrollyTellData(data);
   }, []);
 
+  /**
+   * Select a different sample from the registry and load its data
+   */
+  const selectSample = useCallback((sampleId: string) => {
+    const sample = scrollyTellRegistry[sampleId];
+    if (!sample) {
+      console.error(`Sample "${sampleId}" not found in registry`);
+      return;
+    }
+
+    // Update all related state
+    setSelectedSampleId(sampleId);
+    setScrollyTellData(sample.scrollyTellData);
+    setCurrentChatLeafId(sample.defaultChatLeafId);
+
+    // Load the message tree (temporary - will fetch from backend in future)
+    const tree = getMessageTreeForSample(sampleId);
+    setMessageTree(tree);
+
+    console.log(`Loaded sample: ${sample.name} (${sampleId})`);
+  }, []);
+
   const getMessagePath = useCallback((leafId: number): MessageContainer[] => {
     const path: MessageContainer[] = [];
     let currentMessage = messageTree.find(m => m.id === leafId);
-    
+
     while (currentMessage) {
       path.unshift(currentMessage);
       if (currentMessage.parent_message_id === null || currentMessage.parent_message_id === 0) {
@@ -41,7 +72,7 @@ export const ScrollyTellProvider: React.FC<ScrollyTellProviderProps> = ({ childr
       }
       currentMessage = messageTree.find(m => m.id === currentMessage?.parent_message_id);
     }
-    
+
     return path;
   }, [messageTree]);
 
@@ -91,7 +122,10 @@ export const ScrollyTellProvider: React.FC<ScrollyTellProviderProps> = ({ childr
     currentView,
     setCurrentView,
     getMessagePath,
-    forkMessage
+    forkMessage,
+    selectedSampleId,
+    availableSamples,
+    selectSample
   };
 
   return (
