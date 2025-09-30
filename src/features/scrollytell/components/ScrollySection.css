@@ -4,17 +4,14 @@
 }
 
 .scrolly-step {
-  min-height: 100vh;
-  margin-bottom: 50vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  margin-bottom: 3rem;
+  padding: 2rem;
 }
 
 .scrolly-content {
   max-width: 800px;
   width: 100%;
-  padding: 2rem;
+  margin: 0 auto;
 }
 
 .messages-container {
@@ -57,14 +54,4 @@
 .visual-placeholder p {
   color: rgba(255, 255, 255, 0.6);
   font-style: italic;
-}
-
-/* Sticky graphic support */
-.sticky-graphic {
-  position: sticky;
-  top: 10vh;
-  height: 80vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }

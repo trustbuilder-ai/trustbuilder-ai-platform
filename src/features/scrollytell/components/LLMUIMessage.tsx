@@ -1,6 +1,4 @@
-import React, { useMemo } from 'react';
-import { useLLMOutput, useStreamExample } from '@llm-ui/react';
-import { markdownLookBack } from '@llm-ui/markdown';
+import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { MessageContainer } from '../types';
@@ -8,9 +6,6 @@ import './LLMUIMessage.css';
 
 interface LLMUIMessageProps {
   message: MessageContainer;
-  isStreaming?: boolean;
-  streamProgress?: number;
-  onComplete?: () => void;
   showActions?: boolean;
   onFork?: () => void;
   onTreeView?: () => void;
@@ -20,52 +15,15 @@ interface LLMUIMessageProps {
 
 const LLMUIMessage: React.FC<LLMUIMessageProps> = ({
   message,
-  isStreaming = false,
-  streamProgress = 1,
-  onComplete,
   showActions = false,
   onFork,
   onTreeView,
   truncate = false,
   maxLength = 100
 }) => {
-  // For streaming mode in ScrollyTell view
-  const streamOptions = useMemo(() => ({
-    autoStart: isStreaming,
-    startIndex: 0,
-    delayMultiplier: 1 - streamProgress, // Faster as progress increases
-  }), [isStreaming, streamProgress]);
-
-  const { output: streamedOutput, isStreamFinished } = useStreamExample(
-    message.message.content,
-    isStreaming ? streamOptions : { autoStart: false }
-  );
-
-  // Call onComplete when streaming finishes
-  React.useEffect(() => {
-    if (isStreaming && isStreamFinished && onComplete) {
-      onComplete();
-    }
-  }, [isStreaming, isStreamFinished, onComplete]);
-
-  // Use LLM UI's markdown rendering with lookback for better display
-  const { blockMatches } = useLLMOutput({
-    llmOutput: isStreaming ? streamedOutput : message.message.content,
-    blocks: [],
-    fallbackBlock: {
-      component: ({ blockMatch }: { blockMatch: any }) => (
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-          {blockMatch.output}
-        </ReactMarkdown>
-      ),
-      lookBack: markdownLookBack(),
-    },
-    isStreamFinished: !isStreaming || isStreamFinished,
-  });
-
-  const displayContent = truncate && !isStreaming
+  const displayContent = truncate
     ? message.message.content.substring(0, maxLength) + (message.message.content.length > maxLength ? '...' : '')
-    : undefined;
+    : message.message.content;
 
   const getRoleClass = (role: string) => {
     switch (role) {
@@ -100,8 +58,8 @@ const LLMUIMessage: React.FC<LLMUIMessageProps> = ({
         {showActions && (
           <div className="llm-ui-message-actions">
             {onFork && (
-              <button 
-                className="llm-ui-action-button fork-button" 
+              <button
+                className="llm-ui-action-button fork-button"
                 onClick={onFork}
                 title="Fork conversation from here"
               >
@@ -112,8 +70,8 @@ const LLMUIMessage: React.FC<LLMUIMessageProps> = ({
               </button>
             )}
             {onTreeView && (
-              <button 
-                className="llm-ui-action-button tree-button" 
+              <button
+                className="llm-ui-action-button tree-button"
                 onClick={onTreeView}
                 title="View in tree"
               >
@@ -128,16 +86,16 @@ const LLMUIMessage: React.FC<LLMUIMessageProps> = ({
           </div>
         )}
       </div>
-      
+
       <div className="llm-ui-message-content">
-        {truncate && displayContent ? (
+        {truncate ? (
           <div className="llm-ui-message-text">{displayContent}</div>
         ) : (
-          blockMatches.map((blockMatch: any, index: number) => (
-            <div key={index} className="llm-ui-block">
-              {React.createElement(blockMatch.block.component, { blockMatch })}
-            </div>
-          ))
+          <div className="llm-ui-block">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {displayContent}
+            </ReactMarkdown>
+          </div>
         )}
       </div>
     </div>

@@ -19,20 +19,20 @@ const VERTICAL_SPACING = 150;
 
 /**
  * Transforms the MessageTree data structure into a spatial layout for visualization.
- * 
- * The MessageTree uses parent_message_id references to encode relationships - this is
+ *
+ * The MessageTree uses parent_id_in_tree references to encode relationships - this is
  * consistent with backend storage where messages reference their predecessors. However,
  * for rendering a tree view, we need explicit spatial coordinates and a traversable
  * structure. This function bridges that gap.
- * 
+ *
  * The layout algorithm assigns vertical columns to conversation branches:
  * - The main conversation thread flows vertically down column 0
  * - When a message has multiple responses (a fork), the first child continues
  *   in the parent's column while additional children spawn new columns to the right
  * - This creates a layout where each conversation path is visually distinct and
  *   can be followed vertically, with horizontal separation only at decision points
- * 
- * @param messageTree - Array of messages with parent_message_id relationships
+ *
+ * @param messageTree - Array of messages with parent_id_in_tree relationships
  * @returns Map of message IDs to TreeNode objects containing spatial positions
  */
 export function calculateTreeLayout(messageTree: MessageTree): Map<number, TreeNode> {
@@ -45,20 +45,20 @@ export function calculateTreeLayout(messageTree: MessageTree): Map<number, TreeN
   const roots: number[] = [];
   
   messageTree.forEach(container => {
-    if (container.parent_message_id === null || container.parent_message_id === 0) {
-      roots.push(container.id);
+    if (container.parent_id_in_tree === null || container.parent_id_in_tree === 0) {
+      roots.push(container.id_in_tree);
     }
-    
+
     // Initialize children list for this node
-    if (!childrenMap.has(container.id)) {
-      childrenMap.set(container.id, []);
+    if (!childrenMap.has(container.id_in_tree)) {
+      childrenMap.set(container.id_in_tree, []);
     }
-    
+
     // Add this node as a child of its parent
-    if (container.parent_message_id && container.parent_message_id !== 0) {
-      const siblings = childrenMap.get(container.parent_message_id) || [];
-      siblings.push(container.id);
-      childrenMap.set(container.parent_message_id, siblings);
+    if (container.parent_id_in_tree && container.parent_id_in_tree !== 0) {
+      const siblings = childrenMap.get(container.parent_id_in_tree) || [];
+      siblings.push(container.id_in_tree);
+      childrenMap.set(container.parent_id_in_tree, siblings);
     }
   });
   

@@ -12,30 +12,35 @@ import { ProtectedCard } from "../../../shared/components/ProtectedCard";
 import { DataCard } from "../components/DataCard";
 import {
   listChatTemplateContainersChatTemplateContainersGet,
-  getChatTemplateContainerChatTemplateContainersChatTemplateContainerIdGet,
   listChatTemplatesChatTemplatesGet,
-  startChatTemplateChatTemplatesChatTemplateIdStartPost,
   getCurrentUserInfoUsersMeGet,
-  getChatTemplateContextChatTemplatesChatTemplateIdContextGet,
-  addMessageToChatTemplateChatTemplatesChatTemplateIdAddMessagePost,
+  ensureChatContextChatContextsEnsurePost,
+  updateChatContextMessageTreeChatContextsChatContextIdMessageTreePatch,
 } from "../../../backend_client/sdk.gen";
+import type {
+  EnsureChatContextResponse,
+  MessageContainer,
+  UserInfo,
+  ChatTemplateContainer,
+  SelectionFilter
+} from "../../../backend_client/types.gen";
 import { WARGAMES_CONSTANTS } from "../../../shared/constants/wargames";
 
 export function Tournaments() {
   const navigate = useNavigate();
-  const messagesEndRef = useRef(null);
-  const [selectedTournament, setSelectedTournament] = useState(null);
-  const [tournamentFilter, setTournamentFilter] = useState("ACTIVE");
-  const [joinedTournaments, setJoinedTournaments] = useState(new Set());
-  const [joiningTournament, setJoiningTournament] = useState(null);
-  const [startingChallenge, setStartingChallenge] = useState(null);
-  const [challengeContexts, setChallengeContexts] = useState({});
-  const [activeChallenge, setActiveChallenge] = useState(null);
-  const [messageInput, setMessageInput] = useState("");
-  const [sendingMessage, setSendingMessage] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [selectedTournament, setSelectedTournament] = useState<ChatTemplateContainer | null>(null);
+  const [tournamentFilter, setTournamentFilter] = useState<SelectionFilter>("ACTIVE");
+  const [joinedTournaments, setJoinedTournaments] = useState<Set<number>>(new Set());
+  const [joiningTournament, setJoiningTournament] = useState<number | null>(null);
+  const [startingChallenge, setStartingChallenge] = useState<number | null>(null);
+  const [challengeContexts, setChallengeContexts] = useState<Record<number, any>>({});
+  const [activeChallenge, setActiveChallenge] = useState<any | null>(null);
+  const [messageInput, setMessageInput] = useState<string>("");
+  const [sendingMessage, setSendingMessage] = useState<boolean>(false);
 
   // Fetch user info to get joined tournaments
-  const userInfo = useApiData(getCurrentUserInfoUsersMeGet, {
+  const userInfo = useApiData<UserInfo>(getCurrentUserInfoUsersMeGet, {
     requiresAuth: true,
   });
 
@@ -53,15 +58,15 @@ export function Tournaments() {
   useEffect(() => {
     const fetchChallengeContexts = async () => {
       if (userInfo.data?.active_chat_template_contexts) {
-        const contexts = {};
+        const contexts: Record<number, any> = {};
         for (const context of userInfo.data.active_chat_template_contexts) {
           try {
-            const response = await getChatTemplateContextChatTemplatesChatTemplateIdContextGet({
-              path: { chat_template_id: context.chat_template_id },
-              requiresAuth: true,
+            const response = await ensureChatContextChatContextsEnsurePost({
+              body: { chat_template_id: context.chat_template_id },
+              throwOnError: false,
             });
-            if (response.data?.user_chat_template_context) {
-              contexts[context.chat_template_id] = response.data.user_chat_template_context;
+            if (response.data?.chat_context) {
+              contexts[context.chat_template_id] = response.data.chat_context;
             }
           } catch (error) {
             console.error(`Failed to fetch context for challenge ${context.chat_template_id}:`, error);
@@ -84,21 +89,6 @@ export function Tournaments() {
     },
   });
 
-  // Selected tournament details
-  const tournamentDetails = useApiData(
-    getChatTemplateContainerChatTemplateContainersChatTemplateContainerIdGet,
-    {
-      requiresAuth: true,
-      enabled: !!selectedTournament,
-      initialParams: selectedTournament
-        ? {
-            path: {
-              chat_template_container_id: selectedTournament.id,
-            },
-          }
-        : undefined,
-    }
-  );
   // Challenges for selected tournament
   const challenges = useApiData(listChatTemplatesChatTemplatesGet, {
     requiresAuth: true,
@@ -126,12 +116,12 @@ export function Tournaments() {
   }, [selectedTournament?.id]);
 
   // Fetch context for active challenge (including messages)
-  const challengeMessages = useApiData(getChatTemplateContextChatTemplatesChatTemplateIdContextGet, {
+  const challengeMessages = useApiData<EnsureChatContextResponse>(ensureChatContextChatContextsEnsurePost, {
     requiresAuth: true,
     enabled: !!activeChallenge,
     initialParams: activeChallenge
       ? {
-          path: {
+          body: {
             chat_template_id: activeChallenge.id,
           },
         }
@@ -143,7 +133,7 @@ export function Tournaments() {
     if (activeChallenge && challengeMessages.updateParams) {
       console.log("Fetching messages for challenge:", activeChallenge.id);
       challengeMessages.updateParams({
-        path: {
+        body: {
           chat_template_id: activeChallenge.id,
         },
       });
@@ -165,7 +155,7 @@ export function Tournaments() {
   }, [challengeMessages.data]);
 
   // Handle tournament filter change
-  const handleFilterChange = (newFilter) => {
+  const handleFilterChange = (newFilter: SelectionFilter) => {
     setTournamentFilter(newFilter);
     setSelectedTournament(null);
     tournaments.updateParams({
@@ -178,12 +168,12 @@ export function Tournaments() {
   };
 
   // Handle tournament selection
-  const handleTournamentSelect = (tournament) => {
+  const handleTournamentSelect = (tournament: ChatTemplateContainer) => {
     setSelectedTournament(tournament);
   };
 
   // Tournament enrollment is no longer needed
-  const handleJoinTournament = async (tournamentId, event) => {
+  const handleJoinTournament = async (tournamentId: number, event?: React.MouseEvent) => {
     // Stop propagation to prevent card selection
     if (event) {
       event.stopPropagation();
@@ -193,22 +183,22 @@ export function Tournaments() {
   };
 
   // Handle starting a challenge
-  const handleStartChallenge = async (challengeId) => {
+  const handleStartChallenge = async (challengeId: number) => {
     setStartingChallenge(challengeId);
     try {
-      const response = await startChatTemplateChatTemplatesChatTemplateIdStartPost({
-        path: {
+      const response = await ensureChatContextChatContextsEnsurePost({
+        body: {
           chat_template_id: challengeId,
         },
-        requiresAuth: true,
+        throwOnError: false,
       });
 
-      if (response.data) {
+      if (response.data?.chat_context) {
         // Refresh user info to update active challenges
         userInfo.refetch();
         // Refresh challenge contexts
         const contexts = { ...challengeContexts };
-        contexts[challengeId] = response.data;
+        contexts[challengeId] = response.data.chat_context;
         setChallengeContexts(contexts);
       }
     } catch (error) {
@@ -224,28 +214,20 @@ export function Tournaments() {
 
     setSendingMessage(true);
     try {
-      const response = await addMessageToChatTemplateChatTemplatesChatTemplateIdAddMessagePost({
-        path: {
-          chat_template_id: activeChallenge.id,
-        },
-        query: {
-          message: messageInput.trim(),
-        },
-        requiresAuth: true,
-      });
+      // TODO: Implement message sending with new API
+      // This requires:
+      // 1. Get current chat context and message tree
+      // 2. Create new message container with user message
+      // 3. PATCH updated message tree to /chat_contexts/{id}/message_tree
+      // 4. Call LLM completion endpoint if needed
+      // 5. Update message tree again with LLM response
+      // 6. Refetch context to show updated conversation
 
-      if (response.data) {
-        // Clear input
-        setMessageInput("");
-        
-        // Log the response to see what we're getting
-        console.log("Submit message response:", response.data);
-        
-        // The response includes the full ChallengeContextResponse with updated messages
-        // Force a refetch to get the latest messages from the response
-        // This ensures the chat updates immediately with the new conversation
-        challengeMessages.refetch();
-      }
+      console.warn("Message sending not yet implemented with new API");
+      alert("Message sending is temporarily disabled. This feature needs to be reimplemented with the new API architecture.");
+
+      // For now, just clear the input
+      setMessageInput("");
     } catch (error) {
       console.error("Failed to send message:", error);
     } finally {
@@ -254,15 +236,15 @@ export function Tournaments() {
   };
 
   // Handle joining a challenge (opening chat)
-  const handleJoinChallenge = (challenge) => {
+  const handleJoinChallenge = (challenge: any) => {
     setActiveChallenge(challenge);
   };
 
   // Calculate tournament status
-  const getTournamentStatus = (tournament) => {
+  const getTournamentStatus = (tournament: ChatTemplateContainer) => {
     const now = new Date();
-    const start = new Date(tournament.start_date);
-    const end = new Date(tournament.end_date);
+    const start = tournament.start_date ? new Date(tournament.start_date) : now;
+    const end = tournament.end_date ? new Date(tournament.end_date) : new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
 
     if (now < start) return "FUTURE";
     if (now > end) return "PAST";
@@ -286,10 +268,10 @@ export function Tournaments() {
             <ToggleGroup.Root
               type="single"
               value={tournamentFilter}
-              onValueChange={(value) => value && handleFilterChange(value)}
+              onValueChange={(value) => value && handleFilterChange(value as SelectionFilter)}
               style={{ display: "flex", gap: "0.5rem" }}
             >
-              {["ACTIVE", "FUTURE", "PAST", "ACTIVE_AND_FUTURE"].map((filter) => (
+              {(["ACTIVE", "FUTURE", "PAST", "ACTIVE_AND_FUTURE"] as SelectionFilter[]).map((filter) => (
                 <ToggleGroup.Item
                   key={filter}
                   value={filter}
@@ -312,13 +294,13 @@ export function Tournaments() {
         </Card>
 
         {/* Tournament Grid */}
-        <DataCard {...tournaments}>
-          {(data) => (
+        <DataCard {...(tournaments as any)}>
+          {(data: ChatTemplateContainer[]) => (
             <>
               <Grid columns={{ initial: "1", sm: "2", md: "3" }} gap="3" mb="4">
                 {data.map((tournament) => {
                   const status = getTournamentStatus(tournament);
-                  const isJoined = joinedTournaments.has(tournament.id);
+                  const isJoined = tournament.id ? joinedTournaments.has(tournament.id) : false;
                   const statusColor = status === "ACTIVE" ? "green" : status === "FUTURE" ? "blue" : "gray";
 
                   return (
@@ -355,22 +337,22 @@ export function Tournaments() {
                         <Grid columns="2" gap="3" pt="2" style={{ borderTop: "1px solid var(--gray-5)" }}>
                           <Flex direction="column" gap="1">
                             <Text size="1" color="gray" weight="medium">STARTS</Text>
-                            <Text size="2">{new Date(tournament.start_date).toLocaleDateString()}</Text>
+                            <Text size="2">{tournament.start_date ? new Date(tournament.start_date).toLocaleDateString() : 'N/A'}</Text>
                           </Flex>
                           <Flex direction="column" gap="1">
                             <Text size="1" color="gray" weight="medium">ENDS</Text>
-                            <Text size="2">{new Date(tournament.end_date).toLocaleDateString()}</Text>
+                            <Text size="2">{tournament.end_date ? new Date(tournament.end_date).toLocaleDateString() : 'N/A'}</Text>
                           </Flex>
                         </Grid>
 
                         <Flex justify="between" align="center" pt="2" style={{ borderTop: "1px solid var(--gray-5)" }}>
                           <Badge color={statusColor}>{status}</Badge>
-                          {!isJoined && status !== "PAST" && (
+                          {!isJoined && status !== "PAST" && tournament.id && (
                             <Button
                               size="1"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleJoinTournament(tournament.id, e);
+                                handleJoinTournament(tournament.id!, e);
                               }}
                               disabled={joiningTournament === tournament.id}
                             >
@@ -427,9 +409,9 @@ export function Tournaments() {
                 {/* Header */}
                 <Flex justify="between" align="center">
                   <Heading size="6">{selectedTournament.name}</Heading>
-                  {!joinedTournaments.has(selectedTournament.id) ? (
+                  {selectedTournament && selectedTournament.id && !joinedTournaments.has(selectedTournament.id) ? (
                     <Button
-                      onClick={() => handleJoinTournament(selectedTournament.id)}
+                      onClick={() => handleJoinTournament(selectedTournament.id!)}
                       disabled={joiningTournament === selectedTournament.id}
                     >
                       {joiningTournament === selectedTournament.id ? (
@@ -453,15 +435,15 @@ export function Tournaments() {
                 {/* Challenges Section */}
                 <Box>
                   <Heading size="4" mb="3">Challenges</Heading>
-                  {!joinedTournaments.has(selectedTournament.id) ? (
+                  {selectedTournament.id && !joinedTournaments.has(selectedTournament.id) ? (
                     <Callout.Root color="amber">
                       <Callout.Text>
                         Join this tournament to view and start challenges
                       </Callout.Text>
                     </Callout.Root>
                   ) : (
-                    <DataCard {...challenges}>
-                      {(data) => (
+                    <DataCard {...(challenges as any)}>
+                      {(data: any[]) => (
                         data.length === 0 ? (
                           <Text color="gray" style={{ textAlign: "center", padding: "var(--space-6)" }}>
                             No challenges available yet
@@ -604,21 +586,21 @@ export function Tournaments() {
                     )}
 
                     {challengeMessages.data && (() => {
-                      const messages = challengeMessages.data.messages ||
-                                     challengeMessages.data?.user_chat_template_context?.messages ||
-                                     [];
+                      // Extract message tree from chat context
+                      const messageTree = (challengeMessages.data.chat_context?.message_tree as unknown as MessageContainer[]) || [];
 
-                      if (messages.length > 0) {
+                      if (messageTree.length > 0) {
                         return (
                           <Flex direction="column" gap="3">
-                            {messages.map((message, index) => {
-                              const role = message.role?.toLowerCase();
+                            {messageTree.map((container, index) => {
+                              const message = container.message;
+                              const role = message?.role?.toLowerCase();
                               const isUser = role === 'user';
                               const displayRole = isUser ? 'You' : 'Assistant';
 
                               return (
                                 <Flex
-                                  key={index}
+                                  key={container.id_in_tree || index}
                                   justify={isUser ? "end" : "start"}
                                 >
                                   <Card
@@ -640,13 +622,8 @@ export function Tournaments() {
                                           whiteSpace: "pre-wrap",
                                         }}
                                       >
-                                        {message.content || message.text || message.message || '[No content]'}
+                                        {message?.content || '[No content]'}
                                       </Text>
-                                      {message.tool_name && (
-                                        <Badge size="1" color="gray">
-                                          Tool: {message.tool_name}
-                                        </Badge>
-                                      )}
                                     </Flex>
                                   </Card>
                                 </Flex>

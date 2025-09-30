@@ -34,8 +34,8 @@ function App() {
       <Routes>
         {/* Routes with Header */}
         <Route element={<RootLayout />}>
-          {/* Redirect from root to dashboard */}
-          <Route path="/" element={<Navigate to="/wargames/challenge" replace />} />
+          {/* Redirect from root to scrollytell */}
+          <Route path="/" element={<Navigate to="/scrollytell" replace />} />
           
           {/* Console routes with sidebar */}
           <Route path="/console" element={<ConsoleLayout />}>
@@ -55,10 +55,12 @@ function App() {
         </Route>
         
         {/* Wargames routes without Header */}
-        { <Route path="/wargames" element={<WargamesLayout />}>
+        {/* Temporarily disabled - WargamesChallenge uses non-existent backend API functions
+        <Route path="/wargames" element={<WargamesLayout />}>
           <Route path="challenge" element={<WargamesChallenge />} />
           <Route path="challenge/:challengeId" element={<WargamesChallenge />} />
-        </Route> }
+        </Route>
+        */}
         
         {/* ScrollyTell routes */}
         <Route path="/scrollytell" element={<ScrollyTellLayout />}>

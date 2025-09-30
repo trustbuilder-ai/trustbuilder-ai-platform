@@ -36,6 +36,52 @@ export type ChatChoice = {
 };
 
 /**
+ * ChatContext
+ */
+export type ChatContext = {
+    /**
+     * Id
+     */
+    id?: number | null;
+    /**
+     * Can Contribute
+     */
+    can_contribute: boolean;
+    /**
+     * Chat Template Id
+     */
+    chat_template_id: number;
+    /**
+     * Started At
+     */
+    started_at: string;
+    /**
+     * User Id
+     */
+    user_id: number;
+    /**
+     * Message Tree
+     */
+    message_tree?: {
+        [key: string]: unknown;
+    } | null;
+};
+
+/**
+ * ChatContextResponse
+ * Represents the full message context for a chat template, including user chat template context
+ * and messages.
+ */
+export type ChatContextResponse = {
+    user_chat_template_context: ChatContext;
+    eval_result?: EvalResult | null;
+    /**
+     * Remaining Message Count
+     */
+    remaining_message_count?: number;
+};
+
+/**
  * ChatMessage
  * A single chat message in the conversation.
  *
@@ -201,39 +247,6 @@ export type ChatTemplateContainer = {
 };
 
 /**
- * ChatTemplateContextLLMResponse
- * Represents a response from the LLM call.
- */
-export type ChatTemplateContextLlmResponse = {
-    /**
-     * Remaining Message Count
-     */
-    remaining_message_count: number;
-    /**
-     * Messages
-     */
-    messages: Array<Message>;
-};
-
-/**
- * ChatTemplateContextResponse
- * Represents the full message context for a chat template, including user chat template context
- * and messages.
- */
-export type ChatTemplateContextResponse = {
-    user_chat_template_context: UserChatTemplateContext;
-    /**
-     * Messages
-     */
-    messages?: Array<Message>;
-    eval_result?: EvalResult | null;
-    /**
-     * Remaining Message Count
-     */
-    remaining_message_count?: number;
-};
-
-/**
  * ChatTemplatesPublic
  */
 export type ChatTemplatesPublic = {
@@ -266,6 +279,25 @@ export type ChatUsage = {
      * Total Tokens
      */
     total_tokens: number;
+};
+
+/**
+ * EnsureChatContextRequest
+ * Request body for ensuring chat context exists.
+ */
+export type EnsureChatContextRequest = {
+    /**
+     * Chat Template Id
+     */
+    chat_template_id: number;
+};
+
+/**
+ * EnsureChatContextResponse
+ * Response for ensure chat context endpoint.
+ */
+export type EnsureChatContextResponse = {
+    chat_context: ChatContext;
 };
 
 /**
@@ -390,21 +422,21 @@ export type Message = {
  * Used for the ScrollyTell feature to represent hierarchical message structures.
  *
  * Attributes:
- * id: Unique identifier for the message container.
- * parent_message_id: ID of the parent message, null for root.
+ * id_in_tree: Tree-scoped identifier for the message container (not database ID).
+ * parent_id_in_tree: Tree-scoped ID of the parent message, null for root.
  * message: The actual message content.
  */
 export type MessageContainer = {
     /**
-     * Id
-     * Unique identifier for the message container
+     * Id In Tree
+     * Tree-scoped identifier for the message container
      */
-    id: number;
+    id_in_tree: number;
     /**
-     * Parent Message Id
-     * ID of the parent message, null for root
+     * Parent Id In Tree
+     * Tree-scoped ID of the parent message, null for root
      */
-    parent_message_id?: number | null;
+    parent_id_in_tree?: number | null;
     /**
      * The actual message content
      */
@@ -501,45 +533,22 @@ export type ToolCall = {
 };
 
 /**
- * UserChatTemplateContext
+ * UpdateMessageTreeRequest
+ * Request body for updating message tree.
  */
-export type UserChatTemplateContext = {
+export type UpdateMessageTreeRequest = {
     /**
-     * Id
+     * Message Tree
      */
-    id?: number | null;
-    /**
-     * Can Contribute
-     */
-    can_contribute: boolean;
-    /**
-     * Chat Template Id
-     */
-    chat_template_id: number;
-    /**
-     * Started At
-     */
-    started_at: string;
-    /**
-     * User Id
-     */
-    user_id: number;
-    /**
-     * Last Message Version
-     */
-    last_message_version: number;
-    /**
-     * Processing Token
-     */
-    processing_token?: string | null;
-    /**
-     * Processing Started At
-     */
-    processing_started_at?: string | null;
-    /**
-     * Last Message Id
-     */
-    last_message_id?: number | null;
+    message_tree: Array<MessageContainer>;
+};
+
+/**
+ * UpdateMessageTreeResponse
+ * Response for update message tree endpoint.
+ */
+export type UpdateMessageTreeResponse = {
+    chat_context: ChatContext;
 };
 
 /**
@@ -563,7 +572,7 @@ export type UserInfo = {
     /**
      * Active Chat Template Contexts
      */
-    active_chat_template_contexts: Array<UserChatTemplateContext>;
+    active_chat_template_contexts: Array<ChatContext>;
     /**
      * Badges
      */
@@ -592,6 +601,221 @@ export type ValidationError = {
     type: string;
 };
 
+export type RootGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/';
+};
+
+export type RootGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type HealthCheckHealthCheckGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/health_check';
+};
+
+export type HealthCheckHealthCheckGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type EnsureChatContextChatContextsEnsurePostData = {
+    body: EnsureChatContextRequest;
+    path?: never;
+    query?: never;
+    url: '/chat_contexts/ensure';
+};
+
+export type EnsureChatContextChatContextsEnsurePostErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type EnsureChatContextChatContextsEnsurePostError = EnsureChatContextChatContextsEnsurePostErrors[keyof EnsureChatContextChatContextsEnsurePostErrors];
+
+export type EnsureChatContextChatContextsEnsurePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: EnsureChatContextResponse;
+};
+
+export type EnsureChatContextChatContextsEnsurePostResponse = EnsureChatContextChatContextsEnsurePostResponses[keyof EnsureChatContextChatContextsEnsurePostResponses];
+
+export type UpdateChatContextMessageTreeChatContextsChatContextIdMessageTreePatchData = {
+    body: UpdateMessageTreeRequest;
+    path: {
+        /**
+         * Chat Context Id
+         */
+        chat_context_id: number;
+    };
+    query?: never;
+    url: '/chat_contexts/{chat_context_id}/message_tree';
+};
+
+export type UpdateChatContextMessageTreeChatContextsChatContextIdMessageTreePatchErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateChatContextMessageTreeChatContextsChatContextIdMessageTreePatchError = UpdateChatContextMessageTreeChatContextsChatContextIdMessageTreePatchErrors[keyof UpdateChatContextMessageTreeChatContextsChatContextIdMessageTreePatchErrors];
+
+export type UpdateChatContextMessageTreeChatContextsChatContextIdMessageTreePatchResponses = {
+    /**
+     * Successful Response
+     */
+    200: UpdateMessageTreeResponse;
+};
+
+export type UpdateChatContextMessageTreeChatContextsChatContextIdMessageTreePatchResponse = UpdateChatContextMessageTreeChatContextsChatContextIdMessageTreePatchResponses[keyof UpdateChatContextMessageTreeChatContextsChatContextIdMessageTreePatchResponses];
+
+export type ListEvaluationsEvaluationsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Chat Template Id
+         */
+        chat_template_id?: number | null;
+        /**
+         * Page Index
+         */
+        page_index?: number;
+        /**
+         * Count
+         */
+        count?: number;
+    };
+    url: '/evaluations';
+};
+
+export type ListEvaluationsEvaluationsGetErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListEvaluationsEvaluationsGetError = ListEvaluationsEvaluationsGetErrors[keyof ListEvaluationsEvaluationsGetErrors];
+
+export type ListEvaluationsEvaluationsGetResponses = {
+    /**
+     * Response List Evaluations Evaluations Get
+     * Successful Response
+     */
+    200: Array<ChatContextResponse>;
+};
+
+export type ListEvaluationsEvaluationsGetResponse = ListEvaluationsEvaluationsGetResponses[keyof ListEvaluationsEvaluationsGetResponses];
+
+export type ListChatTemplatesChatTemplatesGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Chat Template Container Id
+         */
+        chat_template_container_id?: number | null;
+        /**
+         * Container Type
+         */
+        container_type?: string | null;
+        /**
+         * Page Index
+         */
+        page_index?: number;
+        /**
+         * Count
+         */
+        count?: number;
+    };
+    url: '/chat_templates';
+};
+
+export type ListChatTemplatesChatTemplatesGetErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListChatTemplatesChatTemplatesGetError = ListChatTemplatesChatTemplatesGetErrors[keyof ListChatTemplatesChatTemplatesGetErrors];
+
+export type ListChatTemplatesChatTemplatesGetResponses = {
+    /**
+     * Response List Chat Templates Chat Templates Get
+     * Successful Response
+     */
+    200: Array<ChatTemplatesPublic>;
+};
+
+export type ListChatTemplatesChatTemplatesGetResponse = ListChatTemplatesChatTemplatesGetResponses[keyof ListChatTemplatesChatTemplatesGetResponses];
+
+export type GetChatTemplateChatTemplatesChatTemplateIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * Chat Template Id
+         */
+        chat_template_id: number;
+    };
+    query?: never;
+    url: '/chat_templates/{chat_template_id}';
+};
+
+export type GetChatTemplateChatTemplatesChatTemplateIdGetErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetChatTemplateChatTemplatesChatTemplateIdGetError = GetChatTemplateChatTemplatesChatTemplateIdGetErrors[keyof GetChatTemplateChatTemplatesChatTemplateIdGetErrors];
+
+export type GetChatTemplateChatTemplatesChatTemplateIdGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: ChatTemplatesPublic;
+};
+
+export type GetChatTemplateChatTemplatesChatTemplateIdGetResponse = GetChatTemplateChatTemplatesChatTemplateIdGetResponses[keyof GetChatTemplateChatTemplatesChatTemplateIdGetResponses];
+
 export type ListChatTemplateContainersChatTemplateContainersGetData = {
     body?: never;
     path?: never;
@@ -615,6 +839,10 @@ export type ListChatTemplateContainersChatTemplateContainersGetData = {
 
 export type ListChatTemplateContainersChatTemplateContainersGetErrors = {
     /**
+     * Not found
+     */
+    404: unknown;
+    /**
      * Validation Error
      */
     422: HttpValidationError;
@@ -632,35 +860,92 @@ export type ListChatTemplateContainersChatTemplateContainersGetResponses = {
 
 export type ListChatTemplateContainersChatTemplateContainersGetResponse = ListChatTemplateContainersChatTemplateContainersGetResponses[keyof ListChatTemplateContainersChatTemplateContainersGetResponses];
 
-export type GetChatTemplateContainerChatTemplateContainersChatTemplateContainerIdGetData = {
-    body?: never;
-    path: {
-        /**
-         * Chat Template Container Id
-         */
-        chat_template_container_id: number;
-    };
+export type CreateChatCompletionLlmChatCompletionsPostData = {
+    body: ChatRequest;
+    path?: never;
     query?: never;
-    url: '/chat_template_containers/{chat_template_container_id}';
+    url: '/llm/chat/completions';
 };
 
-export type GetChatTemplateContainerChatTemplateContainersChatTemplateContainerIdGetErrors = {
+export type CreateChatCompletionLlmChatCompletionsPostErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
     /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Internal server error
+     */
+    500: unknown;
 };
 
-export type GetChatTemplateContainerChatTemplateContainersChatTemplateContainerIdGetError = GetChatTemplateContainerChatTemplateContainersChatTemplateContainerIdGetErrors[keyof GetChatTemplateContainerChatTemplateContainersChatTemplateContainerIdGetErrors];
+export type CreateChatCompletionLlmChatCompletionsPostError = CreateChatCompletionLlmChatCompletionsPostErrors[keyof CreateChatCompletionLlmChatCompletionsPostErrors];
 
-export type GetChatTemplateContainerChatTemplateContainersChatTemplateContainerIdGetResponses = {
+export type CreateChatCompletionLlmChatCompletionsPostResponses = {
     /**
      * Successful Response
      */
-    200: ChatTemplateContainer;
+    200: ChatResponse;
 };
 
-export type GetChatTemplateContainerChatTemplateContainersChatTemplateContainerIdGetResponse = GetChatTemplateContainerChatTemplateContainersChatTemplateContainerIdGetResponses[keyof GetChatTemplateContainerChatTemplateContainersChatTemplateContainerIdGetResponses];
+export type CreateChatCompletionLlmChatCompletionsPostResponse = CreateChatCompletionLlmChatCompletionsPostResponses[keyof CreateChatCompletionLlmChatCompletionsPostResponses];
+
+export type ListAvailableModelsLlmModelsGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/llm/models';
+};
+
+export type ListAvailableModelsLlmModelsGetErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Internal server error
+     */
+    500: unknown;
+};
+
+export type ListAvailableModelsLlmModelsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: ModelsResponse;
+};
+
+export type ListAvailableModelsLlmModelsGetResponse = ListAvailableModelsLlmModelsGetResponses[keyof ListAvailableModelsLlmModelsGetResponses];
+
+export type CheckLlmHealthLlmHealthGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/llm/health';
+};
+
+export type CheckLlmHealthLlmHealthGetErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Internal server error
+     */
+    500: unknown;
+};
+
+export type CheckLlmHealthLlmHealthGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: LlmHealthStatus;
+};
+
+export type CheckLlmHealthLlmHealthGetResponse = CheckLlmHealthLlmHealthGetResponses[keyof CheckLlmHealthLlmHealthGetResponses];
 
 export type ListBadgesBadgesGetData = {
     body?: never;
@@ -683,6 +968,10 @@ export type ListBadgesBadgesGetData = {
 };
 
 export type ListBadgesBadgesGetErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
     /**
      * Validation Error
      */
@@ -715,6 +1004,10 @@ export type GetBadgeBadgesBadgeIdGetData = {
 
 export type GetBadgeBadgesBadgeIdGetErrors = {
     /**
+     * Not found
+     */
+    404: unknown;
+    /**
      * Validation Error
      */
     422: HttpValidationError;
@@ -731,157 +1024,18 @@ export type GetBadgeBadgesBadgeIdGetResponses = {
 
 export type GetBadgeBadgesBadgeIdGetResponse = GetBadgeBadgesBadgeIdGetResponses[keyof GetBadgeBadgesBadgeIdGetResponses];
 
-export type ListChatTemplatesChatTemplatesGetData = {
-    body?: never;
-    path?: never;
-    query?: {
-        /**
-         * Chat Template Container Id
-         */
-        chat_template_container_id?: number | null;
-        /**
-         * Container Type
-         */
-        container_type?: string | null;
-        /**
-         * Page Index
-         */
-        page_index?: number;
-        /**
-         * Count
-         */
-        count?: number;
-    };
-    url: '/chat_templates';
-};
-
-export type ListChatTemplatesChatTemplatesGetErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type ListChatTemplatesChatTemplatesGetError = ListChatTemplatesChatTemplatesGetErrors[keyof ListChatTemplatesChatTemplatesGetErrors];
-
-export type ListChatTemplatesChatTemplatesGetResponses = {
-    /**
-     * Response List Chat Templates Chat Templates Get
-     * Successful Response
-     */
-    200: Array<ChatTemplatesPublic>;
-};
-
-export type ListChatTemplatesChatTemplatesGetResponse = ListChatTemplatesChatTemplatesGetResponses[keyof ListChatTemplatesChatTemplatesGetResponses];
-
-export type StartChatTemplateChatTemplatesChatTemplateIdStartPostData = {
-    body?: never;
-    path: {
-        /**
-         * Chat Template Id
-         */
-        chat_template_id: number;
-    };
-    query?: never;
-    url: '/chat_templates/{chat_template_id}/start';
-};
-
-export type StartChatTemplateChatTemplatesChatTemplateIdStartPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type StartChatTemplateChatTemplatesChatTemplateIdStartPostError = StartChatTemplateChatTemplatesChatTemplateIdStartPostErrors[keyof StartChatTemplateChatTemplatesChatTemplateIdStartPostErrors];
-
-export type StartChatTemplateChatTemplatesChatTemplateIdStartPostResponses = {
-    /**
-     * Successful Response
-     */
-    200: UserChatTemplateContext;
-};
-
-export type StartChatTemplateChatTemplatesChatTemplateIdStartPostResponse = StartChatTemplateChatTemplatesChatTemplateIdStartPostResponses[keyof StartChatTemplateChatTemplatesChatTemplateIdStartPostResponses];
-
-export type AddMessageToChatTemplateChatTemplatesChatTemplateIdAddMessagePostData = {
-    body?: never;
-    path: {
-        /**
-         * Chat Template Id
-         */
-        chat_template_id: number;
-    };
-    query: {
-        /**
-         * Message
-         */
-        message: string;
-        /**
-         * Role
-         */
-        role?: 'user' | 'assistant' | 'system';
-        /**
-         * Solicit Llm Response
-         */
-        solicit_llm_response?: boolean;
-    };
-    url: '/chat_templates/{chat_template_id}/add_message';
-};
-
-export type AddMessageToChatTemplateChatTemplatesChatTemplateIdAddMessagePostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type AddMessageToChatTemplateChatTemplatesChatTemplateIdAddMessagePostError = AddMessageToChatTemplateChatTemplatesChatTemplateIdAddMessagePostErrors[keyof AddMessageToChatTemplateChatTemplatesChatTemplateIdAddMessagePostErrors];
-
-export type AddMessageToChatTemplateChatTemplatesChatTemplateIdAddMessagePostResponses = {
-    /**
-     * Successful Response
-     */
-    200: ChatTemplateContextLlmResponse;
-};
-
-export type AddMessageToChatTemplateChatTemplatesChatTemplateIdAddMessagePostResponse = AddMessageToChatTemplateChatTemplatesChatTemplateIdAddMessagePostResponses[keyof AddMessageToChatTemplateChatTemplatesChatTemplateIdAddMessagePostResponses];
-
-export type EvaluateChatTemplateContextChatTemplatesChatTemplateIdEvaluateGetData = {
-    body?: never;
-    path: {
-        /**
-         * Chat Template Id
-         */
-        chat_template_id: number;
-    };
-    query?: never;
-    url: '/chat_templates/{chat_template_id}/evaluate';
-};
-
-export type EvaluateChatTemplateContextChatTemplatesChatTemplateIdEvaluateGetErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type EvaluateChatTemplateContextChatTemplatesChatTemplateIdEvaluateGetError = EvaluateChatTemplateContextChatTemplatesChatTemplateIdEvaluateGetErrors[keyof EvaluateChatTemplateContextChatTemplatesChatTemplateIdEvaluateGetErrors];
-
-export type EvaluateChatTemplateContextChatTemplatesChatTemplateIdEvaluateGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: EvalResult;
-};
-
-export type EvaluateChatTemplateContextChatTemplatesChatTemplateIdEvaluateGetResponse = EvaluateChatTemplateContextChatTemplatesChatTemplateIdEvaluateGetResponses[keyof EvaluateChatTemplateContextChatTemplatesChatTemplateIdEvaluateGetResponses];
-
 export type GetCurrentUserInfoUsersMeGetData = {
     body?: never;
     path?: never;
     query?: never;
     url: '/users/me';
+};
+
+export type GetCurrentUserInfoUsersMeGetErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
 };
 
 export type GetCurrentUserInfoUsersMeGetResponses = {
@@ -892,152 +1046,6 @@ export type GetCurrentUserInfoUsersMeGetResponses = {
 };
 
 export type GetCurrentUserInfoUsersMeGetResponse = GetCurrentUserInfoUsersMeGetResponses[keyof GetCurrentUserInfoUsersMeGetResponses];
-
-export type GetChatTemplateContextChatTemplatesChatTemplateIdContextGetData = {
-    body?: never;
-    path: {
-        /**
-         * Chat Template Id
-         */
-        chat_template_id: number;
-    };
-    query?: never;
-    url: '/chat_templates/{chat_template_id}/context';
-};
-
-export type GetChatTemplateContextChatTemplatesChatTemplateIdContextGetErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetChatTemplateContextChatTemplatesChatTemplateIdContextGetError = GetChatTemplateContextChatTemplatesChatTemplateIdContextGetErrors[keyof GetChatTemplateContextChatTemplatesChatTemplateIdContextGetErrors];
-
-export type GetChatTemplateContextChatTemplatesChatTemplateIdContextGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: ChatTemplateContextResponse;
-};
-
-export type GetChatTemplateContextChatTemplatesChatTemplateIdContextGetResponse = GetChatTemplateContextChatTemplatesChatTemplateIdContextGetResponses[keyof GetChatTemplateContextChatTemplatesChatTemplateIdContextGetResponses];
-
-export type GetMessageTreeMessageTreeUserChatTemplateContextIdGetData = {
-    body?: never;
-    path: {
-        /**
-         * User Chat Template Context Id
-         */
-        user_chat_template_context_id: number;
-    };
-    query?: never;
-    url: '/message_tree/{user_chat_template_context_id}';
-};
-
-export type GetMessageTreeMessageTreeUserChatTemplateContextIdGetErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetMessageTreeMessageTreeUserChatTemplateContextIdGetError = GetMessageTreeMessageTreeUserChatTemplateContextIdGetErrors[keyof GetMessageTreeMessageTreeUserChatTemplateContextIdGetErrors];
-
-export type GetMessageTreeMessageTreeUserChatTemplateContextIdGetResponses = {
-    /**
-     * Response Get Message Tree Message Tree  User Chat Template Context Id  Get
-     * Successful Response
-     */
-    200: Array<MessageContainer>;
-};
-
-export type GetMessageTreeMessageTreeUserChatTemplateContextIdGetResponse = GetMessageTreeMessageTreeUserChatTemplateContextIdGetResponses[keyof GetMessageTreeMessageTreeUserChatTemplateContextIdGetResponses];
-
-export type CreateChatCompletionLlmChatCompletionsPostData = {
-    body: ChatRequest;
-    path?: never;
-    query?: never;
-    url: '/llm/chat/completions';
-};
-
-export type CreateChatCompletionLlmChatCompletionsPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type CreateChatCompletionLlmChatCompletionsPostError = CreateChatCompletionLlmChatCompletionsPostErrors[keyof CreateChatCompletionLlmChatCompletionsPostErrors];
-
-export type CreateChatCompletionLlmChatCompletionsPostResponses = {
-    /**
-     * Successful Response
-     */
-    200: ChatResponse;
-};
-
-export type CreateChatCompletionLlmChatCompletionsPostResponse = CreateChatCompletionLlmChatCompletionsPostResponses[keyof CreateChatCompletionLlmChatCompletionsPostResponses];
-
-export type ListAvailableModelsLlmModelsGetData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/llm/models';
-};
-
-export type ListAvailableModelsLlmModelsGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: ModelsResponse;
-};
-
-export type ListAvailableModelsLlmModelsGetResponse = ListAvailableModelsLlmModelsGetResponses[keyof ListAvailableModelsLlmModelsGetResponses];
-
-export type CheckLlmHealthLlmHealthGetData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/llm/health';
-};
-
-export type CheckLlmHealthLlmHealthGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: LlmHealthStatus;
-};
-
-export type CheckLlmHealthLlmHealthGetResponse = CheckLlmHealthLlmHealthGetResponses[keyof CheckLlmHealthLlmHealthGetResponses];
-
-export type RootGetData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/';
-};
-
-export type RootGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
-
-export type HealthCheckHealthCheckGetData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/health_check';
-};
-
-export type HealthCheckHealthCheckGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
 
 export type ClientOptions = {
     baseUrl: `${string}://${string}` | (string & {});

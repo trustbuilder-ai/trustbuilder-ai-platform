@@ -8,14 +8,14 @@ import { Message } from '../../../backend_client/types.gen';
  */
 export function generateTemporaryMessageId(existingTree: MessageTree): number {
   // Collect all existing IDs to prevent conflicts
-  const existingIds = new Set(existingTree.map(m => m.id));
-  
+  const existingIds = new Set(existingTree.map(m => m.id_in_tree));
+
   // Start with -1 and decrement to find an unused ID
   let tempId = -1;
   while (existingIds.has(tempId)) {
     tempId--;
   }
-  
+
   return tempId;
 }
 
@@ -39,8 +39,8 @@ export function createForkedMessage(
   };
   
   return {
-    id: newId,
-    parent_message_id: parentMessage.id,
+    id_in_tree: newId,
+    parent_id_in_tree: parentMessage.id_in_tree,
     message: newMessage,
   };
 }
@@ -53,11 +53,11 @@ export function findSiblings(
   messageId: number,
   messageTree: MessageTree
 ): MessageContainer[] {
-  const message = messageTree.find(m => m.id === messageId);
+  const message = messageTree.find(m => m.id_in_tree === messageId);
   if (!message) return [];
-  
+
   return messageTree.filter(
-    m => m.parent_message_id === message.parent_message_id && m.id !== messageId
+    m => m.parent_id_in_tree === message.parent_id_in_tree && m.id_in_tree !== messageId
   );
 }
 
@@ -87,7 +87,7 @@ export function countChildren(
   messageId: number,
   messageTree: MessageTree
 ): number {
-  return messageTree.filter(m => m.parent_message_id === messageId).length;
+  return messageTree.filter(m => m.parent_id_in_tree === messageId).length;
 }
 
 /**
@@ -103,9 +103,9 @@ export function getDescendants(
   
   while (queue.length > 0) {
     const currentId = queue.shift()!;
-    const children = messageTree.filter(m => m.parent_message_id === currentId);
+    const children = messageTree.filter(m => m.parent_id_in_tree === currentId);
     descendants.push(...children);
-    queue.push(...children.map(c => c.id));
+    queue.push(...children.map(c => c.id_in_tree));
   }
   
   return descendants;

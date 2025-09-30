@@ -166,9 +166,11 @@ export function Dashboard() {
                 {data.map((tournament) => (
                   <Card key={tournament.id}>
                     <Heading size="4" mb="2">{tournament.name}</Heading>
-                    <Text size="2" color="gray" mb="2">
-                      Starts: {new Date(tournament.start_date).toLocaleDateString()}
-                    </Text>
+                    {tournament.start_date && (
+                      <Text size="2" color="gray" mb="2">
+                        Starts: {new Date(tournament.start_date).toLocaleDateString()}
+                      </Text>
+                    )}
                     {tournament.end_date && (
                       <Text size="2" color="gray">
                         Ends: {new Date(tournament.end_date).toLocaleDateString()}
