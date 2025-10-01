@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { Badge } from '@radix-ui/themes';
 import { MessageContainer } from '../types';
 import './LLMUIMessage.css';
 
@@ -54,7 +55,14 @@ const LLMUIMessage: React.FC<LLMUIMessageProps> = ({
   return (
     <div className={`llm-ui-message ${getRoleClass(message.message.role)}`}>
       <div className="llm-ui-message-header">
-        <span className="llm-ui-message-role">{getRoleLabel(message.message.role)}</span>
+        <span className="llm-ui-message-role">
+          {getRoleLabel(message.message.role)}
+          {message.message.model && (
+            <Badge size="1" color="gray" style={{ marginLeft: '8px' }}>
+              {message.message.model}
+            </Badge>
+          )}
+        </span>
         {showActions && (
           <div className="llm-ui-message-actions">
             {onFork && (

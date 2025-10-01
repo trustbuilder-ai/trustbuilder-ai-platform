@@ -10,6 +10,7 @@ interface UseChatCompletionOptions {
 
 interface StreamCompletionParams {
   messages: ChatMessage[];
+  model?: string; // Optional override for the model
   onChunk?: (content: string) => void;
 }
 
@@ -24,10 +25,13 @@ export const useChatCompletion = (options: UseChatCompletionOptions) => {
     setStreamingContent('');
 
     try {
+      // Use dynamic model from params, fallback to options.model
+      const modelToUse = params.model ?? options.model;
+
       // Call LLM API with streaming enabled
       const response = await createChatCompletionLlmChatCompletionsPost({
         body: {
-          model: options.model,
+          model: modelToUse,
           messages: params.messages,
           stream: true,
           temperature: options.temperature ?? 0.7,

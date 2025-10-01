@@ -56,4 +56,9 @@ export interface ScrollyTellContextValue extends ScrollyTellState {
   selectedSampleId: string | null;
   availableSamples: ScrollyTellRegistryEntry[];
   selectSample: (sampleId: string) => void;
+  // Shared message tree state
+  userMessageTree: MessageContainer[] | null;
+  setUserMessageTree: (tree: MessageContainer[] | null) => void;
+  contextId: string | null;
+  setContextId: (id: string | null) => void;
 }

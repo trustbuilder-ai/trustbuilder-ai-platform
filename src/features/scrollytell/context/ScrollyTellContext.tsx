@@ -23,6 +23,10 @@ export const ScrollyTellProvider: React.FC<ScrollyTellProviderProps> = ({ childr
   const [scrollyTellData, setScrollyTellData] = useState<ScrollyTellData>(defaultSample.scrollyTellData);
   const [currentView, setCurrentView] = useState<ViewType>('scrollytell');
 
+  // Shared message tree state - single source of truth for both TreeView and ChatView
+  const [userMessageTree, setUserMessageTree] = useState<import('../types').MessageContainer[] | null>(null);
+  const [contextId, setContextId] = useState<string | null>(null);
+
   // Memoize available samples array
   const availableSamples = useMemo(() => Object.values(scrollyTellRegistry), []);
 
@@ -57,7 +61,11 @@ export const ScrollyTellProvider: React.FC<ScrollyTellProviderProps> = ({ childr
     setCurrentView,
     selectedSampleId,
     availableSamples,
-    selectSample
+    selectSample,
+    userMessageTree,
+    setUserMessageTree,
+    contextId,
+    setContextId
   };
 
   return (

@@ -1,23 +1,21 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Box, Flex, TextArea, Button, Callout, DropdownMenu, Text } from '@radix-ui/themes';
+import { InfoCircledIcon, ChevronDownIcon } from '@radix-ui/react-icons';
 import { useScrollyTell } from '../context/ScrollyTellContext';
 import { useAuth } from '../../../shared/hooks/useAuth';
-import { useApiData } from '../../../shared/hooks/useApiData';
-import {
-  ensureChatContextChatContextsEnsurePost,
-  updateChatContextMessageTreeChatContextsChatContextIdMessageTreePatch
-} from '../../../backend_client/sdk.gen';
-import type { EnsureChatContextResponse, MessageContainer, ChatMessage } from '../../../backend_client/types.gen';
+import { updateChatContextMessageTreeChatContextsChatContextIdMessageTreePatch } from '../../../backend_client/sdk.gen';
+import type { MessageContainer, ChatMessage } from '../../../backend_client/types.gen';
 import LLMUIMessage from '../components/LLMUIMessage';
-import { useChatCompletion } from '../hooks';
+import SelectedModelsDisplay from '../components/SelectedModelsDisplay';
+import { useChatCompletion, useAvailableModels, useUserContext } from '../hooks';
 import './ScrollyTell.css';
 
 const ChatView: React.FC = () => {
   const {
     currentChatLeafId,
     setCurrentChatLeafId,
-    setCurrentView,
-    scrollyTellData
+    setCurrentView
   } = useScrollyTell();
   const { session } = useAuth();
   const navigate = useNavigate();
@@ -26,57 +24,80 @@ const ChatView: React.FC = () => {
   // State for message input and streaming
   const [messageInput, setMessageInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [streamingMessage, setStreamingMessage] = useState<MessageContainer | null>(null);
-  const [selectedModel] = useState('gpt-4o-mini'); // TODO: Add model selection UI
-  const [localMessageTree, setLocalMessageTree] = useState<MessageContainer[] | null>(null);
+  const [streamingMessages, setStreamingMessages] = useState<MessageContainer[]>([]);
 
-  // Chat completion hook for streaming
+  // Fetch available models
+  const { models, loading: modelsLoading, error: modelsError } = useAvailableModels();
+
+  // Multi-model selection with localStorage persistence
+  const [selectedModels, setSelectedModels] = useState<string[]>(() => {
+    const saved = localStorage.getItem('chatview-selected-models');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return ['gpt-4o-mini'];
+      }
+    }
+    return ['gpt-4o-mini'];
+  });
+
+  // Update localStorage when models change
+  useEffect(() => {
+    localStorage.setItem('chatview-selected-models', JSON.stringify(selectedModels));
+  }, [selectedModels]);
+
+  // Toggle model selection
+  const toggleModel = (modelId: string, checked: boolean) => {
+    setSelectedModels(prev => {
+      if (checked) {
+        return [...prev, modelId];
+      } else {
+        const filtered = prev.filter(id => id !== modelId);
+        return filtered.length > 0 ? filtered : prev; // Prevent empty selection
+      }
+    });
+  };
+
+  // Chat completion hook for streaming (model will be overridden per request)
   const { streamCompletion, isStreaming, error: streamError } = useChatCompletion({
-    model: selectedModel,
+    model: selectedModels[0] || 'gpt-4o-mini', // Default model
     temperature: 0.7,
     maxTokens: 2000,
   });
 
-  // Fetch or create user context using the shared hook pattern
-  const userContextData = useApiData<EnsureChatContextResponse>(
-    ensureChatContextChatContextsEnsurePost,
-    {
-      requiresAuth: true,
-      enabled: !!scrollyTellData.chat_template_id,
-      initialParams: scrollyTellData.chat_template_id ? {
-        body: { chat_template_id: scrollyTellData.chat_template_id }
-      } : undefined
-    }
-  );
+  // Use shared context hook
+  const {
+    contextData,
+    loading,
+    error,
+    userMessageTree,
+    setUserMessageTree
+  } = useUserContext();
 
-  const { data: contextData, loading, error } = userContextData;
-
-  // Extract message tree from user context (with local override)
-  const userMessageTree = useMemo(() => {
-    if (localMessageTree) return localMessageTree;
-    return (contextData?.chat_context?.message_tree as unknown as MessageContainer[]) || [];
-  }, [localMessageTree, contextData]);
+  // Use shared message tree
+  const messageTree = userMessageTree || [];
 
   // Calculate message path
   const messagePath = useMemo(() => {
     const path: MessageContainer[] = [];
-    let currentMessage = userMessageTree.find(m => m.id_in_tree === currentChatLeafId);
+    let currentMessage = messageTree.find(m => m.id_in_tree === currentChatLeafId);
 
     while (currentMessage) {
       path.unshift(currentMessage);
       if (currentMessage.parent_id_in_tree === null || currentMessage.parent_id_in_tree === 0) {
         break;
       }
-      currentMessage = userMessageTree.find(m => m.id_in_tree === currentMessage?.parent_id_in_tree);
+      currentMessage = messageTree.find(m => m.id_in_tree === currentMessage?.parent_id_in_tree);
     }
 
     return path;
-  }, [userMessageTree, currentChatLeafId]);
+  }, [messageTree, currentChatLeafId]);
 
   // Auto-scroll to bottom when messages change or during streaming
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messagePath, streamingMessage]);
+  }, [messagePath, streamingMessages]);
 
   const handleFork = (messageId: number) => {
     // TODO: Implement fork functionality with PATCH to backend
@@ -90,7 +111,7 @@ const ChatView: React.FC = () => {
   };
 
   const handleSendMessage = async () => {
-    if (!messageInput.trim() || !contextData?.chat_context?.id || isSubmitting) {
+    if (!messageInput.trim() || !contextData?.chat_context?.id || isSubmitting || selectedModels.length === 0) {
       return;
     }
 
@@ -100,9 +121,8 @@ const ChatView: React.FC = () => {
 
     try {
       // 1. Calculate new IDs for user and assistant messages
-      const maxId = Math.max(...userMessageTree.map(m => m.id_in_tree), 0);
+      const maxId = Math.max(...messageTree.map(m => m.id_in_tree), 0);
       const userMessageId = maxId + 1;
-      const assistantMessageId = maxId + 2;
 
       // 2. Create user message container
       const userMessage: MessageContainer = {
@@ -114,7 +134,11 @@ const ChatView: React.FC = () => {
         },
       };
 
-      // 3. Convert message path to ChatMessage format for LLM API
+      // 3. Add user message to tree immediately so user sees it while streaming
+      const treeWithUserMessage = [...messageTree, userMessage];
+      setUserMessageTree(treeWithUserMessage);
+
+      // 4. Convert message path to ChatMessage format for LLM API
       const chatMessages: ChatMessage[] = messagePath.map(container => ({
         role: container.message.role as 'user' | 'assistant' | 'system',
         content: container.message.content,
@@ -126,54 +150,78 @@ const ChatView: React.FC = () => {
         content: userInput,
       });
 
-      // 4. Stream LLM response
-      const { content: assistantContent } = await streamCompletion({
-        messages: chatMessages,
-        onChunk: (content) => {
-          // Update streaming message display in real-time
-          setStreamingMessage({
-            id_in_tree: assistantMessageId,
-            parent_id_in_tree: userMessageId,
-            message: {
-              role: 'assistant',
-              content,
-            },
-          });
-        },
+      // 5. Stream to all selected models in parallel
+      const streamPromises = selectedModels.map((modelId, idx) => {
+        const assistantId = maxId + 2 + idx;
+
+        return streamCompletion({
+          messages: chatMessages,
+          model: modelId, // Override model for each stream
+          onChunk: (content) => {
+            // Update streaming message for this model in real-time
+            setStreamingMessages(prev => {
+              const existing = prev.find(m => m.id_in_tree === assistantId);
+              if (existing) {
+                return prev.map(m =>
+                  m.id_in_tree === assistantId
+                    ? { ...m, message: { ...m.message, content } }
+                    : m
+                );
+              } else {
+                return [...prev, {
+                  id_in_tree: assistantId,
+                  parent_id_in_tree: userMessageId,
+                  message: {
+                    role: 'assistant',
+                    content,
+                    model: modelId,
+                  },
+                }];
+              }
+            });
+          },
+        }).then(({ content }) => ({
+          id_in_tree: assistantId,
+          parent_id_in_tree: userMessageId,
+          message: {
+            role: 'assistant',
+            content,
+            model: modelId, // Populate model field
+          },
+        }));
       });
 
-      // 5. Create assistant message container with complete content
-      const assistantMessage: MessageContainer = {
-        id_in_tree: assistantMessageId,
-        parent_id_in_tree: userMessageId,
-        message: {
-          role: 'assistant',
-          content: assistantContent,
-        },
-      };
+      // 6. Wait for all streams to complete
+      const assistantMessages = await Promise.all(streamPromises);
 
-      // 6. Update message tree with both new messages
-      const updatedTree = [...userMessageTree, userMessage, assistantMessage];
+      // 7. Build final tree with user message and all assistant messages
+      const finalTree = [...treeWithUserMessage, ...assistantMessages];
 
-      // 7. PATCH updated tree to backend
+      // 8. PATCH complete tree to backend (saves after all streaming done)
       await updateChatContextMessageTreeChatContextsChatContextIdMessageTreePatch({
         path: { chat_context_id: contextData.chat_context.id },
-        body: { message_tree: updatedTree },
+        body: { message_tree: finalTree },
         throwOnError: false,
       });
 
-      // 8. Update current leaf to the new assistant message
-      setCurrentChatLeafId(assistantMessageId);
+      // 9. Update current leaf to the first assistant message
+      setCurrentChatLeafId(assistantMessages[0].id_in_tree);
 
-      // 9. Update local tree state (avoids refetch and loading flicker)
-      setLocalMessageTree(updatedTree);
+      // 10. Update shared tree state with final complete tree
+      setUserMessageTree(finalTree);
+
+      // 11. Auto-navigate to tree view if multiple models were used
+      if (selectedModels.length > 1) {
+        setCurrentView('tree');
+        navigate('/scrollytell/tree');
+      }
 
     } catch (error) {
       console.error('Failed to send message:', error);
       // TODO: Show error toast notification
     } finally {
       setIsSubmitting(false);
-      setStreamingMessage(null);
+      setStreamingMessages([]);
     }
   };
 
@@ -245,51 +293,124 @@ const ChatView: React.FC = () => {
               />
             ))}
 
-            {/* Display streaming message */}
-            {streamingMessage && (
+            {/* Display streaming messages */}
+            {streamingMessages.map((streamingMsg) => (
               <LLMUIMessage
-                key="streaming"
-                message={streamingMessage}
+                key={`streaming-${streamingMsg.id_in_tree}`}
+                message={streamingMsg}
                 showActions={false}
               />
-            )}
+            ))}
             {/* Scroll anchor */}
             <div ref={messagesEndRef} />
           </div>
         </div>
 
-        {/* Message input area */}
-        <div className="chat-input-container">
-          <textarea
-            className="chat-input"
-            value={messageInput}
-            onChange={(e) => setMessageInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Type your message... (Shift+Enter for new line)"
-            disabled={isSubmitting || isStreaming}
-            rows={3}
-          />
-          <button
-            type="button"
-            className="chat-send-button"
-            onClick={handleSendMessage}
-            disabled={isSubmitting || isStreaming || !messageInput.trim()}
-          >
-            {isSubmitting || isStreaming ? 'Sending...' : 'Send'}
-          </button>
-        </div>
+        {/* Chat Controls Container */}
+        <Box mt="4">
+          {/* Metadata row: Selected models + Conversation stats */}
+          <Flex mb="3" justify="between" align="center">
+            {/* Left: Selected models */}
+            <SelectedModelsDisplay
+              selectedModels={selectedModels}
+              models={models}
+              loading={modelsLoading}
+            />
 
-        {/* Show error if streaming failed */}
-        {streamError && (
-          <div className="chat-error">
-            Error: {streamError.message}
-          </div>
-        )}
+            {/* Right: Conversation stats */}
+            <Flex gap="3" align="center">
+              <Text size="2" color="gray">
+                Path to #{currentChatLeafId}
+              </Text>
+              <Text size="2" color="gray">
+                •
+              </Text>
+              <Text size="2" color="gray">
+                {messagePath.length} messages
+              </Text>
+            </Flex>
+          </Flex>
 
-        <div className="chat-info">
-          <p>Showing path to message {currentChatLeafId}</p>
-          <p>{messagePath.length} messages in current conversation</p>
-        </div>
+          {/* Show model loading error if any */}
+          {modelsError && (
+            <Callout.Root color="red" mb="3">
+              <Callout.Icon>
+                <InfoCircledIcon />
+              </Callout.Icon>
+              <Callout.Text>
+                Failed to load models: {modelsError.message}
+              </Callout.Text>
+            </Callout.Root>
+          )}
+
+          {/* Message input area */}
+          <Flex gap="3" align="end">
+            <Box style={{ flex: 1 }}>
+              <TextArea
+                value={messageInput}
+                onChange={(e) => setMessageInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Type your message... (Shift+Enter for new line)"
+                disabled={isSubmitting || isStreaming}
+                rows={3}
+                size="3"
+                resize="vertical"
+              />
+            </Box>
+
+            {/* Split Button: Send + Model Selection Dropdown */}
+            <Flex gap="0" style={{ display: 'inline-flex' }}>
+              <Button
+                onClick={handleSendMessage}
+                disabled={isSubmitting || isStreaming || !messageInput.trim() || selectedModels.length === 0}
+                size="3"
+                style={{ borderTopRightRadius: 0, borderBottomRightRadius: 0 }}
+              >
+                {isSubmitting || isStreaming ? 'Sending...' : 'Send'}
+              </Button>
+              <DropdownMenu.Root>
+                <DropdownMenu.Trigger>
+                  <Button
+                    size="3"
+                    disabled={isSubmitting || isStreaming}
+                    style={{
+                      borderTopLeftRadius: 0,
+                      borderBottomLeftRadius: 0,
+                      borderLeft: '1px solid var(--gray-6)',
+                      paddingLeft: '8px',
+                      paddingRight: '8px'
+                    }}
+                  >
+                    <ChevronDownIcon />
+                  </Button>
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Content>
+                  {models.map((model) => (
+                    <DropdownMenu.CheckboxItem
+                      key={model.id}
+                      checked={selectedModels.includes(model.id)}
+                      onCheckedChange={(checked) => toggleModel(model.id, checked)}
+                    >
+                      {model.display_name || model.id}
+                    </DropdownMenu.CheckboxItem>
+                  ))}
+                </DropdownMenu.Content>
+              </DropdownMenu.Root>
+            </Flex>
+          </Flex>
+
+          {/* Show error if streaming failed */}
+          {streamError && (
+            <Callout.Root color="red" mt="3">
+              <Callout.Icon>
+                <InfoCircledIcon />
+              </Callout.Icon>
+              <Callout.Text>
+                Error: {streamError.message}
+              </Callout.Text>
+            </Callout.Root>
+          )}
+        </Box>
       </div>
     </div>
   );

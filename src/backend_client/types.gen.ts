@@ -413,6 +413,10 @@ export type Message = {
      * Tool Call Id
      */
     tool_call_id?: string | null;
+    /**
+     * Model
+     */
+    model?: string | null;
 };
 
 /**
@@ -691,6 +695,40 @@ export type UpdateChatContextMessageTreeChatContextsChatContextIdMessageTreePatc
 };
 
 export type UpdateChatContextMessageTreeChatContextsChatContextIdMessageTreePatchResponse = UpdateChatContextMessageTreeChatContextsChatContextIdMessageTreePatchResponses[keyof UpdateChatContextMessageTreeChatContextsChatContextIdMessageTreePatchResponses];
+
+export type DeleteChatContextChatContextsChatContextIdDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Chat Context Id
+         */
+        chat_context_id: number;
+    };
+    query?: never;
+    url: '/chat_contexts/{chat_context_id}';
+};
+
+export type DeleteChatContextChatContextsChatContextIdDeleteErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteChatContextChatContextsChatContextIdDeleteError = DeleteChatContextChatContextsChatContextIdDeleteErrors[keyof DeleteChatContextChatContextsChatContextIdDeleteErrors];
+
+export type DeleteChatContextChatContextsChatContextIdDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type DeleteChatContextChatContextsChatContextIdDeleteResponse = DeleteChatContextChatContextsChatContextIdDeleteResponses[keyof DeleteChatContextChatContextsChatContextIdDeleteResponses];
 
 export type ListEvaluationsEvaluationsGetData = {
     body?: never;

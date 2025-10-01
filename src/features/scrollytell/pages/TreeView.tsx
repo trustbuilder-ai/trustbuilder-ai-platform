@@ -1,9 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
+import { Flex, Button, AlertDialog, Callout } from '@radix-ui/themes';
+import { InfoCircledIcon } from '@radix-ui/react-icons';
 import { useScrollyTell } from '../context/ScrollyTellContext';
 import { useAuth } from '../../../shared/hooks/useAuth';
-import { useApiData } from '../../../shared/hooks/useApiData';
-import { ensureChatContextChatContextsEnsurePost } from '../../../backend_client/sdk.gen';
-import type { EnsureChatContextResponse, MessageContainer } from '../../../backend_client/types.gen';
+import { useUserContext } from '../hooks';
+import { deleteChatContextChatContextsChatContextIdDelete } from '../../../backend_client/sdk.gen';
 import { calculateTreeLayout, calculateBoundingBox } from '../utils/treeLayout';
 import TreeConnections from '../components/TreeConnections';
 import LLMUIMessage from '../components/LLMUIMessage';
@@ -12,35 +13,74 @@ import './ScrollyTell.css';
 const TreeView: React.FC = () => {
   const {
     currentChatLeafId,
-    setCurrentChatLeafId,
-    scrollyTellData
+    setCurrentChatLeafId
   } = useScrollyTell();
   const { session } = useAuth();
 
-  // Fetch or create user context using the shared hook pattern
-  const userContextData = useApiData<EnsureChatContextResponse>(
-    ensureChatContextChatContextsEnsurePost,
-    {
-      requiresAuth: true,
-      enabled: !!scrollyTellData.chat_template_id,
-      initialParams: scrollyTellData.chat_template_id ? {
-        body: { chat_template_id: scrollyTellData.chat_template_id }
-      } : undefined
-    }
-  );
+  // Reset state
+  const [isResetting, setIsResetting] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
 
-  const { data: contextData, loading, error } = userContextData;
+  // Use shared context hook
+  const {
+    contextData,
+    loading,
+    error,
+    refetch,
+    userMessageTree,
+    setUserMessageTree,
+    setContextId
+  } = useUserContext();
 
-  // Extract message tree from user context
-  const userMessageTree = useMemo(() => {
-    return (contextData?.chat_context?.message_tree as MessageContainer[]) || [];
-  }, [contextData]);
+  // Use shared message tree (already extracted by useUserContext)
+  const messageTree = userMessageTree || [];
 
-  // Calculate layout once when userMessageTree changes
-  const layout = useMemo(() => calculateTreeLayout(userMessageTree), [userMessageTree]);
+  // Calculate layout once when messageTree changes
+  const layout = useMemo(() => calculateTreeLayout(messageTree), [messageTree]);
 
   // Get dimensions for container
   const { width, height } = useMemo(() => calculateBoundingBox(layout), [layout]);
+
+  // Handle reset conversation
+  const handleResetConversation = async () => {
+    if (!contextData?.chat_context?.id) return;
+
+    console.log('[TreeView] Reset starting:', {
+      contextId: contextData.chat_context.id,
+      contextIdType: typeof contextData.chat_context.id,
+      fullContext: contextData.chat_context
+    });
+
+    setIsResetting(true);
+    setResetError(null);
+
+    try {
+      // Delete the current context
+      await deleteChatContextChatContextsChatContextIdDelete({
+        path: { chat_context_id: contextData.chat_context.id },
+        throwOnError: true,
+      });
+
+      // Clear shared state immediately to reflect reset
+      setUserMessageTree(null);
+      setContextId(null);
+
+      // Refetch to create a fresh context with template defaults
+      // useUserContext will update the shared state when new data arrives
+      refetch();
+    } catch (err) {
+      // Show actual error details from backend
+      const errorMessage = err instanceof Error
+        ? err.message
+        : typeof err === 'object' && err !== null && 'error' in err
+        ? String((err as any).error)
+        : 'Failed to reset conversation';
+      setResetError(errorMessage);
+      console.error('Reset failed:', err);
+    } finally {
+      setIsResetting(false);
+    }
+  };
 
   // Auth gate
   if (!session) {
@@ -86,10 +126,61 @@ const TreeView: React.FC = () => {
   return (
     <div className="tree-view">
       <div className="view-container">
-        <h2>Tree View</h2>
+        {/* Header with Reset button */}
+        <Flex justify="between" align="center" mb="2">
+          <h2>Tree View</h2>
+          <AlertDialog.Root>
+            <AlertDialog.Trigger>
+              <Button
+                color="red"
+                variant="soft"
+                disabled={isResetting || loading}
+              >
+                {isResetting ? 'Resetting...' : 'Reset'}
+              </Button>
+            </AlertDialog.Trigger>
+            <AlertDialog.Content maxWidth="450px">
+              <AlertDialog.Title>Reset Conversation Tree?</AlertDialog.Title>
+              <AlertDialog.Description size="2">
+                This will delete your entire conversation history and reset to the default template state.
+                This action cannot be undone.
+              </AlertDialog.Description>
+
+              <Flex gap="3" mt="4" justify="end">
+                <AlertDialog.Cancel>
+                  <Button variant="soft" color="gray">
+                    Cancel
+                  </Button>
+                </AlertDialog.Cancel>
+                <AlertDialog.Action>
+                  <Button
+                    variant="solid"
+                    color="red"
+                    onClick={handleResetConversation}
+                  >
+                    Reset
+                  </Button>
+                </AlertDialog.Action>
+              </Flex>
+            </AlertDialog.Content>
+          </AlertDialog.Root>
+        </Flex>
+
         <p className="view-description">
           Visualizes the entire MessageTree structure with branching conversations.
         </p>
+
+        {/* Error message if reset fails */}
+        {resetError && (
+          <Callout.Root color="red" mb="3">
+            <Callout.Icon>
+              <InfoCircledIcon />
+            </Callout.Icon>
+            <Callout.Text>
+              Failed to reset: {resetError}
+            </Callout.Text>
+          </Callout.Root>
+        )}
 
         <div className="tree-visualization">
           <div className="tree-canvas" style={{ width, height, position: 'relative' }}>
@@ -97,7 +188,7 @@ const TreeView: React.FC = () => {
             <TreeConnections layout={layout} currentLeafId={currentChatLeafId} />
 
             {/* Nodes positioned absolutely */}
-            {userMessageTree.map(container => {
+            {messageTree.map(container => {
               const position = layout.get(container.id_in_tree);
               if (!position) return null;
 
@@ -133,7 +224,7 @@ const TreeView: React.FC = () => {
         </div>
 
         <div className="tree-info">
-          <p>Total messages: {userMessageTree.length}</p>
+          <p>Total messages: {messageTree.length}</p>
           <p>Current selection: Message #{currentChatLeafId}</p>
           <p>Click on any message to update the current chat path</p>
         </div>
