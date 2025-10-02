@@ -313,12 +313,32 @@ export type EvalResult = {
      * Chat Template Id
      */
     chat_template_id?: number | null;
+    /**
+     * Chat Context Id
+     */
+    chat_context_id?: number | null;
+    /**
+     * Context Message Leaf Id
+     */
+    context_message_leaf_id?: number | null;
 };
 
 /**
  * EvalStatus
  */
 export type EvalStatus = 'NOT_EVALUATED' | 'SUCCEEDED' | 'FAILED' | 'ERRORED';
+
+/**
+ * EvaluateRequest
+ * Request body for evaluating a chat context.
+ */
+export type EvaluateRequest = {
+    /**
+     * Leaf Id
+     * ID of the message tree leaf node to evaluate to
+     */
+    leaf_id: number;
+};
 
 /**
  * FunctionCall
@@ -772,6 +792,84 @@ export type ListEvaluationsEvaluationsGetResponses = {
 };
 
 export type ListEvaluationsEvaluationsGetResponse = ListEvaluationsEvaluationsGetResponses[keyof ListEvaluationsEvaluationsGetResponses];
+
+export type ListEvaluationsByContextEvaluationsContextChatContextIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * Chat Context Id
+         */
+        chat_context_id: number;
+    };
+    query?: {
+        /**
+         * Page Index
+         */
+        page_index?: number;
+        /**
+         * Count
+         */
+        count?: number;
+    };
+    url: '/evaluations/context/{chat_context_id}';
+};
+
+export type ListEvaluationsByContextEvaluationsContextChatContextIdGetErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListEvaluationsByContextEvaluationsContextChatContextIdGetError = ListEvaluationsByContextEvaluationsContextChatContextIdGetErrors[keyof ListEvaluationsByContextEvaluationsContextChatContextIdGetErrors];
+
+export type ListEvaluationsByContextEvaluationsContextChatContextIdGetResponses = {
+    /**
+     * Response List Evaluations By Context Evaluations Context  Chat Context Id  Get
+     * Successful Response
+     */
+    200: Array<EvalResult>;
+};
+
+export type ListEvaluationsByContextEvaluationsContextChatContextIdGetResponse = ListEvaluationsByContextEvaluationsContextChatContextIdGetResponses[keyof ListEvaluationsByContextEvaluationsContextChatContextIdGetResponses];
+
+export type EvaluateChatContextEvaluationsChatContextsChatContextIdEvaluatePostData = {
+    body: EvaluateRequest;
+    path: {
+        /**
+         * Chat Context Id
+         */
+        chat_context_id: number;
+    };
+    query?: never;
+    url: '/evaluations/chat_contexts/{chat_context_id}/evaluate';
+};
+
+export type EvaluateChatContextEvaluationsChatContextsChatContextIdEvaluatePostErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type EvaluateChatContextEvaluationsChatContextsChatContextIdEvaluatePostError = EvaluateChatContextEvaluationsChatContextsChatContextIdEvaluatePostErrors[keyof EvaluateChatContextEvaluationsChatContextsChatContextIdEvaluatePostErrors];
+
+export type EvaluateChatContextEvaluationsChatContextsChatContextIdEvaluatePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: EvalResult;
+};
+
+export type EvaluateChatContextEvaluationsChatContextsChatContextIdEvaluatePostResponse = EvaluateChatContextEvaluationsChatContextsChatContextIdEvaluatePostResponses[keyof EvaluateChatContextEvaluationsChatContextsChatContextIdEvaluatePostResponses];
 
 export type ListChatTemplatesChatTemplatesGetData = {
     body?: never;

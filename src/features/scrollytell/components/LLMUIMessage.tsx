@@ -2,7 +2,9 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Badge } from '@radix-ui/themes';
-import { MessageContainer } from '../types';
+import { MessageContainer, EvalResult } from '../types';
+import { getEvalStatusIcon, getEvalButtonColor } from '../utils/evaluationHelpers';
+import EvaluationResultPopover from './EvaluationResultPopover';
 import './LLMUIMessage.css';
 
 interface LLMUIMessageProps {
@@ -12,6 +14,11 @@ interface LLMUIMessageProps {
   onTreeView?: () => void;
   truncate?: boolean;
   maxLength?: number;
+  // Evaluation props
+  showEvalButton?: boolean;
+  evalResult?: EvalResult | null;
+  isEvaluating?: boolean;
+  onEvaluate?: () => void;
 }
 
 const LLMUIMessage: React.FC<LLMUIMessageProps> = ({
@@ -20,7 +27,11 @@ const LLMUIMessage: React.FC<LLMUIMessageProps> = ({
   onFork,
   onTreeView,
   truncate = false,
-  maxLength = 100
+  maxLength = 100,
+  showEvalButton = false,
+  evalResult,
+  isEvaluating = false,
+  onEvaluate,
 }) => {
   const displayContent = truncate
     ? message.message.content.substring(0, maxLength) + (message.message.content.length > maxLength ? '...' : '')
@@ -90,6 +101,23 @@ const LLMUIMessage: React.FC<LLMUIMessageProps> = ({
                 </svg>
                 Tree View
               </button>
+            )}
+            {showEvalButton && message.message.role === 'assistant' && onEvaluate && (
+              <EvaluationResultPopover
+                evalResult={evalResult}
+                isEvaluating={isEvaluating}
+                onEvaluate={onEvaluate}
+              >
+                <button
+                  className="llm-ui-action-button eval-button"
+                  title="Evaluate this response"
+                  disabled={isEvaluating}
+                >
+                  <Badge color={getEvalButtonColor(evalResult)} size="1">
+                    Eval {getEvalStatusIcon(evalResult?.status, isEvaluating)}
+                  </Badge>
+                </button>
+              </EvaluationResultPopover>
             )}
           </div>
         )}

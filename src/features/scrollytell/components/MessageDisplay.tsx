@@ -11,20 +11,14 @@ interface MessageDisplayProps {
 
 const MessageDisplay: React.FC<MessageDisplayProps> = ({ message }) => {
   const navigate = useNavigate();
-  const { forkMessage, setCurrentView } = useScrollyTell();
+  const { setCurrentChatLeafId, setCurrentView } = useScrollyTell();
 
   const handleFork = () => {
-    // Create a new forked message from this message
-    const forkedMessage = forkMessage(message.id_in_tree, 'user', '');
-
-    if (forkedMessage) {
-      // Navigate to chat view with the new forked message as the leaf
-      setCurrentView('chat');
-      navigate('/scrollytell/chat');
-      console.log(`Created fork from message ${message.id_in_tree}, opening chat with new leaf ${forkedMessage.id_in_tree}`);
-    } else {
-      console.error('Failed to create fork from message:', message.id_in_tree);
-    }
+    // Set this message as the current leaf and navigate to chat view
+    setCurrentChatLeafId(message.id_in_tree);
+    setCurrentView('chat');
+    navigate('/scrollytell/chat');
+    console.log(`Forking from message ${message.id_in_tree}, opening chat view`);
   };
 
   const handleTreeView = () => {

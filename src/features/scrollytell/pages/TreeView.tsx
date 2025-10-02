@@ -1,21 +1,26 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Flex, Button, AlertDialog, Callout } from '@radix-ui/themes';
 import { InfoCircledIcon } from '@radix-ui/react-icons';
 import { useScrollyTell } from '../context/ScrollyTellContext';
 import { useAuth } from '../../../shared/hooks/useAuth';
-import { useUserContext } from '../hooks';
+import { useUserContext, useEvaluation } from '../hooks';
 import { deleteChatContextChatContextsChatContextIdDelete } from '../../../backend_client/sdk.gen';
 import { calculateTreeLayout, calculateBoundingBox } from '../utils/treeLayout';
 import TreeConnections from '../components/TreeConnections';
 import LLMUIMessage from '../components/LLMUIMessage';
+import TreeNodeTabs from '../components/TreeNodeTabs';
 import './ScrollyTell.css';
 
 const TreeView: React.FC = () => {
   const {
     currentChatLeafId,
-    setCurrentChatLeafId
+    setCurrentChatLeafId,
+    setCurrentView
   } = useScrollyTell();
   const { session } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   // Reset state
   const [isResetting, setIsResetting] = useState(false);
@@ -35,11 +40,78 @@ const TreeView: React.FC = () => {
   // Use shared message tree (already extracted by useUserContext)
   const messageTree = userMessageTree || [];
 
+  // Use shared evaluation hook
+  const { evalResults, evaluatingNodes, evaluateMessage } = useEvaluation(contextData?.chat_context?.id);
+
   // Calculate layout once when messageTree changes
   const layout = useMemo(() => calculateTreeLayout(messageTree), [messageTree]);
 
   // Get dimensions for container
   const { width, height } = useMemo(() => calculateBoundingBox(layout), [layout]);
+
+  // Refs for scrolling
+  const activeNodeRef = useRef<HTMLDivElement>(null);
+  const treeVisualizationRef = useRef<HTMLDivElement>(null);
+
+  // Read messageId from URL parameter and update currentChatLeafId if present
+  useEffect(() => {
+    const messageIdParam = searchParams.get('messageId');
+    if (messageIdParam) {
+      const messageId = parseInt(messageIdParam, 10);
+      if (!isNaN(messageId) && messageId !== currentChatLeafId) {
+        console.log('[TreeView] Setting currentChatLeafId from URL:', messageId);
+        setCurrentChatLeafId(messageId);
+      }
+    }
+  }, [searchParams, setCurrentChatLeafId]); // Only run when URL changes, not on currentChatLeafId change
+
+  // Auto-scroll to active node on mount or when currentChatLeafId changes
+  useEffect(() => {
+    // Check that we have a valid node in the layout before attempting to scroll
+    const nodePosition = layout.get(currentChatLeafId);
+    if (!nodePosition) {
+      console.log('[TreeView] Node not found in layout, skipping auto-scroll:', currentChatLeafId);
+      return;
+    }
+
+    if (activeNodeRef.current && treeVisualizationRef.current) {
+      // Small delay to ensure layout is complete
+      setTimeout(() => {
+        const node = activeNodeRef.current;
+        const container = treeVisualizationRef.current;
+
+        if (node && container) {
+          // Get node position (it's absolute positioned)
+          const nodeRect = node.getBoundingClientRect();
+          const containerRect = container.getBoundingClientRect();
+
+          // Calculate the center position
+          const scrollLeft = node.offsetLeft - (container.clientWidth / 2) + (nodeRect.width / 2);
+          const scrollTop = node.offsetTop - (container.clientHeight / 2) + (nodeRect.height / 2);
+
+          console.log('[TreeView] Auto-scrolling to node:', {
+            nodeId: currentChatLeafId,
+            scrollLeft,
+            scrollTop
+          });
+
+          // Smooth scroll to center the node
+          container.scrollTo({
+            left: scrollLeft,
+            top: scrollTop,
+            behavior: 'smooth'
+          });
+        }
+      }, 200);
+    }
+  }, [currentChatLeafId, layout]);
+
+  // Handle chat navigation
+  const handleChatClick = (messageId: number) => {
+    setCurrentChatLeafId(messageId);
+    setCurrentView('chat');
+    navigate('/scrollytell/chat');
+  };
 
   // Handle reset conversation
   const handleResetConversation = async () => {
@@ -182,7 +254,7 @@ const TreeView: React.FC = () => {
           </Callout.Root>
         )}
 
-        <div className="tree-visualization">
+        <div className="tree-visualization" ref={treeVisualizationRef}>
           <div className="tree-canvas" style={{ width, height, position: 'relative' }}>
             {/* SVG layer for connections */}
             <TreeConnections layout={layout} currentLeafId={currentChatLeafId} />
@@ -197,6 +269,7 @@ const TreeView: React.FC = () => {
               return (
                 <div
                   key={container.id_in_tree}
+                  ref={isActive ? activeNodeRef : null}
                   className={`tree-node ${isActive ? 'active' : ''}`}
                   style={{
                     position: 'absolute',
@@ -217,6 +290,13 @@ const TreeView: React.FC = () => {
                       showActions={false}
                     />
                   </div>
+                  <TreeNodeTabs
+                    message={container}
+                    onEvaluate={evaluateMessage}
+                    onChatClick={handleChatClick}
+                    evalResult={evalResults[container.id_in_tree]}
+                    isEvaluating={evaluatingNodes.has(container.id_in_tree)}
+                  />
                 </div>
               );
             })}

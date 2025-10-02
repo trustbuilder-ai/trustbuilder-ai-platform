@@ -8,8 +8,29 @@ import { updateChatContextMessageTreeChatContextsChatContextIdMessageTreePatch }
 import type { MessageContainer, ChatMessage } from '../../../backend_client/types.gen';
 import LLMUIMessage from '../components/LLMUIMessage';
 import SelectedModelsDisplay from '../components/SelectedModelsDisplay';
-import { useChatCompletion, useAvailableModels, useUserContext } from '../hooks';
+import SiblingMessagesGroup from '../components/SiblingMessagesGroup';
+import EvaluationResultsTable from '../components/EvaluationResultsTable';
+import { useChatCompletion, useAvailableModels, useUserContext, useEvaluation } from '../hooks';
 import './ScrollyTell.css';
+
+// Utility function to get sibling messages (same parent, different models)
+const getSiblings = (messageId: number, tree: MessageContainer[]): MessageContainer[] => {
+  const message = tree.find(m => m.id_in_tree === messageId);
+  if (!message) return [];
+
+  const siblings = tree.filter(m =>
+    m.parent_id_in_tree === message.parent_id_in_tree &&
+    m.id_in_tree !== messageId &&
+    m.message.model // Only include messages with a model field (multi-model responses)
+  );
+
+  // Include the original message if it has a model
+  if (message.message.model) {
+    return [message, ...siblings];
+  }
+
+  return siblings;
+};
 
 const ChatView: React.FC = () => {
   const {
@@ -25,6 +46,16 @@ const ChatView: React.FC = () => {
   const [messageInput, setMessageInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [streamingMessages, setStreamingMessages] = useState<MessageContainer[]>([]);
+
+  // Track saved message IDs (only show eval buttons after tree saved to DB)
+  const [savedMessageIds, setSavedMessageIds] = useState<Set<number>>(new Set());
+
+  // Track which sibling groups to display
+  const [activeSiblingGroups, setActiveSiblingGroups] = useState<Set<number>>(new Set());
+
+  // Evaluation table state
+  const [showEvalTable, setShowEvalTable] = useState(false);
+  const [currentEvalSiblings, setCurrentEvalSiblings] = useState<MessageContainer[]>([]);
 
   // Fetch available models
   const { models, loading: modelsLoading, error: modelsError } = useAvailableModels();
@@ -78,6 +109,17 @@ const ChatView: React.FC = () => {
   // Use shared message tree
   const messageTree = userMessageTree || [];
 
+  // Use shared evaluation hook
+  const { evalResults, evaluatingNodes, evaluateMessage } = useEvaluation(contextData?.chat_context?.id);
+
+  // Initialize savedMessageIds from messageTree when context loads
+  useEffect(() => {
+    if (messageTree.length > 0) {
+      const allMessageIds = new Set(messageTree.map(m => m.id_in_tree));
+      setSavedMessageIds(allMessageIds);
+    }
+  }, [messageTree.length]); // Only re-run when tree size changes
+
   // Calculate message path
   const messagePath = useMemo(() => {
     const path: MessageContainer[] = [];
@@ -108,6 +150,19 @@ const ChatView: React.FC = () => {
     setCurrentChatLeafId(messageId);
     setCurrentView('tree');
     navigate(`/scrollytell/tree?messageId=${messageId}`);
+  };
+
+  // Handle evaluate all siblings - show table dialog
+  const handleEvaluateAll = async (siblings: MessageContainer[]) => {
+    setCurrentEvalSiblings(siblings);
+    setShowEvalTable(true);
+
+    // Trigger evaluations for all siblings that don't have results
+    for (const sibling of siblings) {
+      if (!evalResults[sibling.id_in_tree]) {
+        await evaluateMessage(sibling.id_in_tree);
+      }
+    }
   };
 
   const handleSendMessage = async () => {
@@ -204,16 +259,19 @@ const ChatView: React.FC = () => {
         throwOnError: false,
       });
 
-      // 9. Update current leaf to the first assistant message
+      // 9. Mark new messages as saved (enables eval buttons)
+      const newMessageIds = new Set([userMessageId, ...assistantMessages.map(m => m.id_in_tree)]);
+      setSavedMessageIds(prev => new Set([...prev, ...newMessageIds]));
+
+      // 10. Update current leaf to the first assistant message
       setCurrentChatLeafId(assistantMessages[0].id_in_tree);
 
-      // 10. Update shared tree state with final complete tree
+      // 11. Update shared tree state with final complete tree
       setUserMessageTree(finalTree);
 
-      // 11. Auto-navigate to tree view if multiple models were used
+      // 12. Auto-activate sibling group if multiple models were used
       if (selectedModels.length > 1) {
-        setCurrentView('tree');
-        navigate('/scrollytell/tree');
+        setActiveSiblingGroups(prev => new Set([...prev, assistantMessages[0].id_in_tree]));
       }
 
     } catch (error) {
@@ -283,15 +341,56 @@ const ChatView: React.FC = () => {
 
         <div className="chat-messages">
           <div className="messages-container">
-            {messagePath.map((container) => (
-              <LLMUIMessage
-                key={container.id_in_tree}
-                message={container}
-                showActions={true}
-                onFork={() => handleFork(container.id_in_tree)}
-                onTreeView={() => handleTreeView(container.id_in_tree)}
-              />
-            ))}
+            {messagePath.map((container) => {
+              const siblings = getSiblings(container.id_in_tree, messageTree);
+              const showSiblingGroup = activeSiblingGroups.has(container.id_in_tree) && siblings.length > 1;
+              const hasSiblings = siblings.length > 1;
+
+              return (
+                <React.Fragment key={container.id_in_tree}>
+                  {showSiblingGroup ? (
+                    // Show sibling group
+                    <SiblingMessagesGroup
+                      siblings={siblings}
+                      onContinueFrom={(id) => setCurrentChatLeafId(id)}
+                      onEvaluate={evaluateMessage}
+                      onEvaluateAll={() => handleEvaluateAll(siblings)}
+                      evalResults={evalResults}
+                      evaluatingNodes={evaluatingNodes}
+                      showEvalButtons={siblings.every(s => savedMessageIds.has(s.id_in_tree))}
+                      currentLeafId={currentChatLeafId}
+                    />
+                  ) : (
+                    // Show single message
+                    <>
+                      <LLMUIMessage
+                        message={container}
+                        showActions={true}
+                        onFork={() => handleFork(container.id_in_tree)}
+                        onTreeView={() => handleTreeView(container.id_in_tree)}
+                        showEvalButton={savedMessageIds.has(container.id_in_tree)}
+                        evalResult={evalResults[container.id_in_tree]}
+                        isEvaluating={evaluatingNodes.has(container.id_in_tree)}
+                        onEvaluate={() => evaluateMessage(container.id_in_tree)}
+                      />
+                      {/* Show sibling indicator link if siblings exist */}
+                      {hasSiblings && !showSiblingGroup && (
+                        <Button
+                          size="1"
+                          variant="ghost"
+                          color="purple"
+                          onClick={() => setActiveSiblingGroups(prev => new Set([...prev, container.id_in_tree]))}
+                          className="sibling-indicator-link"
+                          style={{ marginTop: '-0.5rem', marginBottom: '0.5rem' }}
+                        >
+                          View {siblings.length - 1} other response{siblings.length - 1 !== 1 ? 's' : ''} from different models
+                        </Button>
+                      )}
+                    </>
+                  )}
+                </React.Fragment>
+              );
+            })}
 
             {/* Display streaming messages */}
             {streamingMessages.map((streamingMsg) => (
@@ -411,6 +510,16 @@ const ChatView: React.FC = () => {
             </Callout.Root>
           )}
         </Box>
+
+        {/* Evaluation Results Table Dialog */}
+        <EvaluationResultsTable
+          siblings={currentEvalSiblings}
+          evalResults={evalResults}
+          evaluatingNodes={evaluatingNodes}
+          onEvaluate={evaluateMessage}
+          isOpen={showEvalTable}
+          onClose={() => setShowEvalTable(false)}
+        />
       </div>
     </div>
   );

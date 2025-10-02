@@ -223,9 +223,13 @@
   transform: translateY(-2px);
 }
 
+.tree-node.active {
+  background: linear-gradient(to bottom, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+}
+
 .tree-node.active .tree-node-content .llm-ui-message {
-  border-color: #667eea !important;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  border: 3px solid #667eea !important;
+  box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
 }
 
 .tree-node-header {
@@ -372,4 +376,232 @@
   padding: 1rem;
   border-radius: 6px;
   border: 1px solid #f5c6cb;
+}
+
+/* Tree Node Tabs Styles */
+.tree-node-tabs {
+  margin-top: 0.5rem;
+  width: 100%;
+}
+
+.tree-node-tabs-list {
+  display: flex;
+  gap: 4px;
+  background: #f3f4f6;
+  padding: 2px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.tree-node-tab-trigger {
+  flex: 1;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tree-node-tab-trigger:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.tree-node-tab-trigger[data-state="active"] {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 1px 3px rgba(102, 126, 234, 0.3);
+}
+
+.tree-node-tab-trigger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Active node tabs styling */
+.tree-node.active .tree-node-tabs-list {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Only apply subtle hover to non-active tabs on active nodes */
+.tree-node.active .tree-node-tab-trigger:not([data-state="active"]):hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Removed active tab background override - let default purple gradient show through */
+
+/* Sibling Messages Group Styles */
+.sibling-messages-group {
+  border-radius: 12px;
+  padding: 1rem;
+  margin: 1rem 0;
+  position: relative;
+}
+
+/* Animated border using pseudo-element */
+.sibling-messages-group::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #667eea, #764ba2, #667eea, #764ba2);
+  background-size: 300% 100%;
+  z-index: 0;
+  animation: sibling-group-border 6s ease-in-out infinite;
+}
+
+/* Background fill on top of border */
+.sibling-messages-group::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 10px;
+  background: #f8f9fa;
+  z-index: 1;
+}
+
+@keyframes sibling-group-border {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.sibling-group-header {
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+}
+
+.sibling-messages-container {
+  position: relative;
+  z-index: 2;
+}
+
+.sibling-message-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+  border: 2px solid #e5e7eb;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.sibling-message-card:hover {
+  border-color: #c7d2fe;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+/* Removed conspicuous active state - now indicated by default badge only */
+
+/* Connecting lines between siblings */
+.sibling-connecting-line {
+  position: absolute;
+  top: -1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 1rem;
+  background: linear-gradient(to bottom, #e5e7eb 0%, #667eea 100%);
+}
+
+.sibling-message-card:first-child .sibling-connecting-line {
+  display: none;
+}
+
+/* Button styles */
+.continue-button {
+  min-width: 140px;
+}
+
+.eval-button-sibling {
+  min-width: 80px;
+}
+
+.evaluate-all-button {
+  min-width: 180px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  transition: all 0.2s ease;
+}
+
+.evaluate-all-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* Sibling indicator link */
+.sibling-indicator-link {
+  display: block;
+  text-align: center;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sibling-indicator-link:hover {
+  text-decoration: underline;
+}
+
+/* Evaluation Popover Styles */
+.eval-popover-content {
+  padding: 1rem;
+}
+
+.eval-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 600;
+}
+
+.eval-reason-section {
+  padding: 0.75rem;
+  background: var(--gray-2);
+  border-radius: 6px;
+  border-left: 3px solid var(--purple-6);
+}
+
+.eval-metadata {
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--gray-4);
+}
+
+/* Evaluation Results Table */
+.eval-results-table {
+  width: 100%;
+}
+
+.eval-table-row {
+  transition: background-color 0.2s ease;
+}
+
+.eval-table-row:hover {
+  background-color: var(--gray-2);
+}
+
+.eval-table-cell {
+  padding: 0.75rem;
+  vertical-align: middle;
 }
