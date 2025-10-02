@@ -99,7 +99,7 @@
   border-radius: 8px;
   padding: 1rem;
   margin-bottom: 1rem;
-  max-height: 650px;
+  max-height: calc(100vh - 500px);
   overflow-y: auto;
 }
 
@@ -617,4 +617,19 @@
 
 .tree-view[data-theater-mode="true"] .tree-visualization {
   max-height: 80vh;
+}
+
+/* Search Styles */
+.search-result-item:hover {
+  background-color: var(--purple-2);
+}
+
+/* Highlight matching nodes in tree */
+.tree-node.search-match {
+  border: 2px solid var(--yellow-9);
+  box-shadow: 0 0 8px var(--yellow-5);
+}
+
+.tree-node.search-match .tree-node-header {
+  background: var(--yellow-9);
 }

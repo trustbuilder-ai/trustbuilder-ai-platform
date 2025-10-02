@@ -1,11 +1,12 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Flex, Button, AlertDialog, Callout } from '@radix-ui/themes';
-import { InfoCircledIcon, EnterFullScreenIcon, ExitFullScreenIcon } from '@radix-ui/react-icons';
+import { Flex, Button, AlertDialog, Callout, TextField, IconButton, Card, Badge, Text, Box } from '@radix-ui/themes';
+import { InfoCircledIcon, EnterFullScreenIcon, ExitFullScreenIcon, MagnifyingGlassIcon, Cross2Icon } from '@radix-ui/react-icons';
 import { useScrollyTell } from '../context/ScrollyTellContext';
 import { useAuth } from '../../../shared/hooks/useAuth';
 import { useUserContext, useEvaluation } from '../hooks';
 import { deleteChatContextChatContextsChatContextIdDelete } from '../../../backend_client/sdk.gen';
+import type { MessageContainer } from '../../../backend_client/types.gen';
 import { calculateTreeLayout, calculateBoundingBox } from '../utils/treeLayout';
 import TreeConnections from '../components/TreeConnections';
 import LLMUIMessage from '../components/LLMUIMessage';
@@ -28,6 +29,16 @@ const TreeView: React.FC = () => {
 
   // Theater mode state
   const [theaterMode, setTheaterMode] = useState(false);
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<MessageContainer[]>([]);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [selectedResultIndex, setSelectedResultIndex] = useState(0);
+
+  // Search refs
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchDropdownRef = useRef<HTMLDivElement>(null);
 
   // Use shared context hook
   const {
@@ -157,6 +168,113 @@ const TreeView: React.FC = () => {
     }
   };
 
+  // Search messages function
+  const searchMessages = (query: string, messages: MessageContainer[]): MessageContainer[] => {
+    if (!query.trim()) return [];
+
+    const terms = query.toLowerCase().split(/\s+/).filter(t => t.length > 0);
+
+    const matches = messages.filter(container => {
+      const content = container.message.content.toLowerCase();
+      // All terms must appear as substrings (non-contiguous)
+      return terms.every(term => content.includes(term));
+    });
+
+    // Return top 10 results
+    return matches.slice(0, 10);
+  };
+
+  // Update search results when query changes
+  useEffect(() => {
+    const results = searchMessages(searchQuery, messageTree);
+    setSearchResults(results);
+    setSelectedResultIndex(0); // Reset selection
+  }, [searchQuery, messageTree]);
+
+  // Keyboard navigation handler
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!isSearchOpen || searchResults.length === 0) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedResultIndex(prev =>
+          prev < searchResults.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedResultIndex(prev => prev > 0 ? prev - 1 : prev);
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (searchResults[selectedResultIndex]) {
+          setCurrentChatLeafId(searchResults[selectedResultIndex].id_in_tree);
+          setIsSearchOpen(false);
+          setSearchQuery('');
+        }
+        break;
+      case 'Escape':
+        e.preventDefault();
+        setIsSearchOpen(false);
+        searchInputRef.current?.blur();
+        break;
+    }
+  };
+
+  // Auto-scroll dropdown to keep selected item visible
+  useEffect(() => {
+    if (searchDropdownRef.current && selectedResultIndex >= 0 && searchResults.length > 0) {
+      const selectedElement = searchDropdownRef.current.children[selectedResultIndex] as HTMLElement;
+      selectedElement?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }, [selectedResultIndex, searchResults.length]);
+
+  // Search term highlighting helper
+  const highlightSearchTerms = (text: string, query: string): React.ReactNode => {
+    if (!query.trim()) return text;
+
+    const terms = query.toLowerCase().split(/\s+/).filter(t => t.length > 0);
+    const lowerText = text.toLowerCase();
+
+    // Find all term positions
+    const positions: Array<{start: number, end: number}> = [];
+    terms.forEach(term => {
+      let idx = 0;
+      while ((idx = lowerText.indexOf(term, idx)) !== -1) {
+        positions.push({ start: idx, end: idx + term.length });
+        idx += term.length;
+      }
+    });
+
+    // Sort and merge overlapping positions
+    positions.sort((a, b) => a.start - b.start);
+    const merged: typeof positions = [];
+    positions.forEach(pos => {
+      if (merged.length === 0 || pos.start > merged[merged.length - 1].end) {
+        merged.push(pos);
+      } else {
+        merged[merged.length - 1].end = Math.max(merged[merged.length - 1].end, pos.end);
+      }
+    });
+
+    // Build highlighted text
+    let result: React.ReactNode[] = [];
+    let lastIndex = 0;
+    merged.forEach((pos, i) => {
+      result.push(text.slice(lastIndex, pos.start));
+      result.push(
+        <Text key={i} weight="bold" style={{ backgroundColor: 'var(--yellow-3)' }}>
+          {text.slice(pos.start, pos.end)}
+        </Text>
+      );
+      lastIndex = pos.end;
+    });
+    result.push(text.slice(lastIndex));
+
+    return result;
+  };
+
   // Auth gate
   if (!session) {
     return (
@@ -201,9 +319,112 @@ const TreeView: React.FC = () => {
   return (
     <div className="tree-view" data-theater-mode={theaterMode}>
       <div className="view-container">
-        {/* Header with Theater Mode and Reset buttons */}
+        {/* Header with Search, Theater Mode and Reset buttons */}
         <Flex justify="between" align="center" mb="2">
           <h2>Tree View</h2>
+
+          {/* Search Input */}
+          <Box style={{ position: 'relative', flex: 1, maxWidth: '400px', marginLeft: '2rem', marginRight: '2rem' }}>
+            <TextField.Root
+              ref={searchInputRef}
+              placeholder="Search messages..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setIsSearchOpen(e.target.value.trim().length > 0);
+              }}
+              onKeyDown={handleSearchKeyDown}
+              size="2"
+            >
+              <TextField.Slot>
+                <MagnifyingGlassIcon />
+              </TextField.Slot>
+              {searchQuery && (
+                <TextField.Slot>
+                  <IconButton
+                    size="1"
+                    variant="ghost"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setIsSearchOpen(false);
+                    }}
+                  >
+                    <Cross2Icon />
+                  </IconButton>
+                </TextField.Slot>
+              )}
+            </TextField.Root>
+
+            {/* Search Results Dropdown */}
+            {isSearchOpen && searchResults.length > 0 && (
+              <Card
+                ref={searchDropdownRef}
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  marginTop: '4px',
+                  maxHeight: '400px',
+                  overflowY: 'auto',
+                  zIndex: 1000,
+                }}
+              >
+                {searchResults.map((container, index) => (
+                  <Box
+                    key={container.id_in_tree}
+                    p="2"
+                    style={{
+                      cursor: 'pointer',
+                      borderBottom: '1px solid var(--gray-4)',
+                      backgroundColor: index === selectedResultIndex ? 'var(--purple-3)' : 'transparent',
+                    }}
+                    onClick={() => {
+                      setCurrentChatLeafId(container.id_in_tree);
+                      setIsSearchOpen(false);
+                      setSearchQuery('');
+                    }}
+                    onMouseEnter={() => setSelectedResultIndex(index)}
+                    className="search-result-item"
+                  >
+                    <Flex justify="between" mb="1">
+                      <Text size="1" weight="bold" color="purple">
+                        #{container.id_in_tree}
+                      </Text>
+                      <Badge size="1" variant="soft">
+                        {container.message.role}
+                      </Badge>
+                    </Flex>
+                    <Text size="2" style={{
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                    }}>
+                      {highlightSearchTerms(container.message.content, searchQuery)}
+                    </Text>
+                  </Box>
+                ))}
+              </Card>
+            )}
+
+            {/* No results message */}
+            {isSearchOpen && searchQuery.trim() && searchResults.length === 0 && (
+              <Card style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0,
+                marginTop: '4px',
+                zIndex: 1000,
+              }}>
+                <Box p="3">
+                  <Text size="2" color="gray">No messages found</Text>
+                </Box>
+              </Card>
+            )}
+          </Box>
+
           <Flex gap="2">
             <Button
               variant="soft"
@@ -277,12 +498,13 @@ const TreeView: React.FC = () => {
               if (!position) return null;
 
               const isActive = container.id_in_tree === currentChatLeafId;
+              const isSearchMatch = searchResults.some(r => r.id_in_tree === container.id_in_tree);
 
               return (
                 <div
                   key={container.id_in_tree}
                   ref={isActive ? activeNodeRef : null}
-                  className={`tree-node ${isActive ? 'active' : ''}`}
+                  className={`tree-node ${isActive ? 'active' : ''} ${isSearchMatch ? 'search-match' : ''}`}
                   style={{
                     position: 'absolute',
                     left: position.x,
