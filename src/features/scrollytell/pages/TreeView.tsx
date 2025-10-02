@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Flex, Button, AlertDialog, Callout } from '@radix-ui/themes';
-import { InfoCircledIcon } from '@radix-ui/react-icons';
+import { InfoCircledIcon, EnterFullScreenIcon, ExitFullScreenIcon } from '@radix-ui/react-icons';
 import { useScrollyTell } from '../context/ScrollyTellContext';
 import { useAuth } from '../../../shared/hooks/useAuth';
 import { useUserContext, useEvaluation } from '../hooks';
@@ -25,6 +25,9 @@ const TreeView: React.FC = () => {
   // Reset state
   const [isResetting, setIsResetting] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
+
+  // Theater mode state
+  const [theaterMode, setTheaterMode] = useState(false);
 
   // Use shared context hook
   const {
@@ -196,12 +199,20 @@ const TreeView: React.FC = () => {
   }
 
   return (
-    <div className="tree-view">
+    <div className="tree-view" data-theater-mode={theaterMode}>
       <div className="view-container">
-        {/* Header with Reset button */}
+        {/* Header with Theater Mode and Reset buttons */}
         <Flex justify="between" align="center" mb="2">
           <h2>Tree View</h2>
-          <AlertDialog.Root>
+          <Flex gap="2">
+            <Button
+              variant="soft"
+              onClick={() => setTheaterMode(!theaterMode)}
+            >
+              {theaterMode ? <ExitFullScreenIcon /> : <EnterFullScreenIcon />}
+              {theaterMode ? 'Exit Theater' : 'Theater Mode'}
+            </Button>
+            <AlertDialog.Root>
             <AlertDialog.Trigger>
               <Button
                 color="red"
@@ -236,6 +247,7 @@ const TreeView: React.FC = () => {
               </Flex>
             </AlertDialog.Content>
           </AlertDialog.Root>
+          </Flex>
         </Flex>
 
         <p className="view-description">

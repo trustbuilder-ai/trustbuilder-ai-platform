@@ -90,6 +90,18 @@ const ChatView: React.FC = () => {
     });
   };
 
+  // Select all models
+  const handleSelectAll = () => {
+    setSelectedModels(models.map(m => m.id));
+  };
+
+  // Deselect all models (keeping at least one)
+  const handleDeselectAll = () => {
+    if (models.length > 0) {
+      setSelectedModels([models[0].id]);
+    }
+  };
+
   // Chat completion hook for streaming (model will be overridden per request)
   const { streamCompletion, isStreaming, error: streamError } = useChatCompletion({
     model: selectedModels[0] || 'gpt-4o-mini', // Default model
@@ -484,11 +496,22 @@ const ChatView: React.FC = () => {
                   </Button>
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Content>
+                  {/* Select All / Deselect All controls */}
+                  <DropdownMenu.Item onSelect={handleSelectAll}>
+                    Select All
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item onSelect={handleDeselectAll}>
+                    Deselect All
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Separator />
+
+                  {/* Individual model checkboxes */}
                   {models.map((model) => (
                     <DropdownMenu.CheckboxItem
                       key={model.id}
                       checked={selectedModels.includes(model.id)}
                       onCheckedChange={(checked) => toggleModel(model.id, checked)}
+                      onSelect={(e) => e.preventDefault()}
                     >
                       {model.display_name || model.id}
                     </DropdownMenu.CheckboxItem>
